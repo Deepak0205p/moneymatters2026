@@ -278,25 +278,20 @@ export function SwipeCardViewer({
                 {currentCard.interactiveType === 'calculator' && currentCard.calcData && <InteractiveCalculatorViewer data={currentCard.calcData} color={currentCard.color} />}
                 {currentCard.interactiveType === 'choice_sim' && currentCard.choiceData && <InteractiveChoiceViewer data={currentCard.choiceData} color={currentCard.color} />}
 
-                {/* ── Strategy Slides (appear after the LAST content card) ── */}
-                {isLast && moduleStrategies.length > 0 && (
-                  <div className="space-y-4 mt-6">
-                    <p className="text-[10px] font-black tracking-[0.2em] uppercase text-zinc-500 text-center">
-                      🎮 Bonus Strategies — Try It Now!
-                    </p>
-                    {moduleStrategies.map((strategy) => (
-                      <StrategySlide
-                        key={strategy.id}
-                        strategyName={strategy.name}
-                        hook={strategy.hook || strategy.description}
-                        icon={strategy.iconName}
-                        accentColor={strategy.accentColor}
-                        rewardCoins={strategy.rewardCoins}
-                        onStart={() => setOnboardingStrategy(strategy)}
-                      />
-                    ))}
-                  </div>
-                )}
+                {/* ── Strategy Slides (appear on the card AFTER the topic they relate to) ── */}
+                {moduleStrategies
+                  .filter((s) => s.triggerAfterCard === currentIndex)
+                  .map((strategy) => (
+                    <StrategySlide
+                      key={strategy.id}
+                      strategyName={strategy.name}
+                      hook={strategy.hook || strategy.description}
+                      icon={strategy.iconName}
+                      accentColor={strategy.accentColor}
+                      rewardCoins={strategy.rewardCoins}
+                      onStart={() => setOnboardingStrategy(strategy)}
+                    />
+                  ))}
 
                 {/* Module Complete */}
                 {isLast && (
