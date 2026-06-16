@@ -4,7 +4,6 @@ import { useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAppStore, useHydration } from '@/lib/store/useAppStore';
 import { SwipeCardViewer } from '@/components/shared/SwipeCardViewer';
-import { Navbar } from '@/components/2d/navbar';
 
 /**
  * /dashboard/module/[id] — Dedicated page for module learning.
@@ -51,9 +50,6 @@ export default function ModulePage() {
   }
 
   return (
-    <>
-      <Navbar />
-      <SwipeCardViewer moduleId={moduleId} onClose={handleClose} onComplete={handleComplete} />
-    </>
+    <SwipeCardViewer moduleId={moduleId} onClose={handleClose} onComplete={handleComplete} />
   );
 }
