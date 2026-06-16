@@ -18,8 +18,8 @@ import * as LucideIcons from 'lucide-react';
 import { Construction } from 'lucide-react';
 
 // ── Strategy components (lazy) ───────────────────────────────────────────────
+// Note: "Zindagi Ka Safar" (LifePathMap) has been removed per user request.
 const StrategyComponents: Record<number, React.LazyExoticComponent<React.ComponentType>> = {
-  1: lazy(() => import('@/components/strategies/LifePathMap')),
   2: lazy(() => import('@/components/strategies/FinancialGPS')),
   3: lazy(() => import('@/components/strategies/ConsequenceSim')),
   4: lazy(() => import('@/components/strategies/InflationMonster')),
@@ -228,7 +228,7 @@ export default function ToolsPage() {
               <span className="text-gradient-brand">Strategies & Tools</span>
             </h1>
             <p className="text-ink-muted max-w-2xl mx-auto">
-              12 interactive strategies + 16 financial tools — SIP calculator, expense tracker, quizzes,
+              11 interactive strategies + 16 financial tools — SIP calculator, expense tracker, quizzes,
               games, AI advisor aur bahut kuch. Sab kuch Hinglish mein!
             </p>
           </motion.div>
@@ -270,7 +270,7 @@ export default function ToolsPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Interactive Strategies</h2>
-                <p className="text-xs text-ink-muted">12 visual + gamified financial learning experiences</p>
+                <p className="text-xs text-ink-muted">11 visual + gamified financial learning experiences</p>
               </div>
             </div>
 

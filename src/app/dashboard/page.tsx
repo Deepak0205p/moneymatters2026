@@ -551,7 +551,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Interactive Strategies & Tools</h3>
-                  <p className="text-sm text-ink-muted">12 strategies + 16 financial tools — SIP calc, expense tracker, quizzes, games aur bahut kuch!</p>
+                  <p className="text-sm text-ink-muted">11 strategies + 16 financial tools — SIP calc, expense tracker, quizzes, games aur bahut kuch!</p>
                 </div>
               </div>
               <Link href="/tools">

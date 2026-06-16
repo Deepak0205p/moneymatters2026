@@ -3,10 +3,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/lib/store/useAppStore';
-import { Coins, Map, GitBranch, Layers, ArrowRight, Sparkles } from 'lucide-react';
+import { Coins, Navigation, GitBranch, Layers, ArrowRight, Sparkles } from 'lucide-react';
 
 const PRIORITY_STRATEGIES = [
-  { id: 1, title: 'Zindagi Ka Safar', subtitle: 'Life Path Map', icon: Map, color: '#10B981', description: 'Tumhari zindagi ka financial map — school se retirement tak!' },
+  { id: 2, title: 'Paise Ka GPS', subtitle: 'Financial Health Navigator', icon: Navigation, color: '#3b82f6', description: 'Tumhara financial health kaisa hai? Quick checkup karo!' },
   { id: 3, title: 'Kya Hota Agar', subtitle: 'Consequence Simulator', icon: GitBranch, color: '#8B5CF6', description: 'Agar main aisa karta toh kya hota? Explore karo consequences!' },
   { id: 5, title: 'Budget Khel', subtitle: 'Swipe-Card Game', icon: Layers, color: '#F59E0B', description: 'Tinder-style swipe game — Need ya Want categorize karo!' },
 ];

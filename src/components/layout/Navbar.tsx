@@ -64,7 +64,6 @@ function getIcon(iconName?: string): LucideIcon {
 
 function getAbbreviatedTitle(title: string): string {
   const abbreviations: Record<string, string> = {
-    'Zindagi Ka Safar': 'Safar',
     'Paise Ka GPS': 'GPS',
     'Kya Hota Agar': 'Kya Hota',
     'Chhupa Hua Chor': 'Chor',

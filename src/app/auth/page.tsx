@@ -144,7 +144,7 @@ export default function AuthPage() {
                   Paisa samjho, future secure karo!
                 </h2>
                 <p className="text-ink-muted mb-6">
-                  11 modules, 12 interactive strategies, AI advisor, gamified learning — sab kuch
+                  11 modules, 11 interactive strategies, AI advisor, gamified learning — sab kuch
                   Hinglish mein, specially designed for Indian youth.
                 </p>
                 <div className="grid grid-cols-3 gap-3">

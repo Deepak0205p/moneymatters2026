@@ -2,16 +2,6 @@ import { Strategy } from '@/lib/types';
 
 export const strategies: Strategy[] = [
   {
-    id: 1,
-    title: 'Zindagi Ka Safar',
-    titleEn: 'Interactive Life Path Map',
-    description: 'Tumhari zindagi ka financial map — school se lekar retirement tak! Har life stage pe kya financial decisions lene hain, kya mistakes avoid karni hain — sab ek interactive journey mein. Chalo apna safar dekhte hain!',
-    icon: 'Map',
-    color: '#22c55e',
-    priority: 'highest',
-    componentName: 'LifePathMap',
-  },
-  {
     id: 2,
     title: 'Paise Ka GPS',
     titleEn: 'Financial Health Navigator',

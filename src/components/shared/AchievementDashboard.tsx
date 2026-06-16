@@ -795,7 +795,7 @@ export function AchievementDashboard({ open, onClose }: AchievementDashboardProp
                     C. STRATEGY MASTERY
                 ═══════════════════════════════ */}
                 <DashboardSection delay={0.2}>
-                  <SectionTitle icon={Star} title="Strategy Mastery" subtitle="12 strategies ka progress" />
+                  <SectionTitle icon={Star} title="Strategy Mastery" subtitle="11 strategies ka progress" />
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
                     {strategies.map((strategy, index) => {
                       const Icon = getIcon(strategy.icon);

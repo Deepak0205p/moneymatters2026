@@ -137,7 +137,7 @@ function OnboardingOverlay({ onDismiss }: { onDismiss: () => void }) {
         <div className="mb-8 grid grid-cols-2 gap-3">
           {[
             { label: '11 Modules', color: '#10B981' },
-            { label: '12 Strategies', color: '#8B5CF6' },
+            { label: '11 Strategies', color: '#8B5CF6' },
             { label: 'Hinglish', color: '#FBBF24' },
             { label: 'Gamified', color: '#F59E0B' },
           ].map((item) => (
