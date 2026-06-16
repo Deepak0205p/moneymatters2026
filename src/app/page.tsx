@@ -3,7 +3,10 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, useHydration } from '@/lib/store/useAppStore';
-import { Play, ChevronRight, Coins, TrendingUp, Zap, Award, BookOpen, Sparkles, Flame, Trophy } from 'lucide-react';
+import {
+  Play, ChevronRight, Coins, TrendingUp, Zap, Award, BookOpen,
+  Sparkles, Flame, Trophy, Heart,
+} from 'lucide-react';
 import { Hero } from '@/components/2d/hero';
 import { Features } from '@/components/2d/features';
 import { Gamification } from '@/components/2d/gamification';
@@ -46,7 +49,7 @@ function FloatingSymbols() {
   );
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.1]">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.10]">
       {symbols.map((item, i) => (
         <motion.div
           key={i}
@@ -103,34 +106,34 @@ function OnboardingOverlay({ onDismiss }: { onDismiss: () => void }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-midnight/95 backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-midnight/90 backdrop-blur-md p-4"
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="glass-card-premium mx-4 max-w-lg p-8 text-center sm:p-12"
+        initial={{ scale: 0.92, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.92, opacity: 0, y: 20 }}
+        transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        className="glass-card-premium mx-auto max-w-lg p-8 text-center sm:p-12 rounded-3xl"
       >
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.4, type: 'spring', stiffness: 200 }}
-          className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
+          initial={{ scale: 0, rotate: -10 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 0.6, delay: 0.3, type: 'spring', stiffness: 200 }}
+          className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl"
           style={{
             background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
             boxShadow: '0 0 32px rgba(16,185,129,0.40)',
           }}
         >
-          <Play size={40} className="ml-1 text-midnight" />
+          <Play size={36} className="ml-1 text-midnight fill-current" />
         </motion.div>
 
-        <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
+        <h2 className="font-display text-3xl font-extrabold mb-3 sm:text-4xl">
           Welcome to{' '}
           <span className="text-gradient-brand">Capital Mastery</span>
         </h2>
 
-        <p className="mb-8 text-ink-muted">
+        <p className="mb-8 text-ink-muted leading-relaxed">
           Paisa samjho, future secure karo! Financial literacy seekho in style.
         </p>
 
@@ -141,7 +144,7 @@ function OnboardingOverlay({ onDismiss }: { onDismiss: () => void }) {
             { label: 'Hinglish', color: '#FBBF24' },
             { label: 'Gamified', color: '#F59E0B' },
           ].map((item) => (
-            <div key={item.label} className="rounded-lg bg-white/5 p-3">
+            <div key={item.label} className="rounded-xl bg-white/5 border border-white/8 p-3">
               <p className="text-xs font-semibold" style={{ color: item.color }}>
                 {item.label}
               </p>
@@ -150,20 +153,18 @@ function OnboardingOverlay({ onDismiss }: { onDismiss: () => void }) {
         </div>
 
         <motion.button
-          whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(16,185,129,0.40)' }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.03, boxShadow: '0 16px 40px rgba(16,185,129,0.40)' }}
+          whileTap={{ scale: 0.97 }}
           onClick={onDismiss}
-          className="btn-primary w-full cursor-pointer justify-center"
-          style={{
-            background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
-            color: '#0B1220',
-          }}
+          className="btn-emerald w-full cursor-pointer justify-center flex items-center gap-2 rounded-xl py-3.5 text-base font-semibold"
         >
           <span>Shuru Karo!</span>
           <ChevronRight size={20} />
         </motion.button>
 
-        <p className="mt-4 text-xs text-ink-muted/60">By continuing, you agree to our Terms of Service</p>
+        <p className="mt-4 text-xs text-ink-muted/60">
+          By continuing, you agree to our Terms of Service
+        </p>
       </motion.div>
     </motion.div>
   );
@@ -205,11 +206,29 @@ export default function HomePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 1.2 }}
-          className="py-12 text-center"
+          className="py-12 text-center border-t border-white/5"
         >
-          <p className="text-sm text-ink-muted/60">
-            © 2026 Capital Mastery. Made with care for Indian youth financial literacy.
-          </p>
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="flex items-center justify-center gap-2.5 mb-4">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
+                  boxShadow: '0 0 14px rgba(16,185,129,0.30)',
+                }}
+              >
+                <Coins size={16} className="text-midnight" strokeWidth={2.5} />
+              </div>
+              <span className="text-base font-bold font-display">
+                <span className="text-emerald-soft">Capital</span>{' '}
+                <span className="text-gradient-brand">Mastery</span>
+              </span>
+            </div>
+            <p className="text-sm text-ink-muted/80 flex items-center justify-center gap-1.5">
+              Made with <Heart size={12} className="text-rose-400 fill-current" /> for Indian Youth ·
+              © 2026 Capital Mastery
+            </p>
+          </div>
         </motion.footer>
       </div>
     </main>

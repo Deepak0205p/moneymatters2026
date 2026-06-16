@@ -1054,7 +1054,7 @@ export default function Dashboard() {
             <div className="relative z-10 p-8 sm:p-10">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                  <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 tracking-tight">Namaste, {user?.displayName?.split(' ')[0] ?? 'Champion'}!</h1>
+                  <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-white mb-2 tracking-tight">Namaste, {user?.displayName?.split(' ')[0] ?? 'Champion'}!</h1>
                   <AnimatePresence mode="wait">
                     <motion.p key={quoteIndex} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="text-base text-ink-muted font-medium">&quot;{QUOTES[quoteIndex]}&quot;</motion.p>
                   </AnimatePresence>
@@ -1088,7 +1088,7 @@ export default function Dashboard() {
                   <Wrench size={26} className="text-midnight" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Interactive Strategies & Tools</h3>
+                  <h3 className="font-display text-lg font-bold text-white">Interactive Strategies & Tools</h3>
                   <p className="text-sm text-ink-muted">11 strategies + 16 financial tools — SIP calc, expense tracker, quizzes, games aur bahut kuch!</p>
                 </div>
               </div>
@@ -1105,7 +1105,7 @@ export default function Dashboard() {
         <div className="mx-auto max-w-6xl px-4 pt-8 pb-4 space-y-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-black text-white tracking-tight sm:text-3xl">Financial Journey Map</h2>
+              <h2 className="font-display text-2xl font-extrabold text-white tracking-tight sm:text-3xl">Financial Journey Map</h2>
               <p className="text-sm text-ink-muted mt-1 max-w-xl">Step-by-step personal finance seekho. Har module complete karo aur naya level unlock karo! 🚀</p>
             </div>
             <div className="px-4 py-2 rounded-full bg-white/5 border border-white/10 flex items-center gap-2 w-fit">
@@ -1128,7 +1128,7 @@ export default function Dashboard() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="relative overflow-hidden rounded-[2.5rem] border border-white/10 glass-card">
             <Image src="/images/progress_panel.jpeg" alt="" fill className="object-cover opacity-[0.07] pointer-events-none" />
             <div className="relative z-10 p-8">
-              <h2 className="text-xl font-black text-white mb-6">Mastery Progress</h2>
+              <h2 className="font-display text-xl font-extrabold text-white mb-6">Mastery Progress</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                 {modules.map((mod) => {
                   const cardCount = getAllCardsForModule(mod.id).length;

@@ -224,7 +224,7 @@ export default function ToolsPage() {
                 {toolCount} Interactive Resources
               </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black mb-3">
+            <h1 className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
               <span className="text-gradient-brand">Strategies & Tools</span>
             </h1>
             <p className="text-ink-muted max-w-2xl mx-auto">
@@ -240,21 +240,21 @@ export default function ToolsPage() {
             transition={{ delay: 0.1 }}
             className="flex flex-wrap items-center justify-center gap-3"
           >
-            <div className="flex items-center gap-2 rounded-2xl bg-gold/10 border border-gold/20 px-5 py-2.5">
-              <Coins size={16} className="text-gold-soft" />
-              <span className="text-sm font-bold text-white">{coins}</span>
-              <span className="text-[10px] font-bold text-gold-soft uppercase tracking-wider">Coins</span>
+            <div className="flex items-center gap-2 rounded-xl bg-gold/10 border border-gold/20 px-4 py-2">
+              <Coins size={15} className="text-gold-soft" />
+              <span className="text-sm font-bold text-ink tabular-nums">{coins}</span>
+              <span className="text-[10px] font-semibold text-gold-soft/70 uppercase tracking-wider">Coins</span>
             </div>
-            <div className="flex items-center gap-2 rounded-2xl bg-emerald/10 border border-emerald/20 px-5 py-2.5">
-              <Trophy size={16} className="text-emerald-soft" />
-              <span className="text-sm font-bold text-white">{badges.length}</span>
-              <span className="text-[10px] font-bold text-emerald-soft uppercase tracking-wider">Badges</span>
+            <div className="flex items-center gap-2 rounded-xl bg-emerald/10 border border-emerald/20 px-4 py-2">
+              <Trophy size={15} className="text-emerald-soft" />
+              <span className="text-sm font-bold text-ink tabular-nums">{badges.length}</span>
+              <span className="text-[10px] font-semibold text-emerald-soft/70 uppercase tracking-wider">Badges</span>
             </div>
             <Link
               href="/dashboard"
-              className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm font-semibold text-ink hover:bg-white/10 hover:border-emerald/20 transition-colors"
             >
-              <BookOpen size={16} className="text-ink-muted" />
+              <BookOpen size={15} className="text-emerald-soft" />
               Dashboard
             </Link>
           </motion.div>
@@ -269,7 +269,7 @@ export default function ToolsPage() {
                 <Brain size={20} className="text-midnight" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Interactive Strategies</h2>
+                <h2 className="font-display text-xl font-bold text-ink">Interactive Strategies</h2>
                 <p className="text-xs text-ink-muted">11 visual + gamified financial learning experiences</p>
               </div>
             </div>
@@ -339,7 +339,7 @@ export default function ToolsPage() {
                 <Wrench size={20} className="text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Financial Tools</h2>
+                <h2 className="font-display text-xl font-bold text-ink">Financial Tools</h2>
                 <p className="text-xs text-ink-muted">Calculators, trackers, games aur more</p>
               </div>
             </div>

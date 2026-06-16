@@ -2783,3 +2783,53 @@ Unresolved Issues / Risks:
 - None critical — zero lint errors, all routes 200, zero runtime errors.
 - Dev server process killed by sandbox between bash tool calls (not a code issue — confirmed via DOM eval + VLM that all elements render correctly while server is alive).
 - The SwipeCardViewer is heavy (~700 lines) but compiles in ~2s without OOM (LifePathMap/StoryReader/story-data are not imported).
+
+---
+Task ID: PREMIUM-UI (Hackathon-Ready FinTech UI Upgrade)
+Agent: Main Orchestrator (no reviewer, per user request)
+Task: Complete premium UI upgrade to "RUPAIYA 101" — a heavily funded startup product combining Duolingo (gamification) + Groww (finance) + ChatGPT (AI) + Notion (clean productivity). Strict Midnight Wealth + Emerald Growth palette, Inter/Poppins fonts, premium glassmorphism, mobile-first responsive.
+
+Work Log:
+- Upgraded globals.css (904 → ~960 lines, refined): premium ambient backdrop (dual radial gradients), ::selection emerald, focus-visible ring, slim premium scrollbars with emerald tint, refined glassmorphism (.glass, .glass-strong, .glass-card, .glass-card-premium, .glass-card-glow) all using rgba(255,255,255,0.05) + backdrop-filter: blur(16px), card-shine hover sweep, btn-emerald/btn-gold/btn-ghost-emerald premium buttons, custom range input styling (emerald thumb + glow), shimmer loading animation, all keyframes (float, pulse-glow, shimmer, aurora-drift, particles-float, divider-sweep, badge-pulse, breathing, emoji-pulse, streak-fire, slide-up-reveal, page-fade-in, sound-wave, trophy-glow, rotate-slow), reduced-motion support, light-theme overrides.
+- Upgraded tailwind.config.ts: added ai-deep + gold-deep + midnight-deep tokens, Poppins display font family (font-display), premium typography scale (display-sm/display/display-lg), borderRadius 2xl/3xl, premium shadows (glow-emerald/glow-gold/glow-purple/glass/premium/card-hover), brand-gradient/gold-gradient/emerald-gradient/midnight-radial background images, premium cubic-bezier timing function, shimmer/float/pulse-glow animations.
+- Updated layout.tsx: loaded both Inter (body, --font-inter) + Poppins (display headings, --font-poppins) via next/font/google with display:swap. Added viewport metadata (themeColor #0B1220), enhanced metadata with keywords/authors. Body now uses both font variables.
+- Polished 2d/navbar.tsx: compact glass-strong pill (rounded-2xl), emerald logo gradient with glow, gold coins pill + orange streak pill, emerald Login CTA button (btn-emerald), mobile hamburger with glass styling, mobile menu with 2-col stats grid.
+- Polished 2d/hero.tsx: eyebrow badge with pinging emerald dot ("FinTech + AI Education MVP"), font-display 7xl hero heading with text-gradient-brand, emerald CTA (btn-emerald) + ghost "Explore Tools" button, trust indicators row, AI advisor card with glass-card-premium + AI badge (pinging purple dot).
+- Polished 2d/features.tsx: font-display headings, glass-card + card-shine on all cards, emerald/ai/gold accent icons with rounded-xl backgrounds, image hover zoom.
+- Polished 2d/gamification.tsx: font-display headings, glass-card + card-shine, gold/ai/orange themed cards, rounded-xl stat rows, emerald-to-ai gradient pro tip.
+- Polished app/page.tsx (intro): glass-card-premium onboarding overlay with spring-animated emerald logo, btn-emerald CTA, premium footer with logo + heart icon.
+- Polished app/auth/page.tsx: glass-card-premium form, mode toggle with emerald active state + glow, emerald focus rings (ring-2 ring-emerald/15), btn-emerald submit, ai-soft guest button, 3-col trust badges.
+- Polished 2d/AIChatBot.tsx: emerald FAB with pinging ai-purple notification dot, glass-strong chat window with ai/20 border, gradient header (emerald→ai), emerald typing dots, emerald send button.
+- Polished tools/page.tsx: font-display heading, compact rounded-xl stats pills, emerald section headers.
+- Polished dashboard/page.tsx: font-display on all headings (hero, Financial Journey Map, Mastery Progress, Tools CTA).
+
+Verification (agent-browser + VLM + lint):
+- Zero ESLint errors, zero warnings.
+- All routes 200 (/, /auth, /dashboard, /tools).
+- Zero runtime errors.
+- VLM intro page: 9/10 — "glassmorphic navbar with logo/coins/streak pills, bold gradient hero heading, premium emerald CTAs, AI advisor card with mascot, trust indicators, premium funded startup feel."
+- VLM dashboard: 9/10 — "glassmorphic hero with Namaste Arjun + 175 coins + 3 streak, Tools kholo CTA with emerald gradient, midnight navy with ambient glows, premium/clean Notion+Groww vibe."
+- VLM tools page: 9/10 — "bold gradient Strategies & Tools heading, strategy cards grid with colored icons + priority badges, clean premium glassmorphism, midnight navy + emerald theme."
+- VLM mobile (390px): 8/10 — "layout adapts cleanly with vertical stacking, cards readable no overflow, hamburger menu present, premium dark theme."
+
+Stage Summary:
+- Premium FinTech UI delivered: Midnight Wealth + Emerald Growth palette strictly applied (Background #0B1220, Primary #10B981, AI #8B5CF6, Reward #F59E0B, Text #F8FAFC, Muted #94A3B8).
+- Typography: Inter (body) + Poppins (display headings) via next/font/google with display:swap.
+- Premium glassmorphism throughout: rgba(255,255,255,0.05) + backdrop-filter: blur(16px) + border rgba(255,255,255,0.10).
+- Smooth rounding: rounded-xl / rounded-2xl / rounded-3xl everywhere.
+- Mobile-first responsive verified (390px adapts cleanly).
+- VLM ratings: intro 9/10, dashboard 9/10, tools 9/10, mobile 8/10 — hackathon-ready premium quality.
+
+Files Modified:
+- src/app/globals.css (premium design system rewrite)
+- tailwind.config.ts (Poppins font, premium tokens, shadows, animations)
+- src/app/layout.tsx (Inter + Poppins fonts, viewport metadata)
+- src/components/2d/navbar.tsx (compact glass pill, emerald CTA)
+- src/components/2d/hero.tsx (eyebrow badge, font-display, AI card)
+- src/components/2d/features.tsx (glass-card + card-shine, font-display)
+- src/components/2d/gamification.tsx (glass-card + card-shine, font-display)
+- src/components/2d/AIChatBot.tsx (emerald FAB + ai dot, glass-strong window)
+- src/app/page.tsx (premium onboarding overlay, footer)
+- src/app/auth/page.tsx (glass-card-premium, emerald focus rings, btn-emerald)
+- src/app/tools/page.tsx (font-display headings, compact stats pills)
+- src/app/dashboard/page.tsx (font-display on all headings)

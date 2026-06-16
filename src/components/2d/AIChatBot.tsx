@@ -26,7 +26,10 @@ export function AIChatBot() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { user, coins, streak, completedModules, masteredTerms, advisorMessages, addAdvisorMessage, clearAdvisorMessages, advisorSessionCount } = useAppStore();
+  const {
+    user, coins, streak, completedModules, masteredTerms,
+    advisorMessages, addAdvisorMessage, clearAdvisorMessages, advisorSessionCount,
+  } = useAppStore();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -45,7 +48,6 @@ export function AIChatBot() {
           content: `Namaste ${user?.displayName || 'Champion'}! Main hoon Rupaiya Guru — tumhara AI Financial Advisor. Paisa, budget, SIP, debt — kuch bhi pucho, Hinglish mein jawab dunga!`,
         },
       ]);
-      // hydrate from store history if present
       if (advisorMessages.length > 0) {
         setMessages((prev) => [
           ...prev,
@@ -129,7 +131,7 @@ export function AIChatBot() {
     <>
       {/* Floating Action Button */}
       <motion.button
-        whileHover={{ scale: 1.1, boxShadow: '0 0 30px rgba(16,185,129,0.45)' }}
+        whileHover={{ scale: 1.1, boxShadow: '0 0 32px rgba(16,185,129,0.50)' }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full text-midnight shadow-2xl transition-all duration-300 cursor-pointer ${
@@ -137,10 +139,17 @@ export function AIChatBot() {
         }`}
         style={{
           background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
+          boxShadow: '0 8px 24px rgba(16,185,129,0.40)',
         }}
         aria-label="Open AI Finance Advisor"
       >
         {isOpen ? <X size={22} /> : <Sparkles size={22} />}
+        {!isOpen && (
+          <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ai opacity-60" />
+            <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-ai border-2 border-midnight" />
+          </span>
+        )}
       </motion.button>
 
       {/* Chat Window */}
@@ -151,13 +160,13 @@ export function AIChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed bottom-24 right-6 sm:bottom-24 sm:right-8 z-[60] flex h-[520px] max-h-[80vh] w-[calc(100vw-48px)] sm:w-[400px] flex-col overflow-hidden rounded-3xl border border-white/10 glass-strong shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+            className="fixed bottom-24 right-6 sm:bottom-24 sm:right-8 z-[60] flex h-[540px] max-h-[80vh] w-[calc(100vw-48px)] sm:w-[400px] flex-col overflow-hidden rounded-3xl border border-ai/20 glass-strong shadow-premium"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-emerald/10 to-ai/10 px-5 py-4">
+            <div className="flex items-center justify-between border-b border-white/8 bg-gradient-to-r from-emerald/8 to-ai/8 px-5 py-4">
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl"
                   style={{
                     background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
                     boxShadow: '0 0 12px rgba(16,185,129,0.35)',
@@ -166,16 +175,16 @@ export function AIChatBot() {
                   <Bot size={20} className="text-midnight" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm">Rupaiya Guru</h3>
+                  <h3 className="font-display font-bold text-ink text-sm">Rupaiya Guru</h3>
                   <div className="flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-soft animate-pulse" />
-                    <p className="text-[10px] text-emerald-soft">Online</p>
+                    <p className="text-[10px] text-emerald-soft font-medium">Online · AI Powered</p>
                   </div>
                 </div>
               </div>
               <button
                 onClick={handleClose}
-                className="rounded-xl p-2 text-white/40 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+                className="rounded-xl p-2 text-ink-muted hover:bg-white/10 hover:text-ink transition-all cursor-pointer"
                 aria-label="Close chat"
               >
                 <X size={18} />
@@ -185,7 +194,7 @@ export function AIChatBot() {
             {/* Messages Area */}
             <div
               className="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll"
-              style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(16,185,129,0.2) transparent' }}
+              style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(16,185,129,0.20) transparent' }}
             >
               {messages.map((msg) => (
                 <motion.div
@@ -200,7 +209,7 @@ export function AIChatBot() {
                         ? 'bg-gradient-to-r from-emerald-soft to-emerald text-midnight rounded-br-md font-medium'
                         : msg.role === 'system'
                         ? 'bg-ai/10 border border-ai/20 text-ai-soft w-full text-center text-xs rounded-2xl'
-                        : 'bg-white/5 border border-white/5 text-zinc-200 rounded-bl-md'
+                        : 'bg-white/5 border border-white/8 text-zinc-200 rounded-bl-md'
                     }`}
                   >
                     {msg.role === 'assistant' && msg.isSearch && (
@@ -216,16 +225,10 @@ export function AIChatBot() {
               {/* Typing indicator */}
               {isLoading && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                  <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1.5">
+                  <div className="bg-white/5 border border-white/8 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-soft animate-bounce" />
-                    <span
-                      className="w-1.5 h-1.5 rounded-full bg-emerald-soft animate-bounce"
-                      style={{ animationDelay: '0.15s' }}
-                    />
-                    <span
-                      className="w-1.5 h-1.5 rounded-full bg-emerald-soft animate-bounce"
-                      style={{ animationDelay: '0.3s' }}
-                    />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-soft animate-bounce" style={{ animationDelay: '0.15s' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-soft animate-bounce" style={{ animationDelay: '0.3s' }} />
                   </div>
                 </motion.div>
               )}
@@ -235,13 +238,13 @@ export function AIChatBot() {
             {/* Suggestions */}
             {messages.length <= 1 && (
               <div className="px-4 pb-2">
-                <p className="text-[10px] text-white/30 mb-2 uppercase tracking-wider">Try asking</p>
+                <p className="text-[10px] text-ink-muted/60 mb-2 uppercase tracking-wider font-semibold">Try asking</p>
                 <div className="flex flex-wrap gap-1.5">
                   {SUGGESTIONS.map((s) => (
                     <button
                       key={s}
                       onClick={() => handleSuggestion(s)}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-zinc-400 hover:border-emerald/30 hover:text-emerald-soft transition-all cursor-pointer"
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-ink-muted hover:border-emerald/30 hover:text-emerald-soft transition-all cursor-pointer"
                     >
                       {s}
                     </button>
@@ -251,7 +254,7 @@ export function AIChatBot() {
             )}
 
             {/* Input Area */}
-            <form onSubmit={handleSubmit} className="border-t border-white/10 bg-midnight/60 p-3">
+            <form onSubmit={handleSubmit} className="border-t border-white/8 bg-midnight/60 p-3">
               <div className="relative flex items-center">
                 <input
                   ref={inputRef}
@@ -259,17 +262,17 @@ export function AIChatBot() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Paisa finance ke baare mein pucho..."
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-sm text-white outline-none focus:border-emerald/50 focus:bg-white/[0.07] transition-all placeholder:text-white/25"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-sm text-ink outline-none focus:border-emerald/50 focus:bg-white/[0.07] transition-all placeholder:text-ink-muted/50"
                   disabled={isLoading}
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
-                  className="absolute right-2 flex h-8 w-8 items-center justify-center rounded-xl text-midnight disabled:opacity-30 disabled:from-white/20 disabled:to-white/20 disabled:text-white/40 transition-all cursor-pointer"
+                  className="absolute right-2 flex h-8 w-8 items-center justify-center rounded-lg text-midnight disabled:opacity-30 transition-all cursor-pointer"
                   style={{
                     background:
                       !input.trim() || isLoading
-                        ? undefined
+                        ? 'rgba(255,255,255,0.15)'
                         : 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
                   }}
                   aria-label="Send message"

@@ -91,21 +91,42 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "calc(var(--radius) + 4px)",
+        "2xl": "calc(var(--radius) + 8px)",
+        "3xl": "calc(var(--radius) + 16px)",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-poppins)", "var(--font-inter)", "system-ui", "sans-serif"],
+      },
+      fontSize: {
+        // Premium SaaS typography scale
+        "display-sm": ["2.5rem", { lineHeight: "1.1", letterSpacing: "-0.03em", fontWeight: "800" }],
+        "display": ["3.5rem", { lineHeight: "1.05", letterSpacing: "-0.035em", fontWeight: "800" }],
+        "display-lg": ["4.5rem", { lineHeight: "1.0", letterSpacing: "-0.04em", fontWeight: "800" }],
       },
       boxShadow: {
         "glow-emerald": "0 0 20px rgba(16, 185, 129, 0.30), 0 0 60px rgba(16, 185, 129, 0.10)",
         "glow-gold": "0 0 20px rgba(245, 158, 11, 0.30), 0 0 60px rgba(245, 158, 11, 0.10)",
         "glow-purple": "0 0 20px rgba(139, 92, 246, 0.30), 0 0 60px rgba(139, 92, 246, 0.10)",
-        "glass": "0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0, 0, 0, 0.30)",
+        "glass": "0 1px 0 rgba(255,255,255,0.06) inset, 0 8px 32px rgba(0, 0, 0, 0.28)",
+        "premium": "0 12px 40px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(16, 185, 129, 0.05)",
+        "card-hover": "0 16px 48px rgba(0, 0, 0, 0.44)",
       },
       backgroundImage: {
-        "brand-gradient": "linear-gradient(135deg, #34D399, #10B981 40%, #8B5CF6)",
+        "brand-gradient": "linear-gradient(135deg, #34D399, #10B981 45%, #8B5CF6)",
         "gold-gradient": "linear-gradient(135deg, #FBBF24, #F59E0B, #D97706)",
+        "emerald-gradient": "linear-gradient(135deg, #34D399, #10B981 60%, #047857)",
         "midnight-radial":
           "radial-gradient(60rem 60rem at 80% -10%, rgba(16,185,129,0.10), transparent 60%), radial-gradient(50rem 50rem at -10% 110%, rgba(139,92,246,0.08), transparent 60%)",
+      },
+      transitionTimingFunction: {
+        "premium": "cubic-bezier(0.16, 1, 0.3, 1)",
+      },
+      animation: {
+        "shimmer": "shimmer 2.5s linear infinite",
+        "float": "float 6s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
       },
     },
   },

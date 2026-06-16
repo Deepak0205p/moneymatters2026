@@ -5,14 +5,20 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useAppStore, useHydration, type UserProfile } from '@/lib/store/useAppStore';
-import { Mail, Lock, User, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2, Shield, CheckCircle2, Sparkles, Coins } from 'lucide-react';
+import {
+  Mail, Lock, User, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2,
+  Shield, CheckCircle2, Sparkles, Coins,
+} from 'lucide-react';
 
 type Mode = 'login' | 'signup';
 
 export default function AuthPage() {
   const router = useRouter();
   const hydrated = useHydration();
-  const { isAuthenticated, setUser, setIsAuthenticated, setIsEmailVerified, addCoins, addBadge, badges } = useAppStore();
+  const {
+    isAuthenticated, setUser, setIsAuthenticated, setIsEmailVerified,
+    addCoins, addBadge, badges,
+  } = useAppStore();
 
   const [mode, setMode] = useState<Mode>('signup');
   const [name, setName] = useState('');
@@ -22,17 +28,13 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Redirect to dashboard if already authenticated
   useEffect(() => {
-    if (hydrated && isAuthenticated) {
-      router.push('/dashboard');
-    }
+    if (hydrated && isAuthenticated) router.push('/dashboard');
   }, [hydrated, isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     if (!email.trim() || !password.trim()) {
       setError('Email aur password dono zaroori hai!');
       return;
@@ -43,8 +45,6 @@ export default function AuthPage() {
     }
 
     setLoading(true);
-
-    // Local-only mock auth (no Firebase) — simulate network delay
     await new Promise((r) => setTimeout(r, 700));
 
     const displayName = mode === 'signup' ? name.trim() : email.split('@')[0];
@@ -62,7 +62,6 @@ export default function AuthPage() {
     setIsAuthenticated(true);
     setIsEmailVerified(true);
 
-    // Welcome bonus on signup
     if (mode === 'signup') {
       addCoins(25);
       if (!badges.includes('first-login')) addBadge('first-login');
@@ -107,11 +106,11 @@ export default function AuthPage() {
 
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8 items-center">
-          {/* Left: illustration / branding */}
+          {/* Left: branding / illustration */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="hidden lg:block"
           >
             <div className="glass-card-premium rounded-3xl p-8 relative overflow-hidden">
@@ -120,15 +119,18 @@ export default function AuthPage() {
               <div className="relative">
                 <div className="flex items-center gap-3 mb-6">
                   <div
-                    className="flex h-12 w-12 items-center justify-center rounded-full"
+                    className="flex h-12 w-12 items-center justify-center rounded-xl"
                     style={{
                       background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
                       boxShadow: '0 0 20px rgba(16,185,129,0.40)',
                     }}
                   >
-                    <Coins size={24} className="text-midnight" />
+                    <Coins size={24} className="text-midnight" strokeWidth={2.5} />
                   </div>
-                  <h1 className="text-3xl font-black text-gradient-brand">Capital Mastery</h1>
+                  <h1 className="font-display text-3xl font-extrabold">
+                    <span className="text-emerald-soft">Capital</span>{' '}
+                    <span className="text-gradient-brand">Mastery</span>
+                  </h1>
                 </div>
                 <div className="overflow-hidden rounded-2xl border border-white/10 mb-6">
                   <Image
@@ -140,10 +142,10 @@ export default function AuthPage() {
                     priority
                   />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-3">
+                <h2 className="font-display text-2xl font-bold text-ink mb-3">
                   Paisa samjho, future secure karo!
                 </h2>
-                <p className="text-ink-muted mb-6">
+                <p className="text-ink-muted mb-6 leading-relaxed">
                   11 modules, 11 interactive strategies, AI advisor, gamified learning — sab kuch
                   Hinglish mein, specially designed for Indian youth.
                 </p>
@@ -153,8 +155,8 @@ export default function AuthPage() {
                     { icon: Sparkles, label: 'Free', color: '#8B5CF6' },
                     { icon: CheckCircle2, label: 'Easy', color: '#F59E0B' },
                   ].map((f) => (
-                    <div key={f.label} className="rounded-xl bg-white/5 p-3 text-center">
-                      <f.icon size={20} className="mx-auto mb-1" style={{ color: f.color }} />
+                    <div key={f.label} className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
+                      <f.icon size={20} className="mx-auto mb-1.5" style={{ color: f.color }} />
                       <span className="text-xs text-ink-muted">{f.label}</span>
                     </div>
                   ))}
@@ -167,18 +169,18 @@ export default function AuthPage() {
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="glass-card-premium rounded-3xl p-8 sm:p-10">
               <button
                 onClick={() => router.push('/')}
-                className="flex items-center gap-1 text-xs text-ink-muted hover:text-emerald-soft transition-colors mb-6"
+                className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-emerald-soft transition-colors mb-6 font-medium"
               >
                 <ArrowLeft size={14} />
                 Home
               </button>
 
-              <h2 className="text-2xl font-bold text-white mb-1">
+              <h2 className="font-display text-2xl font-bold text-ink mb-1">
                 {mode === 'signup' ? 'Apna account banao' : 'Wapas aao, dost!'}
               </h2>
               <p className="text-sm text-ink-muted mb-8">
@@ -188,7 +190,7 @@ export default function AuthPage() {
               </p>
 
               {/* Mode toggle */}
-              <div className="flex gap-2 p-1 rounded-xl bg-white/5 mb-6">
+              <div className="flex gap-2 p-1 rounded-xl bg-white/5 border border-white/8 mb-6">
                 {(['signup', 'login'] as Mode[]).map((m) => (
                   <button
                     key={m}
@@ -196,10 +198,10 @@ export default function AuthPage() {
                       setMode(m);
                       setError('');
                     }}
-                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                       mode === m
-                        ? 'bg-emerald text-midnight'
-                        : 'text-ink-muted hover:text-white'
+                        ? 'bg-emerald text-midnight shadow-glow-emerald'
+                        : 'text-ink-muted hover:text-ink'
                     }`}
                   >
                     {m === 'signup' ? 'Sign Up' : 'Login'}
@@ -219,16 +221,13 @@ export default function AuthPage() {
                         Naam
                       </label>
                       <div className="relative">
-                        <User
-                          size={16}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted"
-                        />
+                        <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" />
                         <input
                           type="text"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Apna naam likho"
-                          className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white outline-none focus:border-emerald/50 focus:bg-white/[0.07] transition-all placeholder:text-ink-muted/50"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-ink outline-none focus:border-emerald/50 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald/15 transition-all placeholder:text-ink-muted/50"
                         />
                       </div>
                     </motion.div>
@@ -246,7 +245,7 @@ export default function AuthPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="dost@example.com"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white outline-none focus:border-emerald/50 focus:bg-white/[0.07] transition-all placeholder:text-ink-muted/50"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-ink outline-none focus:border-emerald/50 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald/15 transition-all placeholder:text-ink-muted/50"
                     />
                   </div>
                 </div>
@@ -262,12 +261,12 @@ export default function AuthPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-11 text-sm text-white outline-none focus:border-emerald/50 focus:bg-white/[0.07] transition-all placeholder:text-ink-muted/50"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-11 text-sm text-ink outline-none focus:border-emerald/50 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald/15 transition-all placeholder:text-ink-muted/50"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted hover:text-white transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition-colors"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -288,13 +287,9 @@ export default function AuthPage() {
                 <motion.button
                   type="submit"
                   disabled={loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl py-3 font-bold text-midnight transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                  style={{
-                    background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
-                    boxShadow: '0 8px 24px rgba(16,185,129,0.30)',
-                  }}
+                  whileHover={{ scale: loading ? 1 : 1.02 }}
+                  whileTap={{ scale: loading ? 1 : 0.98 }}
+                  className="btn-emerald w-full flex items-center justify-center gap-2 rounded-xl py-3.5 font-bold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <Loader2 size={18} className="animate-spin" />
@@ -315,13 +310,13 @@ export default function AuthPage() {
 
               <button
                 onClick={handleGuest}
-                className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white hover:bg-white/10 hover:border-emerald/30 transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3.5 text-sm font-semibold text-ink hover:bg-white/10 hover:border-ai/30 transition-all"
               >
-                <Sparkles size={16} className="text-emerald-soft" />
+                <Sparkles size={16} className="text-ai-soft" />
                 Guest ke roop mein continue karo
               </button>
 
-              <p className="text-center text-[10px] text-ink-muted/60 mt-6">
+              <p className="text-center text-[10px] text-ink-muted/60 mt-6 leading-relaxed">
                 By continuing you agree to our Terms of Service. Your progress is saved locally on this device.
               </p>
             </div>
