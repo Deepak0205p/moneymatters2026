@@ -2833,3 +2833,62 @@ Files Modified:
 - src/app/auth/page.tsx (glass-card-premium, emerald focus rings, btn-emerald)
 - src/app/tools/page.tsx (font-display headings, compact stats pills)
 - src/app/dashboard/page.tsx (font-display on all headings)
+
+---
+Task ID: AI-TUTOR (Context-Aware AI Tutor for Learning Modules)
+Agent: Main Orchestrator (no reviewer, per user request)
+Task: Implement a Context-Aware AI Tutor feature. When a user opens a Learning Module card, capture the content/title/topic as system context for the AI. Add an "Ask AI" button (purple #8B5CF6) inside the module view that opens a glassmorphic chat slide-over. AI answers strictly based on the opened module's context. Use Zustand for state, create /api/chat route, premium Midnight Wealth theme.
+
+Work Log:
+- Added moduleContext state to Zustand store (useAppStore.ts):
+  • Interface: moduleContext { moduleId, moduleTitle, moduleDescription, cardTitle, cardTopic, cardContent } | null
+  • isTutorChatOpen: boolean
+  • Actions: setModuleContext(ctx), openTutorChat(), closeTutorChat()
+  • Initial state + action implementations added.
+- Created /api/chat route (src/app/api/chat/route.ts):
+  • POST endpoint accepting { messages, moduleContext, userName }
+  • buildSystemPrompt() injects the module's title, description, card title, card topic, and FULL card content as SYSTEM context so the AI answers strictly based on what the user is reading.
+  • Uses z-ai-web-dev-sdk (same as existing /api/finance-advisor).
+  • Rate limiting (MAX_MESSAGES = 30), fallback response, hasContext flag in response.
+  • Strict rules: answer based on module content, redirect if out-of-scope, no stock recommendations, Hinglish, Pro Tip.
+- Built ContextTutorChat component (src/components/shared/ContextTutorChat.tsx):
+  • Reads isTutorChatOpen + moduleContext from store.
+  • Premium glassmorphic slide-over (right side, 440px desktop, full-width mobile).
+  • Spring-animated entrance (x: 100% → 0).
+  • Purple (#8B5CF6) AI bot avatar + bubbles (bg-ai/10, border-ai/20).
+  • Emerald (#10B981) send button (gradient + glow).
+  • Contextual welcome: "Namaste Arjun! 👋 Main tumhara AI Tutor hoon. Abhi tum **Paise Ki Basic Samajh** module padh rahe ho — specifically 'Barter Dilemma'..."
+  • "Current Context" banner showing module + card title.
+  • Contextual suggestions based on the current card.
+  • Clear chat button, typing indicator (purple dots), contextual placeholder.
+  • Calls /api/chat with moduleContext + message history.
+- Wired into SwipeCardViewer (src/app/dashboard/page.tsx):
+  • useEffect captures activeModule + currentCard into moduleContext whenever the card changes (setModuleContext).
+  • Top-bar Sparkles button now calls openTutorChat() (was openAIChat with a message prefix).
+  • Added a prominent "Ask AI Tutor" CTA card inside the scrollable content (after interactive viewers, before module complete): purple gradient icon with pinging emerald dot, "AI TUTOR • Context-Aware" label, "Is card ke baare mein doubt hai?" heading.
+  • Rendered <ContextTutorChat /> at the end of the dashboard (alongside AIChatBot).
+
+Verification (agent-browser + VLM + curl + lint):
+- Zero ESLint errors.
+- All routes 200 (/, /auth, /dashboard, /tools).
+- curl POST /api/chat with module context → 200 in 2.2s, AI responded with context-aware answer referencing the card's "Double Coincidence of Wants" concept + chaiwala/kitab example, hasContext:true.
+- Browser E2E: dashboard → click "Paise Ki Basic Samajh" module → SwipeCardViewer opens → "Ask AI Tutor" CTA present (DOM verified: hasAskAiCta:true, hasContextAware:true) → click CTA → ContextTutorChat slide-over opens → "AI Tutor Context-Aware" header → "📚 Paise Ki Basic Samajh" context shown → "CURRENT CONTEXT" banner with "Barter Dilemma: Kya Exchange Karoge?" → contextual welcome mentioning the module name → user doubt sent in emerald bubble.
+- VLM design rating: 10/10 — "user question in emerald green bubble, purple AI bot avatar, Current Context banner showing Barter Dilemma, glassmorphic slide-over on right, premium dark theme."
+- VLM design rating (initial open): 9/10 — "glassmorphic slide-over, purple AI bot icon + Context-Aware header, Current Context banner, purple-tinted AI bubbles, emerald send button, contextual welcome mentioning module, Premium Midnight Wealth theme."
+
+Stage Summary:
+- Context-Aware AI Tutor fully implemented: module content automatically captured as system context when a card is opened.
+- "Ask AI" button (purple #8B5CF6) integrated into the SwipeCardViewer top bar + a prominent CTA card inside the content area.
+- Glassmorphic chat slide-over with purple AI bubbles + emerald user bubbles/buttons.
+- Contextual welcome: "Need help understanding [Module Name]? Ask me anything!" (personalized with user name + card title).
+- /api/chat route modular and context-aware (injects module content as system prompt).
+- Zustand state management: moduleContext + isTutorChatOpen + setModuleContext/openTutorChat/closeTutorChat.
+- VLM 10/10 design rating, zero lint errors, API verified via curl.
+
+Files Created:
+- src/app/api/chat/route.ts (context-aware AI tutor endpoint)
+- src/components/shared/ContextTutorChat.tsx (glassmorphic slide-over chat)
+
+Files Modified:
+- src/lib/store/useAppStore.ts (added moduleContext state + actions)
+- src/app/dashboard/page.tsx (imported ContextTutorChat, set module context on card change, replaced openAIChat with openTutorChat, added Ask AI CTA card, rendered ContextTutorChat)

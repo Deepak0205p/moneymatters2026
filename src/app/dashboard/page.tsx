@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useAppStore, useHydration } from '@/lib/store/useAppStore';
 import { Navbar } from '@/components/2d/navbar';
 import { AIChatBot } from '@/components/2d/AIChatBot';
+import { ContextTutorChat } from '@/components/shared/ContextTutorChat';
 import { modules, getModuleById, getAllCardsForModule } from '@/data/modulesIndex';
 import type { ModuleSection } from '@/data/types';
 import {
@@ -489,7 +490,7 @@ function SwipeCardViewer({
 }) {
   const allCards = getAllCardsForModule(moduleId);
   const activeModule = getModuleById(moduleId);
-  const { moduleProgress, updateModuleProgress } = useAppStore();
+  const { moduleProgress, updateModuleProgress, setModuleContext } = useAppStore();
   // Convert stored percentage back to card index
   const savedPercent = moduleProgress[moduleId] || 0;
   const initialIndex = Math.round((savedPercent / 100) * Math.max(allCards.length - 1, 0));
@@ -511,6 +512,19 @@ function SwipeCardViewer({
     const percentage = Math.floor((currentIndex / Math.max(allCards.length - 1, 1)) * 100);
     updateModuleProgress(moduleId, percentage);
   }, [currentIndex, moduleId, allCards.length, updateModuleProgress]);
+
+  // ── Context-Aware AI Tutor: capture current card content as system context ──
+  useEffect(() => {
+    if (!activeModule || !currentCard) return;
+    setModuleContext({
+      moduleId: activeModule.id,
+      moduleTitle: activeModule.title,
+      moduleDescription: activeModule.description,
+      cardTitle: currentCard.title,
+      cardTopic: currentCard.topicTitle,
+      cardContent: currentCard.content,
+    });
+  }, [activeModule, currentCard, setModuleContext]);
 
   useEffect(() => {
     if (!currentCard?.id) return;
@@ -688,9 +702,10 @@ function SwipeCardViewer({
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => { useAppStore.getState().openAIChat(`I am reading the card titled "${currentCard.title}" in the topic "${currentCard.topicTitle}".\nThe content is:\n"${currentCard.content}"\nCan you explain this to me or help me understand it better?`); }}
+              onClick={() => { useAppStore.getState().openTutorChat(); }}
               className="w-8 h-8 rounded-full bg-ai/20 border border-ai/50 flex items-center justify-center hover:bg-ai/30 text-ai-soft transition-colors active:scale-90 cursor-pointer"
-              title="Ask AI about this card"
+              title="Ask AI Tutor about this card"
+              aria-label="Ask AI Tutor"
             >
               <Sparkles size={14} />
             </button>
@@ -777,6 +792,49 @@ function SwipeCardViewer({
                     <p className="relative text-zinc-400 text-sm">Badhai ho! {activeModule.title} complete! Aage badhein aur naya seekhein!</p>
                   </motion.div>
                 )}
+
+                {/* ── Context-Aware Ask AI Tutor CTA ── */}
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => useAppStore.getState().openTutorChat()}
+                  className="w-full mt-4 rounded-2xl p-4 border border-ai/25 text-left transition-all group relative overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.10) 0%, rgba(139,92,246,0.03) 50%, rgba(16,185,129,0.04) 100%)',
+                    boxShadow: '0 0 24px rgba(139,92,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04)',
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 relative"
+                      style={{
+                        background: 'linear-gradient(135deg, #A78BFA, #8B5CF6 60%, #6D28D9)',
+                        boxShadow: '0 0 16px rgba(139,92,246,0.35)',
+                      }}
+                    >
+                      <Sparkles size={18} className="text-white" />
+                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald opacity-60" />
+                        <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald border border-midnight" />
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-ai-soft">AI Tutor</span>
+                        <span className="text-ai-soft/40">•</span>
+                        <span className="text-[9px] font-medium text-zinc-400">Context-Aware</span>
+                      </div>
+                      <h4 className="text-sm font-bold text-white">Is card ke baare mein doubt hai?</h4>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">Poocho, AI Tutor is content ke base pe samjhayega 💡</p>
+                    </div>
+                    <div className="shrink-0 text-ai-soft/50 group-hover:text-ai-soft transition-colors">
+                      <ChevronRight size={20} />
+                    </div>
+                  </div>
+                </motion.button>
               </div>
 
               {/* Mobile swipe hint */}
@@ -1183,6 +1241,7 @@ export default function Dashboard() {
 
       <AchievementToast onClaim={handleClaim} />
       <AIChatBot />
+      <ContextTutorChat />
     </main>
   );
 }

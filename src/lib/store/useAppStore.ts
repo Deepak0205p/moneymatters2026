@@ -163,6 +163,17 @@ interface AppState {
   isAIChatOpen: boolean;
   aiChatContext: string;
 
+  // ── Context-Aware AI Tutor (module doubt resolution) ──
+  moduleContext: {
+    moduleId: number | null;
+    moduleTitle: string;
+    moduleDescription: string;
+    cardTitle: string;
+    cardTopic: string;
+    cardContent: string;
+  } | null;
+  isTutorChatOpen: boolean;
+
   // Actions
   setActiveStrategy: (id: number) => void;
   setActiveModule: (id: number | null) => void;
@@ -218,6 +229,17 @@ interface AppState {
   toggleAudio: () => void;
   openAIChat: (context?: string) => void;
   closeAIChat: () => void;
+  // Context-Aware AI Tutor actions
+  setModuleContext: (ctx: {
+    moduleId: number | null;
+    moduleTitle: string;
+    moduleDescription: string;
+    cardTitle: string;
+    cardTopic: string;
+    cardContent: string;
+  }) => void;
+  openTutorChat: () => void;
+  closeTutorChat: () => void;
   logout: () => void;
   resetProgress: () => void;
 }
@@ -274,6 +296,16 @@ const initialState = {
   isAudioEnabled: true,
   isAIChatOpen: false,
   aiChatContext: '',
+  // Context-Aware AI Tutor defaults
+  moduleContext: null as {
+    moduleId: number | null;
+    moduleTitle: string;
+    moduleDescription: string;
+    cardTitle: string;
+    cardTopic: string;
+    cardContent: string;
+  } | null,
+  isTutorChatOpen: false,
 };
 
 export const useAppStore = create<AppState>()(
@@ -571,6 +603,11 @@ export const useAppStore = create<AppState>()(
       toggleAudio: () => set((state) => ({ isAudioEnabled: !state.isAudioEnabled })),
       openAIChat: (context = '') => set({ isAIChatOpen: true, aiChatContext: context }),
       closeAIChat: () => set({ isAIChatOpen: false, aiChatContext: '' }),
+
+      // ── Context-Aware AI Tutor actions ──
+      setModuleContext: (ctx) => set({ moduleContext: ctx }),
+      openTutorChat: () => set({ isTutorChatOpen: true }),
+      closeTutorChat: () => set({ isTutorChatOpen: false }),
       logout: () =>
         set({
           user: null,
