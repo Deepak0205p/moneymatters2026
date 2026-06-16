@@ -1,6 +1,16 @@
 /**
  * Strategy Registry — Maps interactive strategies to learning modules.
  * Each strategy is embedded inside a specific module and triggered via "Try It Now".
+ *
+ * STRICT MAPPING (8 strategies only):
+ *   Module 2 (Tax Basics for Students)     → Paise Ka GPS, Budget Khel, Ghar Ka Budget, Mistake Market
+ *   Module 3 (Saving Strategies)           → Kya Hota Agar, Chhupa Hua Chor, Power of Compounding
+ *   Module 5 (Banking Basics)              → Debt Trap Ka Darwaza
+ *
+ * Removed from module integration (NOT embedded):
+ *   - Financial Report Card
+ *   - Rupaiya Dictionary
+ *   - Ek Din Ka Kharcha (Daily Spending Simulator)
  */
 
 export interface StrategyDef {
@@ -16,18 +26,49 @@ export interface StrategyDef {
 }
 
 export const STRATEGY_REGISTRY: StrategyDef[] = [
-  // Module 1 (Paise Ki Basic Samajh / Foundation)
+  // ── Module 2 (Tax Basics for Students) — 4 strategies ──
   {
-    id: 'rupaiya-dictionary',
-    name: 'Rupaiya Dictionary',
-    description: 'Finance terms floating bubbles mein tap karke seekho!',
-    iconName: '📚',
-    accentColor: '#3B82F6',
-    rewardCoins: 10,
-    moduleId: 1,
-    triggerAfterCard: 2,
+    id: 'paise-ka-gps',
+    name: 'Paise Ka GPS',
+    description: 'Financial health checkup — GPS style!',
+    iconName: '🧭',
+    accentColor: '#10B981',
+    rewardCoins: 20,
+    moduleId: 2,
+    triggerAfterCard: 1,
   },
-  // Module 3 (Saving Strategies)
+  {
+    id: 'budget-khel',
+    name: 'Budget Khel',
+    description: 'Tinder-style swipe — Need ya Want?',
+    iconName: '💳',
+    accentColor: '#F59E0B',
+    rewardCoins: 20,
+    moduleId: 2,
+    triggerAfterCard: 3,
+  },
+  {
+    id: 'ghar-ka-budget',
+    name: 'Ghar Ka Budget',
+    description: 'Room visual mein budget allocate karo!',
+    iconName: '🏠',
+    accentColor: '#06B6D4',
+    rewardCoins: 20,
+    moduleId: 2,
+    triggerAfterCard: 5,
+  },
+  {
+    id: 'mistake-market',
+    name: 'Mistake Market',
+    description: '7 financial mistakes ke stalls visit karo!',
+    iconName: '🎪',
+    accentColor: '#EF4444',
+    rewardCoins: 20,
+    moduleId: 2,
+    triggerAfterCard: 7,
+  },
+
+  // ── Module 3 (Saving Strategies) — 3 strategies ──
   {
     id: 'kya-hota-agar',
     name: 'Kya Hota Agar...',
@@ -58,7 +99,8 @@ export const STRATEGY_REGISTRY: StrategyDef[] = [
     moduleId: 3,
     triggerAfterCard: 5,
   },
-  // Module 6 (Debt Aur Credit)
+
+  // ── Module 5 (Banking Basics) — 1 strategy ──
   {
     id: 'debt-trap-darwaza',
     name: 'Debt Trap Ka Darwaza',
@@ -66,69 +108,8 @@ export const STRATEGY_REGISTRY: StrategyDef[] = [
     iconName: '🚪',
     accentColor: '#EF4444',
     rewardCoins: 30,
-    moduleId: 6,
+    moduleId: 5,
     triggerAfterCard: 2,
-  },
-  // Module 10 (Budgeting In Real Life)
-  {
-    id: 'paise-ka-gps',
-    name: 'Paise Ka GPS',
-    description: 'Financial health checkup — GPS style!',
-    iconName: '🧭',
-    accentColor: '#10B981',
-    rewardCoins: 20,
-    moduleId: 10,
-    triggerAfterCard: 1,
-  },
-  {
-    id: 'budget-khel',
-    name: 'Budget Khel',
-    description: 'Tinder-style swipe — Need ya Want?',
-    iconName: '💳',
-    accentColor: '#F59E0B',
-    rewardCoins: 20,
-    moduleId: 10,
-    triggerAfterCard: 3,
-  },
-  {
-    id: 'ghar-ka-budget',
-    name: 'Ghar Ka Budget',
-    description: 'Room visual mein budget allocate karo!',
-    iconName: '🏠',
-    accentColor: '#06B6D4',
-    rewardCoins: 20,
-    moduleId: 10,
-    triggerAfterCard: 5,
-  },
-  {
-    id: 'ek-din-ka-kharcha',
-    name: 'Ek Din Ka Kharcha',
-    description: 'Rahul ke din ka kharcha survive karo!',
-    iconName: '☀️',
-    accentColor: '#F59E0B',
-    rewardCoins: 20,
-    moduleId: 10,
-    triggerAfterCard: 7,
-  },
-  {
-    id: 'mistake-market',
-    name: 'Mistake Market',
-    description: '7 financial mistakes ke stalls visit karo!',
-    iconName: '🎪',
-    accentColor: '#EF4444',
-    rewardCoins: 20,
-    moduleId: 10,
-    triggerAfterCard: 9,
-  },
-  {
-    id: 'report-card',
-    name: 'Financial Report Card',
-    description: 'Apna financial report card dekho!',
-    iconName: '📝',
-    accentColor: '#10B981',
-    rewardCoins: 15,
-    moduleId: 10,
-    triggerAfterCard: -1, // last card
   },
 ];
 

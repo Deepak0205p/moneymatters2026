@@ -4,19 +4,17 @@ import { lazy, Suspense } from 'react';
 import { StrategyModal } from '@/components/shared/StrategyModal';
 import type { StrategyDef } from '@/lib/data/strategyRegistry';
 
-// Lazy-load all strategy components
+// Lazy-load the 8 active strategy components
+// (Report Card, Rupaiya Dictionary, Ek Din Ka Kharcha are NOT embedded in modules)
 const strategyComponents: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
   'paise-ka-gps': lazy(() => import('@/components/strategies/PaiseKaGPS')),
-  'kya-hota-agar': lazy(() => import('@/components/strategies/KyaHotaAgar')),
-  'chhupa-hua-chor': lazy(() => import('@/components/strategies/ChhupaHuaChor')),
   'budget-khel': lazy(() => import('@/components/strategies/BudgetKhel')),
   'ghar-ka-budget': lazy(() => import('@/components/strategies/GharKaBudget')),
-  'debt-trap-darwaza': lazy(() => import('@/components/strategies/DebtTrapDarwaza')),
-  'compounding-tree': lazy(() => import('@/components/strategies/CompoundingTree')),
-  'report-card': lazy(() => import('@/components/strategies/ReportCard')),
-  'rupaiya-dictionary': lazy(() => import('@/components/strategies/RupaiyaDictionary')),
-  'ek-din-ka-kharcha': lazy(() => import('@/components/strategies/EkDinKaKharcha')),
   'mistake-market': lazy(() => import('@/components/strategies/MistakeMarket')),
+  'kya-hota-agar': lazy(() => import('@/components/strategies/KyaHotaAgar')),
+  'chhupa-hua-chor': lazy(() => import('@/components/strategies/ChhupaHuaChor')),
+  'compounding-tree': lazy(() => import('@/components/strategies/CompoundingTree')),
+  'debt-trap-darwaza': lazy(() => import('@/components/strategies/DebtTrapDarwaza')),
 };
 
 function StrategyLoading() {
