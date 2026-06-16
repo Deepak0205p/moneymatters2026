@@ -1,9 +1,7 @@
-/**
- * 2D Visual Components — index
- *
- * Reusable SVG/CSS-based 2D visuals for the Rupaiya 101 app.
- * Part of the Midnight Wealth + Emerald Growth design system.
- */
-
+export { Navbar } from './navbar';
+export { Hero } from './hero';
+export { Features } from './features';
+export { Gamification } from './gamification';
+export { AIChatBot } from './AIChatBot';
 export { AmbientBackdrop, GridLines, GlowOrb, Particles } from './AmbientBackdrop';
 export { ProgressArc, BarMeter, StatRing } from './Progress';

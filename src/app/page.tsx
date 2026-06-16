@@ -1,251 +1,217 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
-import { motion } from 'framer-motion';
-import { IndianRupee, Heart, Sparkles } from 'lucide-react';
-import { useAppStore } from '@/lib/store/useAppStore';
-import { Navbar } from '@/components/layout/Navbar';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { PageContainer } from '@/components/layout/PageContainer';
-import { WelcomeOnboarding } from '@/components/shared/WelcomeOnboarding';
-import { FinanceAdvisor } from '@/components/shared/FinanceAdvisor';
-import ThemeToggle from '@/components/shared/ThemeToggle';
-import KeyboardShortcutsDialog from '@/components/shared/KeyboardShortcutsDialog';
-import { useKeyboardShortcuts } from '@/lib/hooks/useKeyboardShortcuts';
-import { strategies } from '@/lib/data/strategies';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAppStore, useHydration } from '@/lib/store/useAppStore';
+import { Play, ChevronRight, Coins, TrendingUp, Zap, Award, BookOpen, Sparkles, Flame, Trophy } from 'lucide-react';
+import { Hero } from '@/components/2d/hero';
+import { Features } from '@/components/2d/features';
+import { Gamification } from '@/components/2d/gamification';
+import { Navbar } from '@/components/2d/navbar';
 
-// Lazy load strategy components for better performance
-const LifePathMap = lazy(() => import('@/components/strategies/LifePathMap'));
-const FinancialGPS = lazy(() => import('@/components/strategies/FinancialGPS'));
-const ConsequenceSim = lazy(() => import('@/components/strategies/ConsequenceSim'));
-const InflationMonster = lazy(() => import('@/components/strategies/InflationMonster'));
-const SwipeBudget = lazy(() => import('@/components/strategies/SwipeBudget'));
-const RoomBudget = lazy(() => import('@/components/strategies/RoomBudget'));
-const DebtDoors = lazy(() => import('@/components/strategies/DebtDoors'));
-const CompoundingTree = lazy(() => import('@/components/strategies/CompoundingTree'));
-const ReportCard = lazy(() => import('@/components/strategies/ReportCard'));
-const Dictionary = lazy(() => import('@/components/strategies/Dictionary'));
-const DailySimulator = lazy(() => import('@/components/strategies/DailySimulator'));
-const MistakeMarket = lazy(() => import('@/components/strategies/MistakeMarket'));
-
-const STRATEGY_COMPONENTS: Record<number, React.LazyExoticComponent<React.ComponentType>> = {
-  1: LifePathMap,
-  2: FinancialGPS,
-  3: ConsequenceSim,
-  4: InflationMonster,
-  5: SwipeBudget,
-  6: RoomBudget,
-  7: DebtDoors,
-  8: CompoundingTree,
-  9: ReportCard,
-  10: Dictionary,
-  11: DailySimulator,
-  12: MistakeMarket,
-};
-
-function StrategyLoading() {
+function LightStreaks() {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-emerald/20 border-t-emerald rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-ink-muted text-sm font-medium">Loading strategy...</p>
-      </div>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(3)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-[2px] h-[30vh] bg-gradient-to-b from-transparent via-emerald/20 to-transparent"
+          style={{
+            left: `${20 + i * 30}%`,
+            top: '-30vh',
+            filter: 'blur(1px)',
+            transform: 'rotate(35deg)',
+          }}
+          animate={{ top: ['-30vh', '130vh'], opacity: [0, 1, 0] }}
+          transition={{ duration: 7 + i * 2, repeat: Infinity, delay: i * 3, ease: 'linear' }}
+        />
+      ))}
     </div>
   );
 }
 
-function renderStrategy(activeStrategy: number) {
-  const StrategyComponent = STRATEGY_COMPONENTS[activeStrategy] ?? LifePathMap;
+function FloatingSymbols() {
+  const symbols = useMemo(
+    () => [
+      { Icon: Coins, color: '#F59E0B', size: 24, top: '15%', left: '10%', delay: 0 },
+      { Icon: TrendingUp, color: '#10B981', size: 32, top: '45%', left: '85%', delay: 2 },
+      { Icon: Zap, color: '#8B5CF6', size: 28, top: '75%', left: '15%', delay: 4 },
+      { Icon: Award, color: '#FBBF24', size: 20, top: '25%', left: '70%', delay: 1 },
+      { Icon: BookOpen, color: '#38BDF8', size: 22, top: '60%', left: '80%', delay: 3 },
+      { Icon: Sparkles, color: '#EC4899', size: 26, top: '85%', left: '90%', delay: 5 },
+      { Icon: Trophy, color: '#F59E0B', size: 30, top: '10%', left: '50%', delay: 2.5 },
+      { Icon: Flame, color: '#EF4444', size: 24, top: '40%', left: '5%', delay: 1.5 },
+    ],
+    []
+  );
+
   return (
-    <PageContainer strategyId={activeStrategy}>
-      <Suspense fallback={<StrategyLoading />}>
-        <StrategyComponent />
-      </Suspense>
-    </PageContainer>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.1]">
+      {symbols.map((item, i) => (
+        <motion.div
+          key={i}
+          className="absolute"
+          style={{ top: item.top, left: item.left }}
+          animate={{
+            y: [0, -40, 0],
+            x: [0, 10, -10, 0],
+            rotate: [0, 20, -20, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 8 + Math.random() * 8,
+            repeat: Infinity,
+            delay: item.delay,
+            ease: 'easeInOut',
+          }}
+        >
+          <item.Icon
+            size={item.size}
+            style={{ color: item.color, filter: `drop-shadow(0 0 10px ${item.color}40)` }}
+          />
+        </motion.div>
+      ))}
+    </div>
   );
 }
 
-const FOOTER_FEATURES = [
-  '12 Strategies', 'Story Mode', 'Quiz Arena', 'Memory Match', 'SIP Calculator',
-  'Health Checkup', 'Expense Tracker', 'Savings Challenge', 'AI Advisor', 'Word Scramble',
-  'Financial News', 'Priority Calculator', 'Financial Age', 'Invest Compare', 'Emergency Fund', 'Habit Tracker',
-];
-
-// App Footer — sticky to bottom, premium glassmorphism
-function AppFooter() {
+function Background2D() {
   return (
-    <footer className="app-footer relative py-8 px-4 md:ml-72 mt-auto" role="contentinfo">
-      <div className="absolute inset-0 bg-gradient-to-t from-emerald/[0.03] to-transparent pointer-events-none" />
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-midnight">
+      <FloatingSymbols />
+      <LightStreaks />
+      {/* Emerald glow top-left */}
+      <div className="absolute -top-[20%] -left-[20%] w-[70%] h-[70%] rounded-full bg-emerald/[0.06] blur-[140px]" />
+      {/* Purple glow bottom-right */}
+      <div className="absolute -bottom-[20%] -right-[20%] w-[70%] h-[70%] rounded-full bg-ai/[0.06] blur-[140px]" />
+      {/* Subtle grid texture */}
+      <div
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }}
+      />
+    </div>
+  );
+}
 
-      <div className="max-w-4xl mx-auto relative">
-        {/* Top section with logo */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-5">
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
-                boxShadow: '0 0 14px rgba(16,185,129,0.30)',
-              }}
-            >
-              <IndianRupee className="w-4 h-4 text-midnight" strokeWidth={2.5} />
+function OnboardingOverlay({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-midnight/95 backdrop-blur-md"
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="glass-card-premium mx-4 max-w-lg p-8 text-center sm:p-12"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.4, type: 'spring', stiffness: 200 }}
+          className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
+          style={{
+            background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
+            boxShadow: '0 0 32px rgba(16,185,129,0.40)',
+          }}
+        >
+          <Play size={40} className="ml-1 text-midnight" />
+        </motion.div>
+
+        <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
+          Welcome to{' '}
+          <span className="text-gradient-brand">Capital Mastery</span>
+        </h2>
+
+        <p className="mb-8 text-ink-muted">
+          Paisa samjho, future secure karo! Financial literacy seekho in style.
+        </p>
+
+        <div className="mb-8 grid grid-cols-2 gap-3">
+          {[
+            { label: '11 Modules', color: '#10B981' },
+            { label: '12 Strategies', color: '#8B5CF6' },
+            { label: 'Hinglish', color: '#FBBF24' },
+            { label: 'Gamified', color: '#F59E0B' },
+          ].map((item) => (
+            <div key={item.label} className="rounded-lg bg-white/5 p-3">
+              <p className="text-xs font-semibold" style={{ color: item.color }}>
+                {item.label}
+              </p>
             </div>
-            <span className="text-base font-bold">
-              <span className="text-emerald-soft">RUPAIYA</span>{' '}
-              <span className="text-gradient-brand">101</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4 text-[10px] text-ink-muted">
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-emerald/60" />
-              Financial Literacy for Everyone
-            </span>
-            <span className="hidden md:inline">•</span>
-            <span className="hidden md:flex items-center gap-1">
-              Made with <Heart className="w-3 h-3 text-rose-400" /> for Indian Youth
-            </span>
-          </div>
-        </div>
-
-        {/* Feature badges */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-5">
-          {FOOTER_FEATURES.map((feature) => (
-            <span
-              key={feature}
-              className="tag-hover px-2.5 py-1 rounded-full text-[9px] font-medium bg-white/[0.04] border border-white/[0.06] text-ink-muted"
-            >
-              {feature}
-            </span>
           ))}
         </div>
 
-        {/* Animated divider */}
-        <div className="divider-animated mb-4" />
-        <div className="flex items-center justify-between text-[9px] text-ink-muted/70">
-          <span>© {new Date().getFullYear()} Rupaiya 101 — Seekho, Bachao, Badhao</span>
-          <span className="hidden md:inline">Paise ki samajh, sabse badi taakat</span>
-        </div>
-      </div>
-    </footer>
+        <motion.button
+          whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(16,185,129,0.40)' }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onDismiss}
+          className="btn-primary w-full cursor-pointer justify-center"
+          style={{
+            background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
+            color: '#0B1220',
+          }}
+        >
+          <span>Shuru Karo!</span>
+          <ChevronRight size={20} />
+        </motion.button>
+
+        <p className="mt-4 text-xs text-ink-muted/60">By continuing, you agree to our Terms of Service</p>
+      </motion.div>
+    </motion.div>
   );
 }
 
-// Mobile bottom navigation bar
-function MobileBottomNav() {
-  const { activeStrategy, setActiveStrategy } = useAppStore();
+export default function HomePage() {
+  const { hasCompletedOnboarding, setHasCompletedOnboarding } = useAppStore();
+  const hydrated = useHydration();
 
-  const bottomNavItems = [
-    strategies[0],  // LifePathMap
-    strategies[2],  // ConsequenceSim
-    strategies[4],  // SwipeBudget
-    strategies[7],  // CompoundingTree
-    strategies[8],  // ReportCard
-  ];
-
-  const navEmojis: Record<number, string> = {
-    1: '🗺️',
-    3: '🤔',
-    5: '💳',
-    8: '🌳',
-    9: '📝',
-  };
-
-  return (
-    <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-strong border-t border-white/[0.06] safe-area-bottom"
-      role="navigation"
-      aria-label="Mobile bottom navigation"
-      style={{ boxShadow: '0 -1px 12px rgba(16,185,129,0.06)' }}
-    >
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald/30 to-transparent" />
-      <div className="flex items-center justify-around h-14 px-1">
-        {bottomNavItems.map((strategy) => {
-          const isActive = activeStrategy === strategy.id;
-          return (
-            <motion.button
-              key={strategy.id}
-              onClick={() => setActiveStrategy(strategy.id)}
-              className={`
-                mobile-nav-item
-                flex flex-col items-center justify-center gap-0.5 px-2 py-1 rounded-lg min-w-[48px] min-h-[44px] transition-colors
-                ${isActive ? 'active text-emerald-soft mobile-nav-active-line' : 'text-ink-muted'}
-              `}
-              whileTap={{ scale: 0.9 }}
-              aria-label={strategy.title}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              <span
-                className="text-sm leading-none"
-                style={{
-                  filter: isActive ? `drop-shadow(0 0 4px ${strategy.color})` : 'none',
-                }}
-              >
-                {navEmojis[strategy.id] || strategy.title.charAt(0)}
-              </span>
-              <span className="text-[9px] font-semibold leading-tight truncate max-w-[56px]">
-                {strategy.title.split(' ').slice(0, 2).join(' ')}
-              </span>
-            </motion.button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
-
-export default function Home() {
-  const { activeStrategy, incrementStreak, setActiveStrategy } = useAppStore();
-  const [keyboardShortcutsOpen, setKeyboardShortcutsOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    incrementStreak();
-  }, [incrementStreak]);
+    if (hydrated && !hasCompletedOnboarding) {
+      const t = setTimeout(() => setShowOnboarding(true), 0);
+      return () => clearTimeout(t);
+    }
+  }, [hydrated, hasCompletedOnboarding]);
 
-  const handleSwitchStrategy = useCallback(
-    (strategyNumber: number) => {
-      setActiveStrategy(strategyNumber);
-    },
-    [setActiveStrategy]
-  );
-
-  const handleOpenShortcutsHelp = useCallback(() => {
-    setKeyboardShortcutsOpen(true);
-  }, []);
-
-  const handleCloseDialog = useCallback(() => {
-    setKeyboardShortcutsOpen(false);
-  }, []);
-
-  useKeyboardShortcuts({
-    onSwitchStrategy: handleSwitchStrategy,
-    onOpenShortcutsHelp: handleOpenShortcutsHelp,
-    onCloseDialog: handleCloseDialog,
-  });
+  const handleDismiss = useCallback(() => {
+    setShowOnboarding(false);
+    setHasCompletedOnboarding(true);
+  }, [setHasCompletedOnboarding]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-midnight text-ink overflow-x-hidden">
-      <WelcomeOnboarding />
-      <Navbar />
-      {/* Theme Toggle — fixed top-right below navbar */}
-      <div className="fixed top-[60px] right-3 z-40">
-        <ThemeToggle />
-      </div>
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 pb-16 md:pb-0 ambient-glow bg-texture-dots">
-          {renderStrategy(activeStrategy)}
-        </main>
-      </div>
-      <AppFooter />
-      <MobileBottomNav />
-      <FinanceAdvisor />
+    <main className="relative min-h-screen w-full overflow-hidden">
+      <Background2D />
 
-      {/* Keyboard Shortcuts Dialog */}
-      <KeyboardShortcutsDialog
-        open={keyboardShortcutsOpen}
-        onClose={() => setKeyboardShortcutsOpen(false)}
-      />
-    </div>
+      <AnimatePresence>
+        {showOnboarding && <OnboardingOverlay onDismiss={handleDismiss} />}
+      </AnimatePresence>
+
+      <div className="relative z-10">
+        <Navbar />
+        <Hero />
+        <Features />
+        <Gamification />
+
+        <motion.footer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
+          className="py-12 text-center"
+        >
+          <p className="text-sm text-ink-muted/60">
+            © 2026 Capital Mastery. Made with care for Indian youth financial literacy.
+          </p>
+        </motion.footer>
+      </div>
+    </main>
   );
 }

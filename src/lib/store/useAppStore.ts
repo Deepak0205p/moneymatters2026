@@ -1,5 +1,37 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useEffect, useState } from 'react';
+
+// Hook to detect when Zustand has finished hydrating from localStorage
+export function useHydration() {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    const alreadyHydrated = (useAppStore as any).persist?.hasHydrated?.() ?? false;
+    if (alreadyHydrated) {
+      // Already hydrated synchronously — defer to avoid setState-in-effect warning
+      const raf = requestAnimationFrame(() => setHydrated(true));
+      const unsubscribe = (useAppStore as any).persist?.onFinishHydration?.(() => setHydrated(true));
+      return () => {
+        cancelAnimationFrame(raf);
+        unsubscribe?.();
+      };
+    }
+    const unsubscribe = (useAppStore as any).persist?.onFinishHydration?.(() => setHydrated(true));
+    return () => unsubscribe?.();
+  }, []);
+  return hydrated;
+}
+
+// ── User profile (capital-mastery auth shape, local-only — no Firebase) ──
+export interface UserProfile {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  phoneNumber: string | null;
+  dateOfBirth: string | null;
+  age: number | null;
+  photoURL: string | null;
+}
 
 export interface AdvisorMessage {
   role: 'user' | 'assistant';
@@ -121,6 +153,16 @@ interface AppState {
   // Habit Tracker
   habitTracker: Record<string, string[]>;
 
+  // ── capital-mastery: onboarding + auth (local-only, no Firebase) ──
+  hasCompletedOnboarding: boolean;
+  user: UserProfile | null;
+  isAuthenticated: boolean;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  isAudioEnabled: boolean;
+  isAIChatOpen: boolean;
+  aiChatContext: string;
+
   // Actions
   setActiveStrategy: (id: number) => void;
   setActiveModule: (id: number | null) => void;
@@ -167,6 +209,16 @@ interface AppState {
   setFinancialAge: (age: number) => void;
   // Habit Tracker
   toggleHabit: (date: string, habitId: string) => void;
+  // capital-mastery auth actions (local mock)
+  setHasCompletedOnboarding: (value: boolean) => void;
+  setUser: (user: UserProfile | null) => void;
+  setIsAuthenticated: (value: boolean) => void;
+  setIsEmailVerified: (value: boolean) => void;
+  setIsPhoneVerified: (value: boolean) => void;
+  toggleAudio: () => void;
+  openAIChat: (context?: string) => void;
+  closeAIChat: () => void;
+  logout: () => void;
   resetProgress: () => void;
 }
 
@@ -213,6 +265,15 @@ const initialState = {
   financialAge: 0,
   financialAgeLastTaken: '',
   habitTracker: {} as Record<string, string[]>,
+  // capital-mastery auth/onboarding defaults (local-only)
+  hasCompletedOnboarding: false,
+  user: null as UserProfile | null,
+  isAuthenticated: false,
+  isEmailVerified: false,
+  isPhoneVerified: false,
+  isAudioEnabled: true,
+  isAIChatOpen: false,
+  aiChatContext: '',
 };
 
 export const useAppStore = create<AppState>()(
@@ -500,6 +561,31 @@ export const useAppStore = create<AppState>()(
         }),
 
       resetProgress: () => set(initialState),
+
+      // ── capital-mastery auth actions (local mock, no Firebase) ──
+      setHasCompletedOnboarding: (value) => set({ hasCompletedOnboarding: value }),
+      setUser: (user) => set({ user }),
+      setIsAuthenticated: (value) => set({ isAuthenticated: value }),
+      setIsEmailVerified: (value) => set({ isEmailVerified: value }),
+      setIsPhoneVerified: (value) => set({ isPhoneVerified: value }),
+      toggleAudio: () => set((state) => ({ isAudioEnabled: !state.isAudioEnabled })),
+      openAIChat: (context = '') => set({ isAIChatOpen: true, aiChatContext: context }),
+      closeAIChat: () => set({ isAIChatOpen: false, aiChatContext: '' }),
+      logout: () =>
+        set({
+          user: null,
+          isAuthenticated: false,
+          isEmailVerified: false,
+          isPhoneVerified: false,
+          activeStrategy: 1,
+          activeModule: null,
+          coins: 0,
+          streak: 0,
+          completedModules: [],
+          moduleProgress: {},
+          badges: [],
+          userName: '',
+        }),
     }),
     {
       name: 'rupaiya-101-storage',
