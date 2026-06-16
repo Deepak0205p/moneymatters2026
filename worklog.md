@@ -2923,3 +2923,25 @@ Work Log:
 
 Files Modified:
 - src/app/dashboard/page.tsx (removed desktop floating arrows block, added inline complete button)
+
+---
+Task ID: MODULE-PAGE (Module opens as new page instead of overlay)
+Agent: Main Orchestrator (no reviewer, per user request)
+Task: User wanted the module detail view (SwipeCardViewer) to open as a new page instead of an overlay/modal on the dashboard.
+
+Work Log:
+- Extracted SwipeCardViewer + all helper functions (RichContent, RainbowProgress, InteractiveQuizViewer, InteractiveCalculatorViewer, InteractiveChoiceViewer) from dashboard/page.tsx into standalone component files:
+  • src/components/shared/SwipeCardViewer.tsx (366 lines) — full-page SwipeCardViewer component with ambient background, phone frame, top bar, card content, notes, ContextTutorChat.
+  • src/components/shared/CardContent.tsx (293 lines) — RichContent parser, RainbowProgress, InteractiveViewers (extracted helpers).
+- Created new route: src/app/dashboard/module/[id]/page.tsx (59 lines) — renders SwipeCardViewer as a full page with Navbar. Close button → router.push('/dashboard'). Complete button → completeModule + addCoins + router.push('/dashboard').
+- Updated dashboard/page.tsx (1169 → 396 lines, 66% reduction): removed the old SwipeCardViewer function + all helper functions + RAINBOW_COLORS constant + openModuleId state + handleCompleteModule + overlay AnimatePresence + ContextTutorChat. Module cards now use router.push('/dashboard/module/${mod.id}') instead of setOpenModuleId.
+- Zero ESLint errors. All routes 200 (/, /dashboard, /dashboard/module/1, /tools).
+- Verified via agent-browser: clicking "Paise Ki Basic Samajh" module card navigates to http://localhost:3000/dashboard/module/1 (new page URL, not overlay). VLM 9/10: "full-page learning card view, module content with banner, navbar at top, reading content."
+
+Files Created:
+- src/components/shared/SwipeCardViewer.tsx
+- src/components/shared/CardContent.tsx
+- src/app/dashboard/module/[id]/page.tsx
+
+Files Modified:
+- src/app/dashboard/page.tsx (removed SwipeCardViewer + helpers, changed onClick to router.push, 66% size reduction)
