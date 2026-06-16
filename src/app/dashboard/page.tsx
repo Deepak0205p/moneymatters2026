@@ -658,37 +658,6 @@ function SwipeCardViewer({
         />
       </div>
 
-      {/* Desktop floating nav arrows */}
-      <div className="hidden sm:block">
-        {!isFirst && (
-          <button
-            onClick={handlePrev}
-            className="absolute left-[calc(50%-270px)] top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white flex items-center justify-center cursor-pointer shadow-xl transition-all active:scale-95 z-40"
-            aria-label="Previous card"
-          >
-            <ArrowLeft size={20} />
-          </button>
-        )}
-        {!isLast ? (
-          <button
-            onClick={handleNext}
-            className="absolute right-[calc(50%-270px)] top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white flex items-center justify-center cursor-pointer shadow-xl transition-all active:scale-95 z-40"
-            style={{ borderColor: `${currentCard.color}40`, boxShadow: `0 4px 20px ${currentCard.color}20` }}
-            aria-label="Next card"
-          >
-            <ArrowRight size={20} style={{ color: currentCard.color }} />
-          </button>
-        ) : (
-          <button
-            onClick={() => onComplete(moduleId)}
-            className="absolute right-[calc(50%-270px)] top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white flex items-center justify-center cursor-pointer shadow-xl transition-all active:scale-95 z-40"
-            aria-label="Complete module"
-          >
-            <CheckCircle2 size={18} />
-          </button>
-        )}
-      </div>
-
       {/* Phone frame on desktop, full screen on mobile */}
       <div className="w-full h-full sm:w-[420px] sm:h-[92vh] sm:rounded-3xl sm:border sm:border-white/[0.06] sm:overflow-hidden sm:shadow-2xl sm:shadow-black/50 flex flex-col relative bg-[#0F0F13]">
         {/* Top Bar */}
@@ -790,6 +759,16 @@ function SwipeCardViewer({
                       <span className="text-xl">🏆</span>
                     </div>
                     <p className="relative text-zinc-400 text-sm">Badhai ho! {activeModule.title} complete! Aage badhein aur naya seekhein!</p>
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => onComplete(moduleId)}
+                      className="relative mt-4 w-full py-3 rounded-xl font-bold text-sm text-midnight flex items-center justify-center gap-2 cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)', boxShadow: '0 8px 24px rgba(16,185,129,0.30)' }}
+                    >
+                      <CheckCircle2 size={16} />
+                      Module Complete Karo (+100 coins)
+                    </motion.button>
                   </motion.div>
                 )}
               </div>

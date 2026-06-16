@@ -2909,3 +2909,17 @@ Work Log:
 
 Files Modified:
 - src/app/dashboard/page.tsx (removed Ask AI CTA card + mobile Prev/Next buttons from SwipeCardViewer)
+
+---
+Task ID: REMOVE-DESKTOP-ARROWS (Remove desktop floating nav arrows)
+Agent: Main Orchestrator (no reviewer, per user request)
+Task: User asked to remove the desktop floating Prev/Next/Complete arrow buttons from the SwipeCardViewer (same as mobile, but for desktop view).
+
+Work Log:
+- Removed the entire "Desktop floating nav arrows" block from SwipeCardViewer (src/app/dashboard/page.tsx): the Previous card arrow (left), Next card arrow (right), and Complete module button (right, last card) — all circular floating buttons outside the phone frame.
+- Added a "Module Complete Karo (+100 coins)" emerald button inside the last card's celebration section so users can still finish the module (since the floating Complete button was removed).
+- Navigation still works via: keyboard arrows (←/→/↑/↓/space), mouse wheel scroll (scroll to bottom → next), touch swipe.
+- Verified via agent-browser: hasPrevCard=false, hasNextCard=false, hasCompleteModule=false. Zero lint errors.
+
+Files Modified:
+- src/app/dashboard/page.tsx (removed desktop floating arrows block, added inline complete button)
