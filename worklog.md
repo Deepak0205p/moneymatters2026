@@ -2892,3 +2892,20 @@ Files Created:
 Files Modified:
 - src/lib/store/useAppStore.ts (added moduleContext state + actions)
 - src/app/dashboard/page.tsx (imported ContextTutorChat, set module context on card change, replaced openAIChat with openTutorChat, added Ask AI CTA card, rendered ContextTutorChat)
+
+---
+Task ID: REMOVE-ELEMENTS (Remove Ask AI CTA card + mobile Prev/Next buttons)
+Agent: Main Orchestrator (no reviewer, per user request)
+Task: User showed a screenshot of the "Ask AI Tutor" CTA card inside the SwipeCardViewer and asked to remove it. Also asked to remove the Prev/Next navigation buttons in mobile view.
+
+Work Log:
+- Identified the two elements in src/app/dashboard/page.tsx SwipeCardViewer:
+  1. "Ask AI Tutor" CTA card (motion.button with purple gradient icon, "Is card ke baare mein doubt hai?" heading, ~42 lines) — removed.
+  2. Mobile bottom nav buttons (Prev/Next buttons in a fixed bottom bar, sm:hidden, ~14 lines) — removed.
+- Kept: mobile swipe hint ("Swipe up to read next" — visual hint only, no buttons), desktop floating nav arrows (outside phone frame, not mobile), top-bar Sparkles icon button (small icon, not the big CTA card).
+- handlePrev/handleNext functions retained (still used by keyboard nav, mouse wheel, touch swipe).
+- Verified via agent-browser at 390px mobile viewport: hasAskAiCta=false, hasPrevBtn=false, hasNextBtn=false.
+- Zero ESLint errors.
+
+Files Modified:
+- src/app/dashboard/page.tsx (removed Ask AI CTA card + mobile Prev/Next buttons from SwipeCardViewer)

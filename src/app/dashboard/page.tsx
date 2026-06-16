@@ -792,49 +792,6 @@ function SwipeCardViewer({
                     <p className="relative text-zinc-400 text-sm">Badhai ho! {activeModule.title} complete! Aage badhein aur naya seekhein!</p>
                   </motion.div>
                 )}
-
-                {/* ── Context-Aware Ask AI Tutor CTA ── */}
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  onClick={() => useAppStore.getState().openTutorChat()}
-                  className="w-full mt-4 rounded-2xl p-4 border border-ai/25 text-left transition-all group relative overflow-hidden"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(139,92,246,0.10) 0%, rgba(139,92,246,0.03) 50%, rgba(16,185,129,0.04) 100%)',
-                    boxShadow: '0 0 24px rgba(139,92,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04)',
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 relative"
-                      style={{
-                        background: 'linear-gradient(135deg, #A78BFA, #8B5CF6 60%, #6D28D9)',
-                        boxShadow: '0 0 16px rgba(139,92,246,0.35)',
-                      }}
-                    >
-                      <Sparkles size={18} className="text-white" />
-                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald opacity-60" />
-                        <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald border border-midnight" />
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-ai-soft">AI Tutor</span>
-                        <span className="text-ai-soft/40">•</span>
-                        <span className="text-[9px] font-medium text-zinc-400">Context-Aware</span>
-                      </div>
-                      <h4 className="text-sm font-bold text-white">Is card ke baare mein doubt hai?</h4>
-                      <p className="text-[11px] text-zinc-400 mt-0.5">Poocho, AI Tutor is content ke base pe samjhayega 💡</p>
-                    </div>
-                    <div className="shrink-0 text-ai-soft/50 group-hover:text-ai-soft transition-colors">
-                      <ChevronRight size={20} />
-                    </div>
-                  </div>
-                </motion.button>
               </div>
 
               {/* Mobile swipe hint */}
@@ -846,21 +803,6 @@ function SwipeCardViewer({
                   </motion.div>
                 </div>
               )}
-
-              {/* Mobile bottom nav buttons */}
-              <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 px-5 pb-6 pt-4 bg-gradient-to-t from-[#0F0F13] to-transparent sm:hidden">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={handlePrev} disabled={isFirst} className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-white/60 text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-30 cursor-pointer">
-                  <ArrowLeft size={16} /> Prev
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={isLast ? () => onComplete(moduleId) : handleNext}
-                  className="flex-1 py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 cursor-pointer"
-                  style={{ background: `linear-gradient(135deg, ${activeModule.color}, ${activeModule.color}CC)` }}
-                >
-                  {isLast ? <><CheckCircle2 size={16} /> Done!</> : <>Next <ArrowRight size={16} /></>}
-                </motion.button>
-              </div>
             </motion.div>
           </AnimatePresence>
 
