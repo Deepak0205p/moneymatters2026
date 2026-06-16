@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/lib/store/useAppStore';
 import { getModuleById, getAllCardsForModule } from '@/data/modulesIndex';
 import { ContextTutorChat } from '@/components/shared/ContextTutorChat';
-import { TryItNow } from '@/components/shared/TryItNow';
-import { StrategyRenderer } from '@/components/shared/StrategyRenderer';
+import { StrategySlide } from '@/components/shared/StrategySlide';
+import { StrategyOnboarding } from '@/components/shared/StrategyOnboarding';
 import { getStrategiesForModule, type StrategyDef } from '@/lib/data/strategyRegistry';
 import {
   X, Zap, Play, BookOpen, CheckCircle2, Sparkles, ArrowUp,
@@ -45,9 +46,10 @@ export function SwipeCardViewer({
   const [notes, setNotes] = useState<string[]>([]);
   const [newNote, setNewNote] = useState('');
   const [bookmarked, setBookmarked] = useState(false);
-  const [activeStrategy, setActiveStrategy] = useState<StrategyDef | null>(null);
+  const [onboardingStrategy, setOnboardingStrategy] = useState<StrategyDef | null>(null);
+  const router = useRouter();
 
-  // Get strategies embedded in this module
+  // Get strategies embedded in this module (appear as bonus slides after last content card)
   const moduleStrategies = getStrategiesForModule(moduleId);
 
   const isLast = currentIndex === allCards.length - 1;
@@ -276,19 +278,25 @@ export function SwipeCardViewer({
                 {currentCard.interactiveType === 'calculator' && currentCard.calcData && <InteractiveCalculatorViewer data={currentCard.calcData} color={currentCard.color} />}
                 {currentCard.interactiveType === 'choice_sim' && currentCard.choiceData && <InteractiveChoiceViewer data={currentCard.choiceData} color={currentCard.color} />}
 
-                {/* ── "Try It Now" Strategy Triggers ── */}
-                {moduleStrategies
-                  .filter((s) => s.triggerAfterCard === currentIndex || (s.triggerAfterCard === -1 && isLast))
-                  .map((strategy) => (
-                    <TryItNow
-                      key={strategy.id}
-                      strategyName={strategy.name}
-                      strategyDescription={strategy.description}
-                      icon={<span className="text-xl">{strategy.iconName}</span>}
-                      accentColor={strategy.accentColor}
-                      onOpen={() => setActiveStrategy(strategy)}
-                    />
-                  ))}
+                {/* ── Strategy Slides (appear after the LAST content card) ── */}
+                {isLast && moduleStrategies.length > 0 && (
+                  <div className="space-y-4 mt-6">
+                    <p className="text-[10px] font-black tracking-[0.2em] uppercase text-zinc-500 text-center">
+                      🎮 Bonus Strategies — Try It Now!
+                    </p>
+                    {moduleStrategies.map((strategy) => (
+                      <StrategySlide
+                        key={strategy.id}
+                        strategyName={strategy.name}
+                        hook={strategy.hook || strategy.description}
+                        icon={strategy.iconName}
+                        accentColor={strategy.accentColor}
+                        rewardCoins={strategy.rewardCoins}
+                        onStart={() => setOnboardingStrategy(strategy)}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 {/* Module Complete */}
                 {isLast && (
@@ -383,11 +391,23 @@ export function SwipeCardViewer({
       {/* Context-Aware AI Tutor */}
       <ContextTutorChat />
 
-      {/* Strategy Modal (opens when user clicks "Try It Now") */}
-      <StrategyRenderer
-        strategy={activeStrategy}
-        isOpen={activeStrategy !== null}
-        onClose={() => setActiveStrategy(null)}
+      {/* Strategy Onboarding Popup (opens when user clicks "Shuru Karo") */}
+      <StrategyOnboarding
+        isOpen={onboardingStrategy !== null}
+        onClose={() => setOnboardingStrategy(null)}
+        onStart={() => {
+          if (onboardingStrategy) {
+            router.push(`/strategy/${onboardingStrategy.slug}`);
+          }
+        }}
+        steps={onboardingStrategy?.onboardingSteps?.map((s) => ({
+          title: s.title,
+          icon: s.icon,
+          content: <p className="whitespace-pre-line text-sm text-ink-muted leading-relaxed">{s.content}</p>,
+        })) || []}
+        accentColor={onboardingStrategy?.accentColor || '#10B981'}
+        strategyName={onboardingStrategy?.name || ''}
+        rewardCoins={onboardingStrategy?.rewardCoins || 0}
       />
     </main>
   );

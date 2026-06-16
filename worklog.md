@@ -3236,3 +3236,165 @@ Files Created:
 
 Files Modified:
 - src/components/shared/SwipeCardViewer.tsx (added TryItNow triggers + StrategyRenderer modal)
+
+---
+
+Task ID: STRAT-SHARED
+Agent: Shared Components Builder
+Task: Build 4 shared strategy-flow components (Card3D, StrategySlide, StrategyOnboarding, StrategyComplete) for the Capital Mastery strategy experience
+
+Work Log:
+- Read worklog.md, globals.css design tokens, and existing StrategyModal/SwipeCardViewer patterns to align with the "Midnight Wealth + Emerald Growth" theme
+- Confirmed available CSS utilities: glass-card, glass-strong, glass-card-premium, strategy-slide-3d, sparkle-particle, badge-3d-spin, confetti-piece, perspective-3d, page-3d-enter, float-3d, coin-spin-3d, btn-3d, card-3d, text-gradient-emerald, font-display
+- Confirmed brand tokens: --color-midnight, --color-emerald, --color-gold, --color-ink, --color-ink-muted, --color-ai
+
+Files Created:
+- src/components/ui/Card3D.tsx
+    * Reusable mouse-tracking 3D tilt wrapper
+    * Uses Framer Motion useMotionValue/useSpring/useTransform for spring-smoothed rotateX/rotateY
+    * Props: children, className, glowColor (optional hex), intensity (default 8), disabled
+    * Cursor-tracking radial glare overlay when glowColor provided
+    * perspective(800px) + transform-style: preserve-3d; springs back to flat on mouse leave
+- src/components/shared/StrategySlide.tsx
+    * The special "last slide" glowing card shown at end of SwipeCardViewer module content
+    * strategy-slide-3d floating animation + accent-colored border glow + outer radial glow
+    * Large pulsing emoji icon (gradient radial bg + drop-shadow glow)
+    * Strategy name in inline gradient (ink → accentColor) using background-clip:text
+    * 6 sparkle-particle divs with useMemo-stable random positions/colors/delays
+    * Coin reward badge (top-right) with coin-spin-3d
+    * "Shuru Karo →" btn-3d CTA with accent gradient + glow, ArrowRight icon translate on hover
+    * Entrance: scale 0.9 + y:24 → spring in
+- src/components/shared/StrategyOnboarding.tsx
+    * Multi-step swipeable onboarding popup (3-4 steps), slides up from bottom on mobile / centers on desktop
+    * Glassmorphic modal with y:100%→0 spring, accent glow strip + 3D depth shadow
+    * Step indicator dots (active = wider + accent glow, others = white/20, clickable to jump)
+    * Each step: floating emoji icon (y-bob), title (font-display), ReactNode content
+    * Navigation: "Piche" (prev, only when current>0), "Aage badho →" (emerald btn-3d), "LET'S GO! 🚀" (accent gradient btn-3d, last step only), "Skip" text button
+    * Swipeable: motion.div drag="x" with dragConstraints/dragElastic + onDragEnd threshold check (offset>60 OR velocity>400)
+    * AnimatePresence step transition (fade + slide, direction-aware via custom prop)
+    * Resets step to 0 on close/start
+- src/components/shared/StrategyComplete.tsx
+    * Celebration overlay with 14 confetti-piece divs (useMemo-stable random colors/positions/delays/durations/sizes/shapes)
+    * Confetti falls from top (-20px start) with rotation + glow
+    * Center glass-card-premium card: scale+rotateY spring entrance, accent border glow + outer radial blur
+    * 3D spinning trophy badge (badge-3d-spin + spring rotateY:0→360, accent-colored Trophy from lucide)
+    * "🎉 Strategy Complete!" heading in text-gradient-emerald (font-display, extrabold)
+    * Strategy name in muted text + Hinglish subtext
+    * Coin reward badge "+{rewardCoins} coins" with gold glow + coin-spin-3d (spring scale-in, delayed)
+    * "Back to Module" emerald btn-3d button with ArrowLeft translate on hover
+    * Auto-dismiss after 5s via useEffect setTimeout (cleanup on close/unmount/isOpen change)
+
+Technical Notes:
+- All 4 files start with "use client"; all animations via Framer Motion
+- Used lucide-react icons (Sparkles, ArrowRight, X, Rocket, ArrowLeft, Trophy)
+- Hinglish content throughout (Shuru Karo, Aage badho, Piche, LET'S GO, "Badhiya! Aapne yeh strategy complete kar li...")
+- Used cn() utility for conditional class merging
+- Fixed one react-hooks/rules-of-hooks lint error in Card3D (hoisted useTransform for glare background out of conditional JSX to top level)
+- Sparkle/confetti fields use useMemo so positions stay stable across re-renders
+- StrategyComplete auto-dismiss timer correctly cleans up on close/unmount
+- Lint: zero errors, zero warnings ✅
+- Dev server log: clean, no compile errors
+
+Stage Summary:
+- 4 production-ready shared components delivered for the strategy experience flow
+- Card3D → StrategySlide (entry) → StrategyOnboarding (steps) → StrategyComplete (celebration) forms a complete UX loop
+- All components are theme-aware (accentColor prop drives glow/gradients) and reusable across all 12+ strategies
+- Ready to be wired into SwipeCardViewer / StrategyRenderer by downstream tasks
+
+---
+
+Task ID: STRAT-ROUTE
+Agent: Strategy Route Builder
+Task: Build the dynamic /strategy/[slug] route page and update the strategy registry with slug, hook, and 4-step onboardingSteps for all 8 strategies. Midnight Wealth + Emerald Growth theme.
+
+Work Log:
+- Read worklog.md to understand the existing project (RUPAIYA 101 / Capital Mastery — Next.js 16, Tailwind 4, Framer Motion, Zustand, shadcn/ui).
+- Read existing src/lib/data/strategyRegistry.ts — confirmed 8 strategies already present with id/name/description/iconName/accentColor/rewardCoins/moduleId/triggerAfterCard. Existing ids already match the requested slugs 1:1.
+- Read src/lib/store/useAppStore.ts — confirmed useHydration hook + isAuthenticated + coins selector + persist middleware (storage key: rupaiya-101-storage).
+- Read src/app/dashboard/module/[id]/page.tsx and src/app/auth/page.tsx to mirror the auth-guard + hydration-loading + router.replace('/auth') pattern.
+- Read src/components/shared/StrategyRenderer.tsx — confirmed strategy components are default-exported and keyed by strategy.id (which equals slug). Verified all 8 lazy targets exist: PaiseKaGPS, BudgetKhel, GharKaBudget, MistakeMarket, KyaHotaAgar, ChhupaHuaChor, CompoundingTree, DebtTrapDarwaza.
+- Verified all required CSS classes exist in globals.css: glass-card, glass-strong, glass-card-premium, btn-emerald, btn-3d, card-3d, page-3d-enter, perspective-3d, custom-scroll, text-gradient-brand, font-display + brand tokens (bg-midnight, text-ink, text-ink-muted, text-emerald-soft, text-ai-soft, text-gold, shadow-glow-emerald).
+
+Files Modified:
+- src/lib/data/strategyRegistry.ts
+    * Added OnboardingStep interface { title, icon, content }.
+    * Extended StrategyDef with slug, hook, onboardingSteps[] fields.
+    * Added slug + hook + 4-step onboardingSteps to all 8 strategies (exact mapping from spec):
+        - Paise Ka GPS     (moduleId 2, slug 'paise-ka-gps',      hook "Dekho tumhari financial car kidhar jaa rahi hai!")
+        - Budget Khel      (moduleId 2, slug 'budget-khel',       hook "Swipe karke batao — Need hai ya Want?")
+        - Ghar Ka Budget   (moduleId 2, slug 'ghar-ka-budget',    hook "Budget badlo, kamra badlega!")
+        - Mistake Market   (moduleId 2, slug 'mistake-market',    hook "Bazaar mein chalo, galtiyan pehchano!")
+        - Kya Hota Agar    (moduleId 3, slug 'kya-hota-agar',     hook "10 saal baad tumhari zindagi kaisi dikhegi?")
+        - Chhupa Hua Chor  (moduleId 3, slug 'chhupa-hua-chor',   hook "Dekho inflation tumhare paise kaise khata hai!")
+        - Power of Compounding (moduleId 3, slug 'compounding-tree', hook "Ek beej lagao, paiso ka ped ugao!")
+        - Debt Trap Ka Darwaza (moduleId 5, slug 'debt-trap-darwaza', hook "7 darwaze kholo, karze ka sach jaano!")
+    * Each onboardingSteps array follows the exact 4-step pattern:
+        Step 1 "Yeh Kya Hai?" (1-sentence what-is) 
+        Step 2 "Kya Sikhoge?" (3 ✅ bullet points, \n-separated for whitespace-pre-line rendering)
+        Step 3 "Kaise Khelna Hai?" (brief instruction)
+        Step 4 "Ready?" (coin reward mention + "LET'S GO!")
+    * Added getStrategyBySlug(slug) helper for the new route.
+    * Preserved existing getStrategiesForModule + getStrategyById (no breaking changes to SwipeCardViewer / StrategyRenderer consumers — they only read pre-existing fields).
+
+Files Created:
+- src/app/strategy/[slug]/page.tsx
+    * "use client" dynamic route. Reads slug from useParams() (handles string | string[] shapes).
+    * Looks up strategy via getStrategyBySlug(slug).
+    * Auth guard: useHydration() → if !isAuthenticated, useEffect calls router.replace('/auth'); renders null until redirect. Matches existing module page pattern.
+    * Hydration loading state: full-screen emerald spinner on bg-midnight.
+    * Fixed top bar (h-14 ≈ 56px, glass-strong, border-b border-white/10, z-40):
+        Left  → back arrow button (ArrowLeft, aria-label) → router.push('/dashboard')
+        Center → strategy icon emoji (sm+) + name (font-display, truncate, bold)
+        Right → gold coin counter (Coins icon + coins from store, gold/gold-soft border ring, tabular-nums) + Help button (circle, HelpCircle icon, ai-soft accent, opens HelpDialog)
+    * Main content container: page-3d-enter class, max-w-5xl, pt-20 (clears fixed top bar), scrollable.
+    * Hook banner above strategy: glass-card with accent-tinted border, strategy icon tile, "Hook" label + hook text, reward coin badge (hidden on mobile).
+    * Strategy component lazy-loaded via strategyComponents[slug] map (all 8 slugs mapped), wrapped in <Suspense> with StrategyLoading spinner fallback, inside perspective-3d wrapper for 3D depth.
+    * AnimatePresence (mode="wait") for fade in/out between strategies.
+    * HelpDialog component (shadcn Dialog): shows strategy icon+name+hook header, then maps onboardingSteps → animated glass-card tiles (Step N label, emoji, title, whitespace-pre-line content), gold reward footer. Max-h-60vh with custom-scroll.
+    * NotFoundState fallback for unknown slugs (🤷 emoji + "Dashboard par jao" button).
+    * Ambient backdrop: two blurred radial blobs (accent-tinted top-left, ai-tinted bottom-right).
+    * All interactive elements: hover border/bg transitions + active:scale-95 micro-feedback, aria-labels, disabled states for help button when no strategy.
+
+Verification:
+- bun run lint: zero errors, zero warnings ✅
+- Dev server log clean (Ready in 602ms, / and /dashboard/module/1 routes compiling fine).
+- No breaking changes to existing StrategyRenderer / SwipeCardViewer (only additive fields + new helper function).
+
+Stage Summary:
+- Strategy registry now slug-addressable with full onboarding copy for all 8 strategies.
+- New /strategy/[slug] route delivers each strategy as a full-page experience with fixed glass top bar, gold coin counter, lazy-loaded strategy component, and a Help dialog surfacing the 4-step onboarding.
+- Ready for downstream tasks to link strategy cards/buttons to /strategy/{slug}.
+
+
+---
+Task ID: 3D-STRATEGIES (3D Website Overhaul + Next-Swipe Strategy Flow)
+Agent: Main Orchestrator + 2 Subagents (no reviewer, per user request)
+Task: Implement the new strategy flow (strategies as last-slide after module content → onboarding popup → full-page route) + global 3D premium effects across the entire website.
+
+Work Log:
+- Added 3D CSS utilities to globals.css: card-3d (mouse tilt), btn-3d (tactile press), depth-back/base/hover/float layers, float-3d animation, coin-spin-3d, module-card-3d (locked pushesback), page-3d-enter (3D page transition), perspective-3d containers, strategy-slide-3d (floating glow), sparkle-particle, door-3d, badge-3d-spin, confetti-piece.
+- Dispatched 2 subagents in parallel:
+  • Subagent 1 (STRAT-SHARED): Built Card3D.tsx (mouse-tracking 3D tilt wrapper), StrategySlide.tsx (glowing last-slide card with sparkles + Shuru Karo CTA), StrategyOnboarding.tsx (4-step swipeable popup with dot indicators), StrategyComplete.tsx (confetti celebration with badge spin).
+  • Subagent 2 (STRAT-ROUTE): Updated strategyRegistry.ts (added slug, hook, onboardingSteps fields to all 8 strategies), created /strategy/[slug]/page.tsx (full-page route with top bar: back arrow, strategy name, coin counter, help button, lazy-loads strategy component).
+- Rewired SwipeCardViewer: removed old TryItNow + StrategyRenderer modal. Now StrategySlide cards appear AFTER the last content card (isLast && moduleStrategies.length > 0). Clicking "Shuru Karo" opens StrategyOnboarding popup. Completing onboarding → router.push('/strategy/${slug}') for the full-page strategy experience.
+- Applied 3D effects to dashboard: module-card-3d class on ModuleCard (unlocked = 3D hover tilt + translateZ, locked = pushback + blur).
+- Removed Navbar from module page (already done in previous round).
+
+Verification:
+- Zero ESLint errors.
+- All routes 200: /, /dashboard, /dashboard/module/2, /strategy/paise-ka-gps, /strategy/budget-khel, /strategy/debt-trap-darwaza.
+- E2E verified: Module 2 → advance to last card → 4 StrategySlide cards render with "Shuru Karo" buttons (hasShuruKaro: true, hasPaiseGPS: true) → click "Shuru Karo" → onboarding popup opens (hasOnboarding: true, hasModal: true) with "Yeh Kya Hai?" Step 1/4, dot indicators, "Aage badho" button.
+- VLM ratings: StrategySlide 8/10 (glowing card, sparkles, 3D float), Onboarding popup 8/10 (glassmorphic modal, step dots, clean design).
+
+Files Created:
+- src/components/ui/Card3D.tsx (mouse-tracking 3D tilt wrapper)
+- src/components/shared/StrategySlide.tsx (glowing last-slide card)
+- src/components/shared/StrategyOnboarding.tsx (4-step swipeable popup)
+- src/components/shared/StrategyComplete.tsx (confetti celebration)
+- src/app/strategy/[slug]/page.tsx (full-page strategy route)
+
+Files Modified:
+- src/app/globals.css (+3D CSS utilities)
+- src/lib/data/strategyRegistry.ts (added slug, hook, onboardingSteps)
+- src/components/shared/SwipeCardViewer.tsx (replaced TryItNow with StrategySlide + StrategyOnboarding)
+- src/app/dashboard/page.tsx (added module-card-3d class to ModuleCard)

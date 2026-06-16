@@ -105,7 +105,7 @@ function ModuleCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       whileHover={{ scale: isUnlocked ? 1.02 : 1, y: isUnlocked ? -5 : 0 }}
-      className="relative group cursor-pointer rounded-[2rem] p-6 border border-white/[0.06] overflow-hidden transition-all duration-500 glass-card"
+      className={`relative group cursor-pointer rounded-[2rem] p-6 border border-white/[0.06] overflow-hidden transition-all duration-500 glass-card module-card-3d ${isUnlocked ? 'unlocked' : 'locked'}`}
       onClick={isUnlocked ? onClick : undefined}
     >
       {/* Holographic Shine */}
