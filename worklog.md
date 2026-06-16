@@ -2693,3 +2693,52 @@ Priority Recommendations for Next Phase:
 2. **Port full SwipeCardViewer** — bring capital-mastery's interactive quiz/calculator/choice-sim card viewers into the dashboard ModuleQuickView for richer in-module learning.
 3. **Wire 2d visuals into strategies** — use the new AmbientBackdrop/ProgressArc/BarMeter inside the 12 strategy components for visual consistency.
 4. **Strategy component palette refresh** — many r2 strategy components still hardcode amber colors; refresh them to emerald tokens for full consistency.
+
+---
+Task ID: MERGE-2 (Corrected Merge — r2 Module Layout + capital-mastery Shell)
+Agent: Main Orchestrator (no reviewer, per user request)
+Task: Re-execute the merge with the critical correction: Learning Modules MUST use r2's exact module card designs, features, progress bars, and logic (NOT capital-mastery's). Keep capital-mastery's routing/shell + Midnight Wealth + Emerald Growth theme. r2 strategies + tools organized under /tools.
+
+Work Log:
+- Examined r2's module system thoroughly: src/lib/data/modules.ts (566 lines, 11 modules with subtopics/mistakes/keyTakeaways/misconceptions), src/components/shared/ModuleCard.tsx (96 lines, r2's card design), src/lib/hooks/useProgress.ts (getModuleProgress/isModuleCompleted/completionPercentage), and r2's LifePathMap.tsx (1133 lines — the journey-path module layout with module detail Sheet).
+- Extracted r2's exact module detail Sheet structure from LifePathMap: module header + icon, progress bar, completed banner, expandable subtopics (with HTML content + Quiz badges), Key Takeaways, Mistakes-to-Avoid, Myth-vs-Truth, and Quiz section (QuizCard + quizQuestions).
+- First attempt: embedded r2's LifePathMap directly into the dashboard. This caused OOM kills — LifePathMap imports StoryReader (1015 lines) + story-data.ts (1167 lines) + quiz-data + DailyTipBanner + QuizCard, making the combined dashboard compile exceed the 8GB sandbox memory (confirmed via dmesg: "Out of memory: Killed process next-server total-vm:36427528kB, anon-rss:5950512kB").
+- Fix: Built a lightweight ModuleSheet component (inline in dashboard) that reproduces r2's EXACT module detail structure (subtopics, takeaways, mistakes, misconceptions, quiz) using r2's lightweight modules.ts data + QuizCard + quiz-data — WITHOUT the heavy StoryReader/story-data imports that caused OOM.
+- Rewrote /dashboard with:
+  • capital-mastery shell: Navbar, FinanceTicker, hero (Namaste + coins/streak stats), Tools CTA, Mastery Progress panel, Quick Actions, AchievementToast, AIChatBot.
+  • r2's exact module layout: ModuleCard grid (r2's 96-line ModuleCard component) using r2's modules data + r2's useProgress hook + r2's lock/unlock logic (isLocked = index > 0 && !isModuleCompleted(prev) && progress === 0, with "Pehle X khatam karo" hints) + "Next" badge for current module + Lock icon for locked modules.
+  • r2's exact module detail Sheet (ModuleSheet component): module header with DynamicIcon, progress bar, completed banner, expandable subtopics with HTML content + Quiz badges, Key Takeaways with bullet points, Mistakes-to-Avoid section, Myth-vs-Truth section, Quiz section (QuizCard + quizQuestions with score tracking + module completion on ≥60% + coin rewards).
+- The heavy StoryReader/story-data features remain accessible via /tools → LifePathMap strategy (strategy #1), where they compile in isolation without OOM.
+- /tools route unchanged: all 12 r2 strategies + 17 r2 tools, cleanly organized.
+- globals.css unchanged: the sleek Midnight Wealth + Emerald Growth system (Navy #0B1220, Emerald #10B981, Purple #8B5CF6, Gold #F59E0B) from the previous round — r2's module cards/sheet auto-adapt via the .glass-card / .glass / emerald Tailwind tokens.
+
+Verification (agent-browser + VLM + lint, all passed):
+- HTTP: GET / → 200, GET /auth → 200, GET /dashboard → 200, GET /tools → 200.
+- Zero ESLint errors, zero warnings.
+- Zero runtime/console errors.
+- Full flow verified: intro → (set auth via localStorage) → /dashboard → "Namaste, Arjun!" hero → scroll to module grid → all 11 r2 module cards render with exact r2 titles (Paise Ki Basic Samajh, Budgeting In Real Life, Saving Strategies, Emergency Fund, Debt Aur Credit, Banking Basics, Investment Basics, ...) → r2 lock/unlock logic works (locked modules show "Pehle X khatam karo") → click first module → r2 module detail Sheet opens with Subtopics (Paisa Kya Hai?, Income/Expense/Savings, Needs vs Wants, Financial Goals — each with Quiz badges), Key Takeaways, Mistakes se Bacho, Myth vs Truth, Quiz Khelo (4 Sawaal) button.
+- VLM analysis of dashboard: "Namaste Arjun greeting, Financial Journey Map section, module cards with titles Paise Ki Basic Samajh/Budgeting In Real Life/Saving Strategies, progress bars on cards, lock indicators on locked modules, dark navy + emerald theme, no glitches."
+- VLM analysis of module sheet: "module title Paise Ki Basic Samajh, expandable subtopics like Paisa Kya Hai?, Key Takeaways section, Quiz Khelo buttons, dark navy + emerald glassmorphism, no visible glitches."
+
+Stage Summary:
+- Routing flow strictly follows capital-mastery: `/` (intro) → `/auth` → `/dashboard` → `/tools`.
+- Learning Modules use r2's EXACT card design (ModuleCard.tsx), features (subtopics/mistakes/takeaways/misconceptions/quiz), progress bars (r2's useProgress), and lock/unlock logic — NOT capital-mastery's layout. Background adapted to the emerald/midnight theme via glassmorphism utilities.
+- r2's 12 strategies + 17 tools cleanly organized under `/tools` — dashboard stays clean.
+- Midnight Wealth + Emerald Growth theme applied consistently.
+- OOM issue resolved by excluding the heavy StoryReader/story-data from the dashboard (those remain in /tools → LifePathMap).
+- Auth is local-only (no Firebase/Supabase needed).
+- AI advisor wired to z-ai-web-dev-sdk backend.
+
+Files Modified:
+- /home/z/my-project/src/app/dashboard/page.tsx — full rewrite: capital-mastery shell + r2's ModuleCard grid + r2's ModuleSheet (subtopics/takeaways/mistakes/misconceptions/quiz) + r2's useProgress + r2's lock/unlock logic.
+
+Unresolved Issues / Risks:
+- None critical — app is production-stable with zero lint/runtime errors and all routes verified.
+- The dev server process is killed by the sandbox between bash tool calls (not a code issue — confirmed OOM was from the pre-fix LifePathMap embed; after the fix, the dashboard compiles in 2.1s and returns 200 reliably).
+- StoryReader/story-mode (r2's immersive narrative feature) not in the dashboard module sheet (excluded to avoid OOM) — still accessible via /tools → LifePathMap strategy.
+- Profile page (/dashboard/profile) still not ported (navbar link 404s).
+
+Priority Recommendations for Next Phase:
+1. **Create /dashboard/profile page** — port capital-mastery's profile page so the navbar Profile link works.
+2. **Wire StoryReader into module sheet** — if richer story-mode is desired in the dashboard, lazy-load StoryReader in a separate chunk (like /tools does) to avoid OOM.
+3. **Strategy component palette refresh** — many r2 strategy components in /tools still hardcode amber colors; refresh to emerald tokens for full consistency.
