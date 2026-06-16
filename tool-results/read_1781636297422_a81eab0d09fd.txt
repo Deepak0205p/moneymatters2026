@@ -1,0 +1,2002 @@
+     1→# RUPAIYA 101 - Work Log
+     2→
+     3→## Project Status
+     4→- **Status**: Production-ready with 28+ features + Story-Based Learning + 18 interactive tools + enhanced dashboard + 580+ lines CSS + 110+ lines story CSS
+     5→- **App**: RUPAIYA 101 - Financial Literacy App for Indian Youth (Hinglish)
+     6→- **Tech**: Next.js 16, Tailwind CSS 4, Framer Motion, Zustand, Recharts, shadcn/ui, z-ai-web-dev-sdk
+     7→- **Latest**: Story-based learning system — each module is now an immersive narrative with chapters, dialogues, interactive choices, and XP rewards
+     8→
+     9→---
+    10→
+    11→Task ID: 1
+    12→Agent: Main Orchestrator
+    13→Task: Build complete RUPAIYA 101 financial literacy app from spec documents
+    14→
+    15→Work Log:
+    16→- Read and analyzed RUPAIYA_101_Master_Build_Prompt.docx (2000+ lines of spec)
+    17→- Read Rupaiya_101_Complete_Guide.pdf (147 pages of content data)
+    18→- Created comprehensive todo list with 12 phases
+    19→- Parallelized work across multiple subagents for speed
+    20→
+    21→Stage Summary:
+    22→- Full spec understood: 12 strategies, 11 modules, Hinglish content, dark theme, single-page app
+    23→
+    24→---
+    25→
+    26→Task ID: 1-a
+    27→Agent: Subagent
+    28→Task: Create TypeScript types and constants
+    29→
+    30→Work Log:
+    31→- Created src/lib/types/index.ts with 16+ interfaces
+    32→- Created src/lib/constants.ts with COLORS, MILESTONES, DEBT_DOORS, financial constants
+    33→
+    34→---
+    35→
+    36→Task ID: 1-b
+    37→Agent: Subagent
+    38→Task: Create all 9 data files
+    39→
+    40→Work Log:
+    41→- Created modules.ts (11 modules with subtopics, mistakes, takeaways)
+    42→- Created strategies.ts (12 strategies with priorities)
+    43→- Created terms-dictionary.ts (40+ financial terms in Hinglish)
+    44→- Created expense-cards.ts (30 swipe cards)
+    45→- Created scenarios-data.ts (5 what-if scenarios)
+    46→- Created budget-templates.ts (5 income level templates)
+    47→- Created mistakes-data.ts (5 categories, 17 mistakes)
+    48→- Created daily-choices.ts (10 daily choices)
+    49→- Created quiz-data.ts (44 quiz questions)
+    50→
+    51→---
+    52→
+    53→Task ID: 2-a
+    54→Agent: Subagent
+    55→Task: Create Zustand store, hooks, and utility functions
+    56→
+    57→Work Log:
+    58→- Updated utils.ts with 10 financial utility functions
+    59→- Created useAppStore.ts with full Zustand store + localStorage persistence
+    60→- Created useProgress.ts, useCoins.ts, useLocalStorage.ts hooks
+    61→
+    62→---
+    63→
+    64→Task ID: 3
+    65→Agent: Subagent
+    66→Task: Create shared components
+    67→
+    68→Work Log:
+    69→- Created DynamicIcon.tsx, ModuleCard.tsx, ProgressRing.tsx, CoinCounter.tsx
+    70→- Created QuizCard.tsx, StatCard.tsx, SliderControl.tsx, EmptyState.tsx
+    71→
+    72→---
+    73→
+    74→Task ID: 4
+    75→Agent: Subagent
+    76→Task: Create layout components, CSS, and root layout
+    77→
+    78→Work Log:
+    79→- Updated globals.css with custom animations, glow effects, scrollbar
+    80→- Updated layout.tsx with Inter font, dark theme, metadata
+    81→- Created Navbar.tsx with scrollable strategy tabs, mobile menu
+    82→- Created Sidebar.tsx with 11 modules, progress bars, quick stats
+    83→- Created PageContainer.tsx with AnimatePresence transitions
+    84→
+    85→---
+    86→
+    87→Task ID: 5
+    88→Agent: Subagent
+    89→Task: Build Strategy 1 - LifePathMap (HOME SCREEN)
+    90→
+    91→Work Log:
+    92→- Created 1005-line LifePathMap.tsx with SVG winding road, 11 stations
+    93→- Village-to-city progression with SVG illustrations
+    94→- Fun facts pit stops, module detail panel with quiz
+    95→- Three station states: completed (green), current (gold pulse), locked (gray)
+    96→
+    97→---
+    98→
+    99→Task ID: 6
+   100→Agent: Subagent
+   101→Task: Build Strategy 3 - ConsequenceSim (KILLER FEATURE)
+   102→
+   103→Work Log:
+   104→- Created 622-line ConsequenceSim.tsx
+   105→- Dual timeline AreaChart (red vs green divergence)
+   106→- 3 user profiles, 4 fast forward buttons, 3 sliders
+   107→- Real-time SIP calculations with dramatic difference display
+   108→
+   109→---
+   110→
+   111→Task ID: 7
+   112→Agent: Subagent
+   113→Task: Build SwipeBudget + InflationMonster
+   114→
+   115→Work Log:
+   116→- Created SwipeBudget.tsx (~290 lines) with Framer Motion drag, 3D card stack
+   117→- Created InflationMonster.tsx (~310 lines) with Chor vs Hero SVG characters
+   118→
+   119→---
+   120→
+   121→Task ID: 8
+   122→Agent: Subagent
+   123→Task: Build CompoundingTree + DebtDoors
+   124→
+   125→Work Log:
+   126→- Created CompoundingTree.tsx (542 lines) with growing SVG tree, comparison mode
+   127→- Created DebtDoors.tsx (560 lines) with 7 3D doors, EXIT section
+   128→
+   129→---
+   130→
+   131→Task ID: 9
+   132→Agent: Subagent
+   133→Task: Build FinancialGPS + ReportCard
+   134→
+   135→Work Log:
+   136→- Created FinancialGPS.tsx (~270 lines) with SVG road, animated car, milestones
+   137→- Created ReportCard.tsx (~310 lines) with Indian school report card design
+   138→
+   139→---
+   140→
+   141→Task ID: 10
+   142→Agent: Subagent
+   143→Task: Build remaining 4 strategies
+   144→
+   145→Work Log:
+   146→- Created RoomBudget.tsx with room visualization, budget sliders
+   147→- Created DailySimulator.tsx with wallet balance, daily choices
+   148→- Created Dictionary.tsx with term bubbles, category filters
+   149→- Created MistakeMarket.tsx with market stalls, cost counter
+   150→
+   151→---
+   152→
+   153→Task ID: 11
+   154→Agent: Main Orchestrator
+   155→Task: Wire everything together in page.tsx
+   156→
+   157→Work Log:
+   158→- Created main page.tsx with lazy-loaded strategy components
+   159→- Fixed Exit → LogOut icon import in DebtDoors.tsx
+   160→- Fixed eslint warning for incrementStreak dependency
+   161→- All 12 strategies load and render correctly
+   162→- Browser verified: no errors, clean rendering
+   163→
+   164→---
+   165→
+   166→## Current Project Status
+   167→- All 12 strategies implemented and functional ✅
+   168→- All shared components created ✅
+   169→- Layout (Navbar, Sidebar, PageContainer) working with enhanced styling ✅
+   170→- Dark theme with gold accents applied throughout ✅
+   171→- Hinglish content throughout ✅
+   172→- Zustand store with localStorage persistence ✅
+   173→- Lint passes with zero errors ✅
+   174→- Dev server running without errors ✅
+   175→- Browser verified: all strategies render correctly ✅
+   176→- WelcomeOnboarding flow for first-time users ✅
+   177→- BadgeGallery with 12 badges and visual grid ✅
+   178→- Favicon.svg (₹ in gold) ✅
+   179→- Enhanced CSS with stagger animations, glass effects, pulse rings ✅
+   180→- Automatic badge awarding on coins, streaks, quiz scores ✅
+   181→
+   182→## Unresolved Issues / Next Steps
+   183→- ~~Mobile responsiveness could be improved on some strategies~~ ✅ Fixed
+   184→- Module detail panel in LifePathMap could show more subtopic content
+   185→- ~~Report card could have better print/share functionality~~ ✅ Share feature added
+   186→- ~~Daily simulator wallet visualization could be more engaging~~ ✅ Enhanced
+   187→- ~~Some text might need better contrast on very dark backgrounds~~ ✅ Improved
+   188→- Could add more quiz questions per module (currently 4 each)
+   189→- Could add sound effects for interactions
+   190→- ~~Could add a "share progress" feature~~ ✅ Added
+   191→- Could add a financial goal tracker / savings target feature
+   192→- Could add more interactive mini-games
+   193→- Could add leaderboard / social features
+   194→
+   195→---
+   196→
+   197→Task ID: cron-1
+   198→Agent: Continuous Development Agent
+   199→Task: QA testing, bug fixes, styling enhancements, new features
+   200→
+   201→Work Log:
+   202→- Performed comprehensive QA on all 12 strategies via agent-browser
+   203→- All 12 strategies load with zero errors
+   204→- VLM analysis identified: low contrast on some elements, need for better visual hierarchy
+   205→- Created favicon.svg (gold ₹ on dark background)
+   206→- Updated layout.tsx to use favicon.svg
+   207→- Enhanced globals.css with 15+ new utility classes: strategy-header, badge-earned, glass-card, animate-slide-up, stagger-children, animate-pulse-ring, animate-coin-bounce, progress-glow, text-shadow-gold, noise-overlay, module-item-hover, rupaiya-tooltip, term-mastered, tab-scroll-mask, progress-gold, animate-border-pulse
+   208→- Created WelcomeOnboarding.tsx: 3-step onboarding flow (Welcome → Name → Strategy Pick) with gold coin particles, Framer Motion transitions, store integration (saves name, adds 10 coins, awards first-login badge)
+   209→- Created BadgeGallery.tsx: 12 badges with Lucide icons, earned/locked states, progress bar, spring animations, responsive grid
+   210→- Enhanced Navbar.tsx: ₹ logo icon, colored dot indicators per strategy, Tooltip hovers, badge gallery button, smoother mobile menu, tab scroll masks
+   211→- Enhanced Sidebar.tsx: overall progress ring, level indicator (Lvl 1-5), module color dots, gold gradient progress bars, green checkmark for completed, reset progress with confirmation, staggered entrance animations
+   212→- Upgraded Zustand store: automatic badge awarding for coins-100, coins-500, streak-3, streak-7, perfect-quiz
+   213→- Updated page.tsx to include WelcomeOnboarding overlay
+   214→
+   215→Stage Summary:
+   216→- QA complete: zero errors across all 12 strategies
+   217→- Favicon added and working
+   218→- Onboarding flow functional and visually appealing
+   219→- Badge gallery with 12 badges, auto-awarding system
+   220→- Enhanced Navbar and Sidebar with better animations and visual hierarchy
+   221→- 15+ new CSS utility classes for polish
+   222→- All changes lint-clean and browser-verified
+   223→
+   224→---
+   225→
+   226→Task ID: 5
+   227→Agent: Visual Polish Agent
+   228→Task: Enhance visual polish and styling across all strategy components
+   229→
+   230→Work Log:
+   231→- Enhanced globals.css with 25+ new utility classes and animations
+   232→- Refined scrollbar styling (5px, gold-tinted, transparent track)
+   233→- Added particle-bg, glass-surface, gradient-border, watermark-bg CSS classes
+   234→- Added animations: fadeIn, scaleIn, countUp, slideInRight/Left, doorKnock, confettiBurst, pulseScale, fallingLeaf, fallingCoin, soundWave
+   235→- Added utility: glow-soft, card-dark, text-glow-gold, btn-gold, btn-ghost-gold, stat-card, journey-progress-track/fill, weather-*, price-tag-crossed, daytime/nighttime-gradient
+   236→- Enhanced LifePathMap: particle-bg, gradient gold title, journey progress bar, enhanced station glows, floating emoji decorations
+   237→- Enhanced ConsequenceSim: red/green contrast backgrounds with patterns, warning icons, larger difference cards with glow
+   238→- Enhanced ReportCard: watermark-bg, full-page stamp overlay, Parent/Guardian Advice section with Hinglish tips
+   239→- Enhanced CompoundingTree: card-dark + glow-soft containers, falling coin particles, text-glow-gold on numbers
+   240→- Enhanced SwipeBudget: confetti celebration on completion, card counter indicator, enhanced swipe direction hints
+   241→- Enhanced DebtDoors: particle-bg corridor, enhanced EXIT with glow and spring animation
+   242→- Enhanced InflationMonster: sound wave visualization, inflation rate label on CHOR
+   243→- Enhanced DailySimulator: day/night gradient on wallet, wallet icon spin animation
+   244→- Enhanced Dictionary: mastery progress bar, alphabetical index strip (A-Z)
+   245→- Enhanced MistakeMarket: crossed-out price tags showing original vs real cost
+   246→- Enhanced FinancialGPS: road sign markers, weather metaphor backgrounds on direction card
+   247→- All 12 strategy headers now use text-gradient-gold for consistent gold gradient text
+   248→
+   249→Stage Summary:
+   250→- 25+ new CSS utility classes and 12+ new CSS animations added
+   251→- All 12 strategies enhanced with visual polish
+   252→- Consistent gold gradient headers across all strategies
+   253→- Particle effects, glow effects, and animated elements added
+   254→- Zero lint errors, dev server compiles successfully
+   255→- No new npm packages added
+   256→- All changes backward-compatible
+   257→
+   258→---
+   259→
+   260→Task ID: cron-2
+   261→Agent: Continuous Development Agent (Round 2)
+   262→Task: QA testing, new features (SIP Calculator, Daily Tips, Share Progress), styling enhancements, mobile improvements
+   263→
+   264→Work Log:
+   265→- Performed comprehensive QA on all 12 strategies via agent-browser — zero errors
+   266→- VLM analysis of screenshots: rated 7.5/10, identified spacing and contrast improvements
+   267→- Created SIPCalculator.tsx: Full-featured SIP calculator with sliders, donut chart, year-by-year breakdown, Rule of 72, quick presets, AI personalized tips
+   268→- Created API route /api/sip-calculate/route.ts: Backend LLM-powered Hinglish financial tips using z-ai-web-dev-sdk
+   269→- Updated Navbar.tsx: Added Calculator icon button opening SIP Calculator dialog
+   270→- Created DailyTipBanner.tsx: 35 Hinglish financial tips, date-based rotation, auto-rotate every 30s, dismissible, Framer Motion animations
+   271→- Created ShareProgress.tsx: Share dialog with text copy + canvas-based PNG download, beautiful share card with stats
+   272→- Updated LifePathMap.tsx: Integrated DailyTipBanner between header and SVG map
+   273→- Updated Sidebar.tsx: Added Share Progress button, improved spacing (p-3, space-y-1.5), darker quick stats background
+   274→- Updated Zustand store: Added dismissedTipDate state for tip dismissal persistence
+   275→- Enhanced globals.css: Added 30+ new utility classes including iOS safe-area, focus-visible, reduced-motion, gradient text variants, hover-lift, strategy-scroll
+   276→- Added MobileBottomNav in page.tsx: Fixed bottom nav with 5 key strategies, visible only on mobile
+   277→- Updated page.tsx: Added pb-16 md:pb-0 for bottom nav spacing, wrapped strategy in <main> element
+   278→- Mobile responsiveness: 44px touch targets, responsive prefixes, overflow-x-hidden, proper SVG scaling
+   279→- All 15 files updated for mobile and visual polish
+   280→
+   281→Stage Summary:
+   282→- 3 major new features: SIP Calculator, Daily Tips Banner, Share Progress
+   283→- Mobile bottom navigation added for better mobile UX
+   284→- 30+ new CSS utility classes for accessibility and polish
+   285→- iOS safe-area support, reduced-motion preferences, focus-visible rings
+   286→- VLM design rating: 7.5/10 with identified improvement areas addressed
+   287→- Zero lint errors, dev server compiles successfully
+   288→- All strategies tested and verified via agent-browser
+   289→
+   290→## Current Project Status
+   291→- All 12 strategies implemented and functional ✅
+   292→- SIP Calculator tool (new) ✅
+   293→- Daily Financial Tips Banner (new) ✅
+   294→- Share Progress with image download (new) ✅
+   295→- Mobile bottom navigation (new) ✅
+   296→- Enhanced visual polish across all strategies ✅
+   297→- Mobile responsive design ✅
+   298→- Accessibility: focus-visible, reduced-motion, safe-area ✅
+   299→- Onboarding flow with 3 steps ✅
+   300→- Badge gallery with 12 badges ✅
+   301→- Zustand store with localStorage persistence ✅
+   302→- Lint passes with zero errors ✅
+   303→- Dev server running without errors ✅
+   304→
+   305→## Unresolved Issues / Next Steps
+   306→- Module detail panel in LifePathMap could show more subtopic content
+   307→- Could add more quiz questions per module (currently 4 each)
+   308→- Could add sound effects for interactions
+   309→- Could add a financial goal tracker / savings target feature
+   310→- Could add more interactive mini-games
+   311→- Could add leaderboard / social features
+   312→- SIP Calculator AI tip could have better caching mechanism
+   313→- Could add PWA support for offline usage
+   314→- Report card could have PDF export capability
+   315→
+   316→---
+   317→
+   318→Task ID: 5
+   319→Agent: Achievement Dashboard Agent
+   320→Task: Create comprehensive Achievement Dashboard / Progress Summary
+   321→
+   322→Work Log:
+   323→- Created AchievementDashboard.tsx (~500 lines) — full-screen overlay dashboard with 9 sections
+   324→- Hero Section: User name (or "Seekho"), level badge (1-5), total XP, streak, days active, motivational Hinglish messages
+   325→- Progress Overview: Large circular progress ring (120px), modules completed /11, overall %, estimated time to complete, terms mastered, quiz average
+   326→- Strategy Mastery: 12 mini cards showing progress per strategy with small progress rings, strategy colors, clickable to navigate
+   327→- Module Progress: Vertical timeline showing all 11 modules with completion status, icons, progress bars, "Done ✓" badges
+   328→- Quiz Performance: Average score, best score, quiz attempts, Recharts bar chart with color-coded bars (green ≥80%, amber ≥50%, red <50%)
+   329→- Financial Literacy Score: Large score ring (0-100), letter grade (A+/A/B/C/D), color-coded grade badge, score breakdown bars (Modules/Quiz/Terms/Activity)
+   330→  - Calculation: modules * 5 (max 55) + avgQuizScore / 10 (max 10) + masteredTerms * 0.5 (max 15) + streak * 2 + coins/50 (max 20), capped at 100
+   331→- Badge Showcase: Grid of all 12 badges with earned/locked states, progress bar
+   332→- Streak Calendar: 7-day visualization with fire icons, "TODAY" indicator, 7-day celebration message
+   333→- Next Steps: "Aage kya karein" section suggesting next module/strategy/quiz/dictionary
+   334→- Animated counters for all numbers (useAnimatedCounter hook)
+   335→- Confetti animation when Financial Literacy Score ≥ 70
+   336→- Framer Motion stagger animations for all sections and sub-items
+   337→- Glass-surface cards, particle backgrounds, gold gradient accents throughout
+   338→- Dark theme consistent with app design
+   339→- Added "Dashboard dekho" button in Sidebar (above Quick Stats, with LayoutDashboard icon)
+   340→- Added BarChart3 icon button in Navbar (between CoinCounter and Calculator)
+   341→- Both buttons open the AchievementDashboard full-screen overlay
+   342→- Hinglish text throughout all sections
+   343→- Zero lint errors, dev server compiles successfully
+   344→
+   345→Stage Summary:
+   346→- Comprehensive achievement dashboard with 9 distinct sections
+   347→- Financial Literacy Score calculation with grade system
+   348→- Recharts bar chart for quiz performance
+   349→- Confetti celebration animation for high scores
+   350→- Animated counters and stagger animations throughout
+   351→- Dashboard accessible from both Sidebar and Navbar
+   352→- All text in Hinglish
+   353→- Zero lint errors, dev server running without errors
+   354→
+   355→---
+   356→
+   357→Task ID: 4
+   358→Agent: Finance Advisor Agent
+   359→Task: Create AI Financial Advisor Chatbot (Rupaiya Guru)
+   360→
+   361→Work Log:
+   362→- Read existing codebase: worklog, store, page.tsx, globals.css, SIP route
+   363→- Added AdvisorMessage interface and advisor state (advisorMessages, advisorSessionCount) to Zustand store with localStorage persistence
+   364→- Added addAdvisorMessage and clearAdvisorMessages actions
+   365→- Created API route `/api/finance-advisor/route.ts`:
+   366→  - POST endpoint with z-ai-web-dev-sdk LLM integration
+   367→  - Comprehensive Hinglish system prompt for "Rupaiya Guru" personality
+   368→  - Context-aware: accepts user progress (coins, modules, streak, name)
+   369→  - Conversation history support (last 6 messages)
+   370→  - Rate limiting: max 20 messages per session
+   371→  - Fallback responses for 5 key topics (SIP, emergency fund, credit card, first investment, budget)
+   372→  - Friendly Hinglish error messages
+   373→- Created FinanceAdvisor component (`src/components/shared/FinanceAdvisor.tsx`):
+   374→  - Floating chat button with green indicator dot (bottom-right on desktop, above bottom nav on mobile)
+   375→  - Sliding chat panel with Framer Motion animations
+   376→  - Glass-surface effect on panel with dark theme
+   377→  - Header with Sparkles icon and "Rupaiya Guru" branding
+   378→  - User messages on right (amber bg), AI messages on left (dark card bg)
+   379→  - Typing indicator with bouncing dots animation
+   380→  - 5 preset quick question buttons: SIP, emergency fund, credit card, investment, budget
+   381→  - Chat history maintained in Zustand store (persisted in localStorage)
+   382→  - Disclaimer text at bottom of chat
+   383→  - Clear chat button with trash icon
+   384→  - Send button disabled when input is empty
+   385→  - Auto-scroll to bottom on new messages
+   386→  - Mobile responsive (full-width on mobile, 400px panel on desktop)
+   387→- Updated page.tsx: Added FinanceAdvisor component import and rendered it alongside MobileBottomNav
+   388→- Updated globals.css: Added scrollbar-none utility class for horizontal quick-question scroll
+   389→- Fixed pre-existing lint error in AchievementDashboard.tsx (setState in effect body)
+   390→- All files pass ESLint with zero errors
+   391→- Dev server compiles and runs successfully
+   392→
+   393→Stage Summary:
+   394→- AI Financial Advisor chatbot fully functional ✅
+   395→- LLM-powered Hinglish financial advice via z-ai-web-dev-sdk ✅
+   396→- Context-aware responses using user's app progress ✅
+   397→- Rate limiting (20 messages per session) ✅
+   398→- Fallback responses for offline/error scenarios ✅
+   399→- Beautiful dark theme UI with gold accents ✅
+   400→- Framer Motion animations throughout ✅
+   401→- Mobile responsive design ✅
+   402→- Zustand + localStorage persistence for chat history ✅
+   403→- Zero lint errors ✅
+   404→
+   405→## Current Project Status
+   406→- All 12 strategies implemented and functional ✅
+   407→- SIP Calculator tool ✅
+   408→- Daily Financial Tips Banner ✅
+   409→- Share Progress with image download ✅
+   410→- Mobile bottom navigation ✅
+   411→- **AI Financial Advisor Chatbot (Rupaiya Guru) ✅**
+   412→- **Financial Goal Tracker ✅ NEW**
+   413→- Achievement Dashboard ✅
+   414→- Enhanced visual polish across all strategies ✅
+   415→- Mobile responsive design ✅
+   416→- Accessibility: focus-visible, reduced-motion, safe-area ✅
+   417→- Onboarding flow with 3 steps ✅
+   418→- Badge gallery with 12 badges ✅
+   419→- Zustand store with localStorage persistence ✅
+   420→- Lint passes with zero errors ✅
+   421→- Dev server running without errors ✅
+   422→
+   423→---
+   424→
+   425→Task ID: 3
+   426→Agent: Goal Tracker Agent
+   427→Task: Create Financial Goal Tracker Component
+   428→
+   429→Work Log:
+   430→- Updated Zustand store (`src/lib/store/useAppStore.ts`):
+   431→  - Added `Goal` interface with id, name, target, saved, deadline, category, emoji, createdAt
+   432→  - Added `goals: Goal[]` state (persisted in localStorage)
+   433→  - Added `addGoal`, `updateGoalSaved`, `deleteGoal` actions
+   434→  - Fixed duplicate Goal interface that was already partially added
+   435→- Created `src/components/shared/GoalTracker.tsx` (~1100 lines):
+   436→  - Goal Creation: Full form with name, target amount (₹), saved amount, deadline date, category (Emergency Fund, Gadget, Travel, Education, Investment, Other), optional emoji
+   437→  - Pre-built goal templates: "Emergency Fund - 6 mahine ka kharcha", "Naya Phone", "Goa Trip", "SIP Start", "Diwali Shopping"
+   438→  - Gold gradient progress bars for each goal
+   439→  - Goal Dashboard: Summary cards showing Total Goals, Total Saved, Total Target, Overall Progress %
+   440→  - Filter by category, sort by deadline/progress/amount
+   441→  - Motivational Hinglish quotes that change based on overall progress (5 brackets: 0-25%, 25-50%, 50-75%, 75-100%, 100%)
+   442→  - Expandable Goal Detail View with large progress ring with milestone markers (25%, 50%, 75%, 100%)
+   443→  - "Add Savings" button with coin reward (+5 coins per savings addition)
+   444→  - Time remaining indicator with color coding (green/yellow/amber/red)
+   445→  - Monthly projection: "Agar tum ₹X/mahina save karte ho, toh [date] tak goal poora hoga!"
+   446→  - Confetti celebration when a goal reaches 100%
+   447→  - Delete confirmation dialog
+   448→  - Quick amount buttons (₹500, ₹1000, ₹2000, ₹5000)
+   449→  - Goal complete: awards 25 coins + "goal-complete" badge
+   450→  - Dark theme with #0a0a0f bg, #1a1a2e cards, gold #f59e0b accents
+   451→  - Uses glass-surface, card-dark, text-gradient-gold CSS classes
+   452→  - Framer Motion animations throughout
+   453→  - shadcn/ui components: Dialog, Button, Input, Select, Progress, Badge
+   454→- Updated Navbar (`src/components/layout/Navbar.tsx`):
+   455→  - Added Target icon import from lucide-react
+   456→  - Added GoalTracker component import
+   457→  - Added Goal Tracker dialog state (useGoalTrackerOpen)
+   458→  - Added Goals button with Target icon (between Dashboard and Calculator buttons)
+   459→  - Renders GoalTracker component with open/close state
+   460→
+   461→Stage Summary:
+   462→- Full financial goal tracker with create, track, save, delete functionality
+   463→- 5 pre-built templates for quick goal creation
+   464→- Summary dashboard with 4 stat cards
+   465→- Filter and sort controls
+   466→- Expandable goal cards with progress rings and milestones
+   467→- Confetti celebration on goal completion
+   468→- Coin rewards: +5 per savings, +25 + badge on completion
+   469→- Monthly savings projection calculator
+   470→- All text in Hinglish
+   471→- Zero lint errors, dev server compiles successfully
+   472→
+   473→---
+   474→Task ID: cron-3
+   475→Agent: Continuous Development Agent (Round 3)
+   476→Task: QA testing, 3 major new features, visual polish improvements
+   477→
+   478→Work Log:
+   479→- Performed comprehensive QA on all 12 strategies via agent-browser — zero errors
+   480→- VLM analysis of screenshots: improved from 6/10 to 8/10 rating
+   481→- Created Financial Goal Tracker (GoalTracker.tsx ~1100 lines): goal creation with templates, progress tracking, savings additions, milestone celebrations, coin rewards, delete with confirmation
+   482→- Created AI Financial Advisor (FinanceAdvisor.tsx ~370 lines + API route): LLM-powered Hinglish chatbot with z-ai-web-dev-sdk, floating chat button, quick questions, typing indicator, conversation history, rate limiting
+   483→- Created Achievement Dashboard (AchievementDashboard.tsx ~500+ lines): hero section, progress overview, strategy mastery grid, module timeline, quiz performance chart, Financial Literacy Score (0-100 with A+/A/B/C/D grades), badge showcase, streak calendar, next steps section
+   484→- Created API route /api/finance-advisor/route.ts: POST endpoint with z-ai-web-dev-sdk, context-aware responses, rate limiting, fallback responses
+   485→- Enhanced Sidebar: better contrast (#a0a0b8 instead of #8888a0), gradient header, level glow effect, locked module hints ("Pehle [module] khatam karo"), module count indicator, improved Quick Stats with border/hover effects
+   486→- Enhanced FinanceAdvisor: chat pulse ring animation, improved header gradient, better contrast in welcome text
+   487→- Enhanced globals.css: 15+ new utility classes (animate-chat-pulse, animate-goal-burst, animate-unlock-shimmer, animate-score-flip, animate-breath-glow, glass-card-glow, progress-ring-glow, section-divider, number-highlight, chat-bubble tails, skeleton-shimmer, ribbon)
+   488→- Updated Zustand store: Goal interface, AdvisorMessage interface, goals state, advisorMessages state, addGoal/updateGoalSaved/deleteGoal/addAdvisorMessage/clearAdvisorMessages actions
+   489→- Updated Navbar: Achievement Dashboard button (BarChart3 icon), Goal Tracker button (Target icon)
+   490→- Updated page.tsx: FinanceAdvisor component integration
+   491→- All 12 strategies tested — zero errors across all tabs
+   492→- Lint passes with zero errors
+   493→- Dev server running without errors
+   494→
+   495→Stage Summary:
+   496→- 3 major new features: Financial Goal Tracker, AI Financial Advisor, Achievement Dashboard
+   497→- VLM rating improved from 6/10 to 8/10
+   498→- 15+ new CSS utility classes for polish
+   499→- Better contrast throughout Sidebar (#a0a0b8 > #8888a0)
+   500→- Locked module guidance added
+   501→- AI chatbot responds in Hinglish with context-aware advice
+   502→- Financial Literacy Score calculated from modules + quizzes + terms + activity
+   503→
+   504→## Current Project Status
+   505→- All 12 strategies implemented and functional ✅
+   506→- Financial Goal Tracker (new) ✅
+   507→- AI Financial Advisor chatbot (new) ✅
+   508→- Achievement Dashboard with FL Score (new) ✅
+   509→- SIP Calculator tool ✅
+   510→- Daily Financial Tips Banner ✅
+   511→- Share Progress with image download ✅
+   512→- Mobile bottom navigation ✅
+   513→- Enhanced visual polish across all strategies ✅
+   514→- Mobile responsive design ✅
+   515→- Accessibility: focus-visible, reduced-motion, safe-area ✅
+   516→- Onboarding flow with 3 steps ✅
+   517→- Badge gallery with 12 badges + auto-awarding ✅
+   518→- Zustand store with localStorage persistence ✅
+   519→- Lint passes with zero errors ✅
+   520→- Dev server running without errors ✅
+   521→- VLM visual quality rating: 8/10 ✅
+   522→
+   523→## Unresolved Issues / Next Steps
+   524→- Could add sound effects for interactions
+   525→- Could add PWA support for offline usage
+   526→- Report card could have PDF export capability
+   527→- SIP Calculator AI tip could have better caching mechanism
+   528→- ~~Could add more interactive mini-games (spin wheel, memory match)~~ ✅ Spin Wheel added
+   529→- Could add memory match game
+   530→- Could add leaderboard / social features
+   531→- Module detail panel in LifePathMap could show more subtopic content
+   532→- Could add more quiz questions per module
+   533→- Could add a financial news feed section
+   534→- Dashboard quiz performance chart could be more interactive
+   535→- Goal Tracker could support recurring savings (auto-deduct monthly)
+   536→
+   537→---
+   538→
+   539→Task ID: 4
+   540→Agent: Spin Wheel Agent
+   541→Task: Create Financial Fortune Spin Wheel Mini-game
+   542→
+   543→Work Log:
+   544→- Updated Zustand store (`src/lib/store/useAppStore.ts`):
+   545→  - Added `lastSpinTime: number` state (timestamp, 0 = never spun)
+   546→  - Added `totalSpins: number` state (total spins ever)
+   547→  - Added `spinWinnings: number` state (total coins won from spins)
+   548→  - Added `setLastSpinTime`, `incrementTotalSpins`, `addSpinWinnings` actions
+   549→  - `addSpinWinnings` also adds to coins and checks badge thresholds (coins-100, coins-500)
+   550→- Created `src/components/shared/SpinWheel.tsx` (~580 lines):
+   551→  - **8 SVG wheel segments** with different rewards and colors:
+   552→    - 🪙 10 Coins (amber), 🪙 25 Coins (gold), 🪙 50 Coins (bright gold)
+   553→    - 📚 Financial Tip (blue), 🎯 Daily Challenge (green)
+   554→    - 🔥 Streak Shield (orange), 🎁 Mystery Box (purple), 💡 Wisdom Quote (teal)
+   555→  - **SVG wheel design**: Colored segments with emoji + text labels, gold outer ring with dot ticks, center hub with ₹ logo and gold gradient
+   556→  - **Spin mechanics**: CSS transform rotate + transition with `cubic-bezier(0.17, 0.67, 0.12, 0.99)` for realistic deceleration (4.5s duration, 5-7 full rotations)
+   557→  - **Pointer/arrow** at top (gold triangle with drop-shadow)
+   558→  - **Spin button**: Gold gradient (`btn-gold`), costs 5 coins, shows cost in ₹
+   559→  - **4-hour cooldown**: Tracked by `lastSpinTime` in store, live countdown timer "Agle spin mein XX:XX:XX bache hain", cooldown progress bar
+   560→  - **Not enough coins message**: "Pehle thode coins kamaao! 💪"
+   561→  - **Reward reveal modal** with Framer Motion animations:
+   562→    - Coins: Coin bounce animation + counting-up number display
+   563→    - Tip: Card flip animation to reveal Hinglish financial tip (10 tips pool)
+   564→    - Challenge: Spring animation showing daily challenge text (8 challenges pool)
+   565→    - Streak Shield: Pulsing glow shield icon
+   566→    - Mystery Box: Shaking box animation → reveals random coins (5-100, weighted distribution)
+   567→    - Wisdom: Decorative quote card with teal gradient border (8 quotes pool)
+   568→  - **"Collect!" button** to claim reward → adds coins via `addSpinWinnings` or `addCoins`
+   569→  - **Confetti** on big wins (50+ coins) with 30 colorful particles
+   570→  - **Stats row**: Total Spins, Won from Spins, Balance
+   571→  - Dark theme with `glass-card-glow`, `btn-gold`, `text-gradient-gold`, `stat-card` CSS classes
+   572→  - Dialog opens via shadcn/ui Dialog component
+   573→- Updated Navbar (`src/components/layout/Navbar.tsx`):
+   574→  - Added CircleDot icon import from lucide-react
+   575→  - Added SpinWheel component import
+   576→  - Added spin wheel dialog state (`useSpinWheelOpen`)
+   577→  - Added Spin Wheel button with CircleDot icon (between Goals and Calculator buttons)
+   578→  - Tooltip: "Spin Wheel 🎰"
+   579→  - Renders SpinWheel component with open/close state
+   580→- Financial Tips Pool: 10 Hinglish tips (SIP consistency, emergency fund, credit card, 50-30-20 rule, insurance, equity MF, expense tracking, lifestyle inflation, tax saving, P2P/crypto caution)
+   581→- Daily Challenges Pool: 8 Hinglish challenges (₹100 save, cancel subscription, 24h thinking rule, net worth calc, teach family, homemade food, subscriptions audit, learn new term)
+   582→- Wisdom Quotes Pool: 8 Hinglish quotes with author attribution
+   583→
+   584→Stage Summary:
+   585→- Interactive spin-the-wheel mini-game fully functional ✅
+   586→- 8 reward segments with distinct animations per type ✅
+   587→- Realistic spin physics with CSS transition ✅
+   588→- 4-hour cooldown with live countdown timer ✅
+   589→- Spin costs 5 coins with insufficient coins message ✅
+   590→- Confetti celebration on big wins ✅
+   591→- All text in Hinglish ✅
+   592→- 10 financial tips, 8 daily challenges, 8 wisdom quotes pools ✅
+   593→- Mystery Box with weighted random coin distribution ✅
+   594→- Streak Shield reward type ✅
+   595→- Zustand store persistence for spin state ✅
+   596→- Accessible from Navbar via Dialog ✅
+   597→- Zero lint errors ✅
+   598→- Dev server compiling successfully ✅
+   599→
+   600→---
+   601→
+   602→Task ID: 3
+   603→Agent: Quiz Arena Agent
+   604→Task: Create Interactive Quiz Challenge Arena
+   605→
+   606→Work Log:
+   607→- Read worklog.md, quiz-data.ts, useAppStore.ts, Navbar.tsx, globals.css, SIPCalculator.tsx, types/index.ts, modules.ts to understand the existing codebase
+   608→- Updated Zustand store (`src/lib/store/useAppStore.ts`):
+   609→  - Added `quizArenaHighScores: Record<string, number>` state (best score per mode)
+   610→  - Added `quizArenaBestStreak: number` state (all-time best streak)
+   611→  - Added `setQuizArenaHighScore: (mode: string, score: number) => void` action (stores max score per mode)
+   612→  - Added `setQuizArenaBestStreak: (streak: number) => void` action (stores max streak)
+   613→  - Added both to initialState for proper reset
+   614→- Created `src/components/shared/QuizArena.tsx` (~1150 lines):
+   615→  - **4 Quiz Challenge Modes**:
+   616→    - **Quick Fire**: 10 random questions, 15 seconds per question, earn coins based on speed
+   617→    - **Module Mastery**: All questions from a specific module (11 modules listed), no timer, learn at your pace
+   618→    - **Survival Mode**: Keep answering until you get one wrong - game over with skull animation
+   619→    - **Speed Run**: Answer all 44 questions as fast as possible with live timer
+   620→  - **Game Mechanics**:
+   621→    - Timer countdown bar (animated, gold gradient for normal, red gradient when <25% time) for timed modes
+   622→    - Combo streak system: consecutive correct answers multiply coins (1x base, 2x at 2 streak, 3x at 3, 5x at 5+)
+   623→    - Streak visual: growing Flame icon with each combo level, glow effects at higher streaks
+   624→    - Points: +10 base for correct, +5 speed bonus (if answered in <50% of timer), streak multiplier applied
+   625→    - Wrong answer: streak resets to 0, show correct answer with explanation for 3 seconds
+   626→    - Question difficulty badges: Easy (green), Medium (amber), Hard (red) with color-coded backgrounds
+   627→  - **Visual Design**:
+   628→    - Large question card with flip animation on reveal (Framer Motion rotateY)
+   629→    - 4 answer option buttons with hover lift effect and color feedback (green flash correct, red shake wrong)
+   630→    - Combo counter with scaling animation (1x → 2x → 3x → 5x) using number-highlight CSS class
+   631→    - Progress bar showing questions completed (gold gradient)
+   632→    - Confetti burst on combo milestones (5, 10, 15, 20, 25, 30, 35, 40) with 30 particles
+   633→    - Dark theme (#0a0a0f bg, glass-card-glow cards, gold #f59e0b accents)
+   634→    - Uses existing CSS classes: glass-card-glow, text-gradient-gold, btn-gold, btn-ghost-gold, number-highlight, section-divider
+   635→    - Framer Motion for all animations (spring, stagger, flip, confetti)
+   636→  - **Results Screen**:
+   637→    - Score breakdown: Total points, Accuracy %, Best streak, Time taken (4 stat cards with icons)
+   638→    - Coin reward display with counting animation (incrementing from 0 to reward)
+   639→    - Performance grade: S (95%+), A (80%+), B (60%+), C (40%+), D (below) with color and glow
+   640→    - "Phir se khelo" (Play again) button using btn-gold class
+   641→    - "Aage badho" (Continue) button using btn-ghost-gold class
+   642→    - "Score share karo" button (copies text to clipboard) with check icon on success
+   643→    - NEW BEST! badge on high scores
+   644→    - Hinglish motivational messages based on accuracy brackets
+   645→  - **Integration**:
+   646→    - Awards coins via `addCoins` action on quiz completion (1 coin per 5 points)
+   647→    - Awards "quiz-ace" badge if accuracy ≥ 90% in Quick Fire mode
+   648→    - Updates `quizArenaHighScores` and `quizArenaBestStreak` in store on completion
+   649→    - Shows high score per mode on mode selection screen
+   650→    - Shows all-time best streak on mode selection screen
+   651→  - **State Management**:
+   652→    - Phase system: mode-select → module-select (mastery only) → playing → result
+   653→    - Full game state: questions, currentIndex, streak, bestStreak, totalPoints, answers, timeLeft, etc.
+   654→    - Proper cleanup on dialog close (reset all state, clear timers)
+   655→    - Body scroll prevention when dialog open
+   656→  - Timer uses useCallback for handleTimeUp and advanceQuestion to satisfy ESLint hoisting rules
+   657→- Updated Navbar (`src/components/layout/Navbar.tsx`):
+   658→  - Added Zap icon import from lucide-react
+   659→  - Added QuizArena component import
+   660→  - Added useQuizArenaOpen dialog state hook
+   661→  - Added Quiz Arena button with Zap icon (between Goal Tracker and Spin Wheel buttons)
+   662→  - Renders QuizArena component with open/close state
+   663→- All text in Hinglish throughout
+   664→- Zero lint errors, dev server compiles successfully
+   665→
+   666→Stage Summary:
+   667→- Comprehensive quiz challenge arena with 4 distinct game modes
+   668→- Full game mechanics: timed questions, combo streaks, point multipliers, speed bonuses
+   669→- Visual celebrations: confetti bursts, flip animations, growing flames, color feedback
+   670→- Results screen with grade system, coin rewards, sharing, and replay
+   671→- Integrated with Zustand store for high scores, best streaks, coin rewards, and badge awarding
+   672→- Accessible from Navbar via Dialog (Zap icon button)
+   673→- All text in Hinglish
+   674→- Zero lint errors ✅
+   675→
+   676→---
+   677→
+   678→Task ID: 5-a
+   679→Agent: Contrast & Visual Hierarchy Agent
+   680→Task: Improve text contrast and visual hierarchy across all strategy components
+   681→
+   682→Work Log:
+   683→- Replaced all `text-[#8888a0]` with `text-[#a0a0b8]` across 11 strategy component files (excluded LifePathMap which was not in scope)
+   684→- ConsequenceSim.tsx: Replaced 12 instances of low-contrast text, added `font-medium` to profile description/slider labels/section headers, added `number-highlight` to important difference card numbers and SIP formula, added `hover:bg-white/[0.04] transition-colors` to fast forward buttons, improved formula text opacity from /50 to /60
+   685→- InflationMonster.tsx: Replaced 14 instances of `text-gray-400/500/600` with `text-[#a0a0b8]`, added `font-medium` to all labels (Amount, Years, Real value, Invested value, stat card labels), added `hover:bg-white/[0.04] transition-colors` to quick amount buttons
+   686→- SwipeBudget.tsx: Replaced `text-gray-600` swipe hint with `text-[#a0a0b8]`, previously updated `text-gray-400/500` to `text-[#a0a0b8]` with `font-medium`
+   687→- RoomBudget.tsx: Replaced 7 instances of `text-[#8888a0]`, added `text-gradient-gold` to main header (was `text-white`), added `font-medium` to budget labels/Total Allocated/health indicator, added `hover:bg-white/[0.04] transition-colors` to income selector buttons
+   688→- DebtDoors.tsx: Replaced 11 instances of `text-[#8888a0]`, added `font-medium` to door subtitles, calculation labels, exit section descriptions, doors opened label, key insight text, percentage labels
+   689→- CompoundingTree.tsx: Replaced 9 instances of `text-[#8888a0]`, added `font-medium` to description text, return rate label, formula sections, delay loss text, added `hover:bg-white/[0.04] transition-colors` to return rate buttons, added `hover:bg-amber-400/5 transition-colors` to comparison toggle, added `number-highlight` to comparison corpus number
+   690→- FinancialGPS.tsx: Replaced 8 instances of `text-[#8888a0]`, added `font-medium` to Health Score/Journey Progress labels, description text, milestone descriptions/percentages, direction status text, tooltip text
+   691→- ReportCard.tsx: No `text-[#8888a0]` found — uses intentional light theme (school report card design) with `text-gray-500` for grade badges in light context
+   692→- Dictionary.tsx: Replaced 11 instances of `text-[#8888a0]`, added `font-medium` to header description, added `hover:bg-white/[0.04] transition-colors` to category filter buttons, close button, module button, increased mastery progress bar from `h-1.5` to `h-2`
+   693→- DailySimulator.tsx: Replaced 8 instances of `text-[#8888a0]`, added `font-medium` to Daily Budget/Total Spent/Saved Over/Smart Choices labels, Wallet Balance label, Day Progress label, increased timeline progress bar from `h-1.5` to `h-2`, increased wallet progress bar from `h-1.5` to `h-2`
+   694→- MistakeMarket.tsx: Replaced 6 instances of `text-[#8888a0]`, added `font-medium` to header description and explanation text, added `transition-colors` to all chevron icons (4 instances)
+   695→
+   696→Stage Summary:
+   697→- 86+ instances of `text-[#8888a0]` replaced with `text-[#a0a0b8]` across 11 files
+   698→- `font-medium` added to 40+ labels, section headers, and descriptive text elements
+   699→- `text-gradient-gold` applied to RoomBudget header (was `text-white`)
+   700→- `number-highlight` class added to key numbers in ConsequenceSim and CompoundingTree
+   701→- `hover:bg-white/[0.04]` or `hover:bg-amber-400/5` added to 8+ interactive elements
+   702→- `transition-colors` added to 15+ interactive elements missing smooth color transitions
+   703→- Progress bars increased from `h-1.5` to `h-2` in Dictionary, DailySimulator
+   704→- Zero lint errors ✅
+   705→- Dev server compiles successfully ✅
+   706→
+   707→---
+   708→Task ID: cron-4
+   709→Agent: Continuous Development Agent (Round 4)
+   710→Task: QA testing, 2 new interactive features, deep styling enhancements across all strategies
+   711→
+   712→Work Log:
+   713→- Performed comprehensive QA on all 12 strategies via agent-browser — zero JS errors
+   714→- VLM visual analysis: LifePathMap contrast/readability improved from 6/10 → 8/10, visual hierarchy 5/10 → 7/10, overall polish 5/10 → 8/10
+   715→- Created Quiz Arena (QuizArena.tsx ~1150 lines): 4 game modes (Quick Fire, Module Mastery, Survival, Speed Run), combo streak system (1x→2x→3x→5x), timer bar, difficulty badges, animated results with grade system (S/A/B/C/D), coin rewards, quiz-ace badge for ≥90% accuracy
+   716→- Created Financial Fortune Spin Wheel (SpinWheel.tsx ~580 lines): 8 SVG segments (10/25/50 Coins, Financial Tip, Daily Challenge, Streak Shield, Mystery Box, Wisdom Quote), realistic spin physics with CSS cubic-bezier, 4-hour cooldown, 5-coin cost, 10 Hinglish tips pool, 8 daily challenges pool, 8 wisdom quotes, confetti on big wins
+   717→- Updated Zustand store: quizArenaHighScores, quizArenaBestStreak, lastSpinTime, totalSpins, spinWinnings + actions
+   718→- Updated Navbar: Zap icon for Quiz Arena, CircleDot icon for Spin Wheel
+   719→- Deep styling enhancement across all 11 strategy files:
+   720→  - Replaced 86+ instances of low-contrast text-[#8888a0] with brighter text-[#a0a0b8]
+   721→  - Added font-medium to 40+ label/header elements for visual weight
+   722→  - Applied text-gradient-gold to RoomBudget heading for consistency
+   723→  - Added number-highlight class to prominent numbers in ConsequenceSim and CompoundingTree
+   724→  - Added hover states (hover:bg-white/[0.04] or hover:bg-amber-400/5) to 8+ interactive elements
+   725→  - Added transition-colors to 15+ elements
+   726→  - Increased progress bars from h-1.5 to h-2 in Dictionary and DailySimulator
+   727→- Enhanced LifePathMap header: larger title (text-base font-extrabold), breathing glow on icon, better progress bar (w-24 h-2 with border), number-highlight on stats
+   728→- Enhanced ConsequenceSim header: text-gradient-gold on title, text-[#a0a0b8] for subtitle
+   729→- VLM rating: Quiz Arena 8/10, Spin Wheel 7/10
+   730→- Zero lint errors, dev server running without errors
+   731→
+   732→Stage Summary:
+   733→- 2 major new interactive features: Quiz Challenge Arena, Financial Fortune Spin Wheel
+   734→- Deep contrast improvement across all 11 strategy files (86+ text replacements)
+   735→- VLM contrast/readability improved from 6/10 → 8/10
+   736→- Better hover states and interactivity cues added throughout
+   737→- Consistent gold gradient headers across all strategies
+   738→- All 12 strategies tested — zero errors
+   739→
+   740→## Current Project Status
+   741→- All 12 strategies implemented and functional ✅
+   742→- Quiz Challenge Arena with 4 game modes (NEW) ✅
+   743→- Financial Fortune Spin Wheel mini-game (NEW) ✅
+   744→- Financial Goal Tracker ✅
+   745→- AI Financial Advisor chatbot ✅
+   746→- Achievement Dashboard with FL Score ✅
+   747→- SIP Calculator tool ✅
+   748→- Daily Financial Tips Banner ✅
+   749→- Share Progress with image download ✅
+   750→- Mobile bottom navigation ✅
+   751→- Deep contrast improvements across all strategies ✅
+   752→- Consistent gold gradient headers ✅
+   753→- Better hover states and interactivity cues ✅
+   754→- Mobile responsive design ✅
+   755→- Accessibility: focus-visible, reduced-motion, safe-area ✅
+   756→- Onboarding flow with 3 steps ✅
+   757→- Badge gallery with 12 badges + auto-awarding ✅
+   758→- Zustand store with localStorage persistence ✅
+   759→- Lint passes with zero errors ✅
+   760→- Dev server running without errors ✅
+   761→- VLM visual quality: contrast 8/10, hierarchy 7/10, polish 8/10 ✅
+   762→
+   763→## Unresolved Issues / Next Steps
+   764→- Could add sound effects for interactions
+   765→- Could add PWA support for offline usage
+   766→- Report card could have PDF export capability
+   767→- Spin Wheel could have more dynamic wheel border (subtle glow animation)
+   768→- Quiz Arena could add multiplayer/leaderboard features
+   769→- Could add more interactive mini-games (memory match, word scramble)
+   770→- Module detail panel in LifePathMap could show more subtopic content
+   771→- Could add more quiz questions per module
+   772→- Could add a financial news feed section
+   773→- Goal Tracker could support recurring savings (auto-deduct monthly)
+   774→- Dashboard could have more interactive charts with drill-down
+   775→
+   776→---
+   777→
+   778→Task ID: Round-5
+   779→Agent: Main Orchestrator
+   780→Task: QA testing, 3 new interactive features, ultra-premium styling enhancements, app footer
+   781→
+   782→Work Log:
+   783→- Performed comprehensive QA testing with agent-browser on all 12 strategies and existing features
+   784→- Zero JS errors found across all strategies and dialogs
+   785→- Fixed import mismatch: SavingsChallenge, ExpenseTracker, HealthCheckup use default exports but were imported as named exports
+   786→- Created SavingsChallenge component (~280 lines): 30-day savings tracker with preset/custom daily goals, 30-day grid calendar, milestone confetti, streak tracking, badge awards
+   787→- Created ExpenseTracker component (~400 lines): Daily expense logging with 9 categories (with emoji + colors), Recharts pie chart breakdown, monthly budget tracking, grouped expense list
+   788→- Created HealthCheckup component (~500 lines): 8-question financial health quiz with 4 answer options each, animated score counter, Recharts radar chart, personalized recommendations based on lowest-scoring categories
+   789→- Updated Zustand store with 3 new interfaces (SavingsDay/SavingsChallenge, ExpenseEntry, HealthCheckupResult) and 8 new actions
+   790→- Updated Navbar with 3 new buttons: HeartPulse (Health Checkup), Receipt (Expense Tracker), PiggyBank (Savings Challenge)
+   791→- Enhanced globals.css with 25+ new CSS utilities:
+   792→  - Premium glassmorphism (.glass-premium)
+   793→  - Animated gradient border (.gradient-border-animated)
+   794→  - Sparkle effect on achievements
+   795→  - Neon text glow (.text-neon-gold)
+   796→  - Shimmer sweep on hover (.shimmer-hover)
+   797→  - 3D card tilt effect (.card-3d)
+   798→  - Aurora gradient background (.aurora-bg)
+   799→  - Press effect for buttons (.press-effect)
+   800→  - Animated gradient text (.text-gradient-animated)
+   801→  - Glass input field styling (.glass-input)
+   802→  - Custom scrollbar for dark cards
+   803→  - Heartbeat animation, piggy bank wobble, receipt tear reveal
+   804→  - Color dot pulse, morph blob background
+   805→  - Footer styling (.app-footer)
+   806→  - Stagger list animations up to 20 items
+   807→  - Wavy underline, floating label, typing cursor blink
+   808→- Added AppFooter component with logo, feature badges, and tagline
+   809→- Updated page.tsx layout to use flex column for proper footer placement
+   810→- All text in Hinglish throughout new features
+   811→- Zero lint errors, dev server running without errors
+   812→
+   813→Stage Summary:
+   814→- 3 major new interactive features: Savings Challenge, Expense Tracker, Financial Health Checkup
+   815→- 25+ new CSS utility classes for ultra-premium visual effects
+   816→- App footer with branding and feature showcase
+   817→- All 12 strategies + all features tested — zero errors
+   818→- Zustand store extended with 3 new interfaces and 8 new actions
+   819→- 3 new badges: savings-streak-7, savings-streak-14, savings-streak-30, health-guru, health-aware
+   820→- Navbar now has 10 feature buttons (Dashboard, Goals, Health Checkup, Expense Tracker, Savings Challenge, Quiz Arena, Spin Wheel, SIP Calculator, Badges, Progress)
+   821→
+   822→## Current Project Status
+   823→
+   824→### Core Features (12 Strategies)
+   825→- ✅ LifePathMap - Interactive life journey with pit stops
+   826→- ✅ FinancialGPS - Financial health navigator
+   827→- ✅ ConsequenceSim - What-if consequence simulator
+   828→- ✅ InflationMonster - Inflation impact visualizer
+   829→- ✅ SwipeBudget - Swipe-card expense categorizer
+   830→- ✅ RoomBudget - Room-by-room budget builder
+   831→- ✅ DebtDoors - Debt trap door animation
+   832→- ✅ CompoundingTree - Growing tree compounding visual
+   833→- ✅ ReportCard - Financial health report card
+   834→- ✅ Dictionary - Financial terms explorer (Hinglish)
+   835→- ✅ DailySimulator - Daily spending simulator
+   836→- ✅ MistakeMarket - Interactive error gallery
+   837→
+   838→### Interactive Tools
+   839→- ✅ Quiz Challenge Arena (4 game modes: Quick Fire, Module Mastery, Survival, Speed Run)
+   840→- ✅ Financial Fortune Spin Wheel (8 segments, cooldown, coin cost)
+   841→- ✅ SIP Calculator (sliders, year-by-year breakdown, presets)
+   842→- ✅ Savings Challenge (30-day tracker, streaks, milestones, confetti) [NEW]
+   843→- ✅ Expense Tracker (9 categories, pie chart, budget tracking) [NEW]
+   844→- ✅ Financial Health Checkup (8-question quiz, radar chart, recommendations) [NEW]
+   845→
+   846→### Dashboard & Tracking
+   847→- ✅ Achievement Dashboard (FL Score, strategy mastery, module progress, quiz performance, streak calendar)
+   848→- ✅ Financial Goal Tracker (add goals, track savings, visual progress)
+   849→- ✅ Badge Gallery (12+ badges with auto-awarding)
+   850→- ✅ AI Financial Advisor chatbot (Rupaiya Guru)
+   851→- ✅ Daily Financial Tips Banner
+   852→- ✅ Share Progress with image download
+   853→- ✅ Progress Ring (navbar, sidebar)
+   854→
+   855→### Visual & UX
+   856→- ✅ Dark premium theme with amber/gold accents
+   857→- ✅ Glassmorphism effects (glass-card, glass-premium, glass-surface)
+   858→- ✅ Animated gradient borders
+   859→- ✅ Sparkle/particle effects
+   860→- ✅ 3D card tilt, shimmer hover
+   861→- ✅ Aurora gradient backgrounds
+   862→- ✅ Deep contrast improvements (text-[#a0a0b8])
+   863→- ✅ Consistent gold gradient headers
+   864→- ✅ Mobile bottom navigation
+   865→- ✅ Mobile-responsive design
+   866→- ✅ App footer with branding
+   867→- ✅ Onboarding flow (3 steps)
+   868→- ✅ Zustand store with localStorage persistence
+   869→- ✅ Accessibility: focus-visible, reduced-motion, safe-area
+   870→
+   871→### Technical
+   872→- ✅ Lint passes with zero errors
+   873→- ✅ Dev server running without errors
+   874→- ✅ All components lazy-loaded for performance
+   875→
+   876→## Unresolved Issues / Next Steps
+   877→- Could add PWA support for offline usage
+   878→- Could add sound effects for interactions
+   879→- Report card could have PDF export capability
+   880→- Could add more interactive mini-games (memory match, word scramble)
+   881→- Quiz Arena could add multiplayer/leaderboard features
+   882→- Could add a financial news feed section
+   883→- Goal Tracker could support recurring savings (auto-deduct monthly)
+   884→- Dashboard could have more interactive charts with drill-down
+   885→- Could add dark/light theme toggle
+   886→- Could add localization (pure Hindi, English options)
+   887→- Expense Tracker could add receipt photo capture
+   888→- Health Checkup could save historical scores and show trend
+   889→- Savings Challenge could support custom durations (7-day, 14-day)
+   890→- Could add keyboard shortcuts for power users
+   891→
+   892→---
+   893→
+   894→Task ID: 5
+   895→Agent: frontend-styling-expert
+   896→Task: Deep Styling Improvements — Micro-interactions, Animations, Visual Polish
+   897→
+   898→Work Log:
+   899→- Read full globals.css (1222 lines) and worklog.md to understand existing styling
+   900→- Identified 3 pre-existing keyframes (float, countUp, morphBlob) and 2 pre-existing classes (animate-float, text-shadow-gold) that matched requested additions — correctly skipped to avoid clashes
+   901→- Added 7 NEW keyframe animations: shimmerSlide, borderGlow, cardEntrance, typewriter, ripple, rotateGlow, slideInFromLeft
+   902→- Added 4 supporting keyframes: scrollBounce, skeletonPulseMove, loadingDotBounce, badgeGlowPulse
+   903→- Added 16 new utility classes: animate-shimmer-slide, animate-border-glow, animate-card-entrance, animate-slide-from-left, ripple-effect, hover-lift-lg, hover-glow, text-shadow-sm, bg-gradient-radial, noise-bg, card-hover-expand, focus-ring-gold, scroll-indicator, animated-underline (+ skipped animate-float, text-shadow-gold already existing)
+   904→- Enhanced global scrollbar: 6px width, gold-tinted thumb at 30% opacity, transparent track, 999px radius, 50% opacity on hover
+   905→- Added comprehensive .light theme with warm cream/amber tones (not cold blue): #faf8f5 bg, #1a1a2e fg, amber-based primary/secondary/accent/border colors
+   906→- Added .strategy-header-enhanced with gradient text, breathing glow animation, and decorative bottom line
+   907→- Added 3 enhanced card styles: .card-premium (animated gradient border), .card-glass (backdrop-blur + border glow), .card-dark-enhanced (inner shadow + border)
+   908→- Added 3 button enhancements: .btn-gold-enhanced (shimmer on hover), .btn-ghost-enhanced (glow on hover), .btn-danger (red/warning)
+   909→- Added 3 interactive element states: .skeleton-pulse (enhanced shimmer), .loading-dots (3 bouncing dots), .badge-glow (animated glow pulse)
+   910→- Verified zero name clashes with existing CSS
+   911→- Build passes successfully with `next build`
+   912→
+   913→Files Modified:
+   914→- src/app/globals.css (added ~540 lines of new CSS, total now ~1764 lines)
+   915→
+   916→Notes:
+   917→- float, countUp, morphBlob keyframes already existed and were preserved as-is
+   918→- animate-float and text-shadow-gold classes already existed and were preserved as-is
+   919→- All new additions use the same color scheme: #0a0a0f bg, #1a1a2e cards, #f59e0b gold, #e8e8ed text
+   920→- No component files were modified — only globals.css
+   921→
+   922→---
+   923→
+   924→Task ID: 4-a
+   925→Agent: Subagent
+   926→Task: Create Financial Memory Match Mini-Game Component
+   927→
+   928→Work Log:
+   929→- Read worklog.md and analyzed existing project structure
+   930→- Examined existing components (SpinWheel, QuizArena, etc.) for patterns
+   931→- Reviewed terms-dictionary.ts data (40+ financial terms in Hinglish)
+   932→- Reviewed useAppStore.ts state management patterns
+   933→- Reviewed Navbar.tsx for tool button integration pattern
+   934→- Reviewed globals.css for existing utility classes (glass-card-glow, text-gradient-gold, btn-gold, btn-ghost-gold, card-dark, stat-card)
+   935→
+   936→Created Files:
+   937→- src/components/shared/MemoryMatch.tsx (~855 lines)
+   938→  - Full financial term memory match game with card flip animations
+   939→  - 3 game modes: Easy (6 pairs), Medium (8 pairs), Hard (10 pairs)
+   940→  - Terms sourced from existing terms-dictionary.ts data
+   941→  - Card flip animation using CSS 3D transforms + Framer Motion
+   942→  - Match celebration with gold glow effect
+   943→  - Combo system: consecutive matches multiply coin reward (1x, 2x, 3x, 5x)
+   944→  - Timer counting up (not down) — shows total time at end
+   945→  - Move counter
+   946→  - Results screen: time, moves, accuracy %, coins earned, grade (S/A/B/C/D)
+   947→  - Confetti animation on completing hard mode
+   948→  - "Phir Khelo!" (Play Again) button
+   949→  - All text in Hinglish
+   950→  - Uses existing CSS classes: glass-card-glow, text-gradient-gold, btn-gold, btn-ghost-gold, card-dark, stat-card
+   951→  - Dark theme: #0a0a0f background, #1a1a2e cards, #f59e0b gold accents
+   952→  - Exported as default function with MemoryMatchProps interface
+   953→  - Uses shadcn/ui Dialog component
+   954→  - Game completion logic computed inline (no setState in useEffect)
+   955→
+   956→Modified Files:
+   957→- src/lib/store/useAppStore.ts
+   958→  - Added `memoryMatchBestTimes: Record<string, number>` state
+   959→  - Added `setMemoryMatchBestTime: (mode: string, time: number) => void` action
+   960→  - Added both to initialState
+   961→  - Coins awarded via `addCoins` on game completion (5 easy, 10 medium, 15 hard + combo bonus)
+   962→
+   963→- src/components/layout/Navbar.tsx
+   964→  - Added import for MemoryMatch component
+   965→  - Added `Brain` icon import from lucide-react
+   966→  - Added `useMemoryMatchOpen` dialog state hook
+   967→  - Added Brain icon button between Spin Wheel and SIP Calculator buttons
+   968→  - Added tooltip: "Memory Match 🧠"
+   969→  - Added `<MemoryMatch>` dialog component in render
+   970→
+   971→Lint Status:
+   972→- Zero new lint errors in MemoryMatch.tsx, useAppStore.ts, Navbar.tsx
+   973→- Pre-existing ThemeToggle.tsx lint error (unrelated) remains
+   974→
+   975→---
+   976→
+   977→Task ID: 4-b
+   978→Agent: Keyboard Shortcuts + Theme Agent
+   979→Task: Add Keyboard Shortcuts System + Financial Word Scramble Game + Theme Toggle
+   980→
+   981→Work Log:
+   982→- Read worklog.md and analyzed existing project structure (12 strategies, 10+ interactive tools, dark theme, Zustand store)
+   983→- Read current page.tsx, layout.tsx, globals.css, Navbar.tsx, useAppStore.ts, strategies.ts
+   984→
+   985→Created Files:
+   986→1. `src/lib/hooks/useKeyboardShortcuts.ts` (~120 lines)
+   987→   - Custom hook that registers global keyboard shortcuts for the app
+   988→   - Accepts config object with callbacks for each shortcut action
+   989→   - `Alt+1` through `Alt+=` → Switch to strategies 1-12 (1-9 direct, 0=10, -=11, ==12)
+   990→   - `Alt+D` → Open Achievement Dashboard
+   991→   - `Alt+G` → Open Goal Tracker
+   992→   - `Alt+K` and `Alt+/` → Open Keyboard Shortcuts Help dialog
+   993→   - `Escape` → Close any open dialog (works even when typing in inputs)
+   994→   - `?` → Show keyboard shortcuts help (when no input is focused)
+   995→   - Does NOT trigger when typing in input/textarea/select/contenteditable fields
+   996→   - Exports `shortcutsList` for display purposes and `ShortcutEntry` type
+   997→   - Uses useEffect with proper cleanup for event listener
+   998→   - Uses useCallback for stable handler reference
+   999→
+  1000→2. `src/components/shared/KeyboardShortcutsDialog.tsx` (~170 lines)
+  1001→   - Beautiful dark theme dialog showing all available keyboard shortcuts
+  1002→   - Grouped by category: Navigation (12 strategy shortcuts), Tools (2 shortcuts), General (4 shortcuts)
+  1003→   - Keyboard key styling: dark card with gold border for each key (KeyBadge component)
+  1004→   - Category headers with emoji labels and Hinglish descriptions
+  1005→   - "Pro Tip" section at bottom in Hinglish
+  1006→   - Framer Motion animations: spring entrance, stagger rows, hover effects
+  1007→   - Prevents body scroll when dialog open
+  1008→   - Props: `open: boolean; onClose: () => void`
+  1009→   - Exported as default
+  1010→
+  1011→3. `src/components/shared/ThemeToggle.tsx` (~65 lines)
+  1012→   - Toggle button that switches between dark and light themes
+  1013→   - Uses `next-themes` for theme management (cookie-based persistence via ThemeProvider)
+  1014→   - Dark mode = current dark theme (default)
+  1015→   - Light mode = warm light theme with amber accents
+  1016→   - Sun/Moon icon animation with Framer Motion rotation (180°)
+  1017→   - Uses `useSyncExternalStore` for mounted state (avoids lint error with setState in effect)
+  1018→   - Hydration-safe: shows placeholder div until mounted
+  1019→
+  1020→Modified Files:
+  1021→4. `src/app/layout.tsx`
+  1022→   - Wrapped app with `<ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>`
+  1023→   - Imported ThemeProvider from `next-themes`
+  1024→   - Removed hardcoded bg/text colors from body (delegated to globals.css theme overrides)
+  1025→
+  1026→5. `src/app/globals.css`
+  1027→   - Added `@custom-variant light (&:is(.light *));` for Tailwind light variant support
+  1028→   - Added `.light` CSS variable overrides with warm amber tones (oklch color space)
+  1029→   - Added 90+ lines of `.light` theme overrides including:
+  1030→     - Scrollbar colors, body background/text, glass cards, buttons, inputs
+  1031→     - Text color overrides for muted text (text-[#a0a0b8], text-[#8888a0], etc.)
+  1032→     - Background overrides for key surfaces (bg-[#0a0a0f], bg-[#12121a], etc.)
+  1033→     - Border overrides for white/[0.06], white/[0.08], white/[0.04]
+  1034→     - Section divider, app footer, focus visible, selection, gradient borders
+  1035→     - Glow effects, tooltips, nav backgrounds, key badges, watermark, skeleton shimmer
+  1036→     - Particle background opacity reduction, mobile menu gradient
+  1037→   - Light theme uses warm cream (#faf7f2) background with amber (#b45309, #92400e) accents
+  1038→   - Dark theme remains exactly as before
+  1039→
+  1040→6. `src/app/page.tsx`
+  1041→   - Added ThemeToggle component (fixed position, top-right corner below navbar)
+  1042→   - Added KeyboardShortcutsDialog component with open/close state
+  1043→   - Integrated useKeyboardShortcuts hook with proper callbacks:
+  1044→     - onSwitchStrategy: calls setActiveStrategy
+  1045→     - onOpenDashboard: sets navbarDashboardOpen state
+  1046→     - onOpenGoalTracker: sets navbarGoalTrackerOpen state
+  1047→     - onOpenShortcutsHelp: sets keyboardShortcutsOpen state
+  1048→     - onCloseDialog: closes all dialogs (keyboardShortcutsOpen, navbarDashboardOpen, navbarGoalTrackerOpen)
+  1049→   - All callbacks use useCallback for stable references
+  1050→
+  1051→Lint Status:
+  1052→- Zero lint errors across all files ✅
+  1053→- Dev server running without errors ✅
+  1054→- Page loads with HTTP 200 ✅
+  1055→
+  1056→Stage Summary:
+  1057→- Keyboard shortcuts hook with full shortcut registration and display list ✅
+  1058→- Beautiful keyboard shortcuts help dialog with gold key styling ✅
+  1059→- Theme toggle with Sun/Moon rotation animation ✅
+  1060→- Light theme with warm amber tones (not cold blue/white) ✅
+  1061→- Dark theme preserved exactly as before ✅
+  1062→- ThemeProvider integration with next-themes (cookie-based) ✅
+  1063→- All new components use 'use client' directive ✅
+  1064→- Default exports for all new components ✅
+  1065→- Zero lint errors ✅
+  1066→
+  1067→---
+  1068→
+  1069→Task ID: 6
+  1070→Agent: Main Orchestrator (Round 6)
+  1071→Task: QA testing, bug fixes, 3 new features, deep styling improvements, worklog update
+  1072→
+  1073→Work Log:
+  1074→- Performed comprehensive QA testing via agent-browser on all 12 strategies + all tools + mobile view
+  1075→- All 12 strategies load with zero JS errors
+  1076→- All tool dialogs (SIP Calculator, Health Checkup, Expense Tracker, Savings Challenge, Quiz Arena, Spin Wheel, Goal Tracker, Achievement Dashboard, Memory Match) open without errors
+  1077→- Theme Toggle works correctly (dark ↔ light)
+  1078→- Keyboard Shortcuts Dialog opens and displays all shortcuts
+  1079→- Fixed hydration mismatch bug in WelcomeOnboarding.tsx: GoldCoins component used Math.random() during SSR, causing server/client mismatch. Fixed by using mounted state pattern (render placeholder div on server, coins only after mount)
+  1080→- Fixed keyboard shortcuts integration: Alt+D and Alt+G shortcuts now dispatch custom DOM events ('rupaiya-shortcut') that Navbar listens for, properly opening Dashboard and Goal Tracker dialogs. Escape also closes all Navbar dialogs.
+  1081→- Removed unused local state (navbarDashboardOpen, navbarGoalTrackerOpen) from page.tsx since Navbar manages its own dialog states
+  1082→- Added Memory Match feature badge to footer
+  1083→- Verified lint passes with zero errors
+  1084→- Verified dev server running with HTTP 200 responses
+  1085→- Console errors resolved: no more hydration mismatch errors
+  1086→
+  1087→Stage Summary:
+  1088→- QA: All 12 strategies + all tools + mobile view = zero JS errors ✅
+  1089→- Bug fix: Hydration mismatch in WelcomeOnboarding GoldCoins ✅
+  1090→- Bug fix: Keyboard shortcuts now properly control Navbar dialogs ✅
+  1091→- New feature verified: Memory Match game ✅
+  1092→- New feature verified: Keyboard Shortcuts + Help Dialog ✅
+  1093→- New feature verified: Theme Toggle (dark/light) ✅
+  1094→- Deep styling: 540+ lines of new CSS with 11 keyframe animations, 14+ utility classes, enhanced scrollbar, light theme variables, premium card/button styles ✅
+  1095→- Zero lint errors ✅
+  1096→- Dev server stable ✅
+  1097→
+  1098→---
+  1099→
+  1100→# COMPREHENSIVE HANDOVER DOCUMENT
+  1101→
+  1102→## 1. Current Project Status Assessment
+  1103→
+  1104→### App: RUPAIYA 101 — Financial Literacy App for Indian Youth (Hinglish)
+  1105→### Tech Stack: Next.js 16 + TypeScript 5 + Tailwind CSS 4 + Framer Motion + Zustand + Recharts + shadcn/ui + z-ai-web-dev-sdk
+  1106→
+  1107→### Overall Health: ✅ PRODUCTION-READY
+  1108→- Zero lint errors
+  1109→- Zero runtime JS errors across all 12 strategies and all tools
+  1110→- No hydration mismatch errors
+  1111→- Dev server running stably (HTTP 200)
+  1112→- All features functional and tested via agent-browser
+  1113→- Mobile responsive design working
+  1114→- Dark/Light theme toggle working
+  1115→
+  1116→### Feature Count: 20+ major features
+  1117→
+  1118→#### Core Strategies (12)
+  1119→1. ✅ LifePathMap — Interactive life journey SVG with pit stops
+  1120→2. ✅ FinancialGPS — Financial health navigator with animated car
+  1121→3. ✅ ConsequenceSim — Dual timeline what-if simulator
+  1122→4. ✅ InflationMonster — Chor vs Hero inflation visualizer
+  1123→5. ✅ SwipeBudget — Tinder-style expense categorizer
+  1124→6. ✅ RoomBudget — Room-by-room budget builder
+  1125→7. ✅ DebtDoors — 7-door debt trap animation
+  1126→8. ✅ CompoundingTree — Growing tree compounding visual
+  1127→9. ✅ ReportCard — School-style financial report card
+  1128→10. ✅ Dictionary — Financial terms explorer (40+ Hinglish terms)
+  1129→11. ✅ DailySimulator — Daily spending simulator
+  1130→12. ✅ MistakeMarket — Interactive error gallery
+  1131→
+  1132→#### Interactive Tools (8)
+  1133→1. ✅ Quiz Challenge Arena — 4 game modes (Quick Fire, Module Mastery, Survival, Speed Run)
+  1134→2. ✅ Financial Fortune Spin Wheel — 8 segments, 4-hour cooldown
+  1135→3. ✅ SIP Calculator — Sliders, year-by-year breakdown, AI tips
+  1136→4. ✅ Memory Match Game — 3 difficulty levels, card flip animation, combo system [NEW]
+  1137→5. ✅ Savings Challenge — 30-day tracker with streaks
+  1138→6. ✅ Expense Tracker — 9 categories, pie chart, budget tracking
+  1139→7. ✅ Financial Health Checkup — 8-question quiz, radar chart
+  1140→8. ✅ AI Financial Advisor Chatbot (Rupaiya Guru) — LLM-powered Hinglish advice
+  1141→
+  1142→#### Dashboard & Tracking (5)
+  1143→1. ✅ Achievement Dashboard — FL Score (0-100), grades, strategy mastery, quiz chart
+  1144→2. ✅ Financial Goal Tracker — Create goals, track savings, templates, milestones
+  1145→3. ✅ Badge Gallery — 12+ badges with auto-awarding
+  1146→4. ✅ Daily Financial Tips Banner — 35 tips, auto-rotation
+  1147→5. ✅ Share Progress — Text copy + PNG download
+  1148→
+  1149→#### UX & System (4)
+  1150→1. ✅ Theme Toggle (Dark/Light) — Sun/Moon animation, next-themes [NEW]
+  1151→2. ✅ Keyboard Shortcuts — Alt+1-12 strategies, Alt+D/G/K, ? help [NEW]
+  1152→3. ✅ Keyboard Shortcuts Help Dialog — Gold key styling, Hinglish tips [NEW]
+  1153→4. ✅ Welcome Onboarding — 3-step flow (Welcome → Name → Strategy Pick)
+  1154→
+  1155→### Codebase Stats
+  1156→- Total component files: 30+ (12 strategies, 8 shared tools, 3 layout, 7+ shared components)
+  1157→- Data files: 9 (modules, strategies, quiz, terms, expenses, scenarios, budget templates, mistakes, daily choices)
+  1158→- CSS: 1764 lines in globals.css with 30+ animations, 60+ utility classes
+  1159→- Zustand store: 415 lines with 25+ actions, full localStorage persistence
+  1160→- API routes: 2 (finance-advisor, sip-calculate)
+  1161→
+  1162→---
+  1163→
+  1164→## 2. Current Goals / Completed Modifications / Verification Results
+  1165→
+  1166→### Goals for This Round
+  1167→1. ✅ Assess project status and perform QA via agent-browser
+  1168→2. ✅ Fix any bugs found during QA (hydration mismatch, keyboard shortcut integration)
+  1169→3. ✅ Add new features: Memory Match game, Keyboard Shortcuts, Theme Toggle
+  1170→4. ✅ Deep styling improvements: 11 new keyframe animations, 14+ utility classes, light theme, enhanced scrollbar, premium cards/buttons
+  1171→
+  1172→### Verification Results
+  1173→- **agent-browser QA**: All 12 strategies + 8 tools + mobile + theme toggle tested = zero JS errors
+  1174→- **Lint**: Zero errors
+  1175→- **Dev server**: HTTP 200 on all routes, compiling successfully
+  1176→- **Hydration**: No more server/client mismatch errors
+  1177→- **Console**: Clean (only minor Framer Motion color animation warning)
+  1178→- **Memory Match**: Opens, renders correctly with card grid, mode selection
+  1179→- **Theme Toggle**: Switches dark ↔ light correctly, persists via next-themes
+  1180→- **Keyboard Shortcuts**: ? key and Alt+K open shortcuts dialog, Escape closes dialogs, Alt+D opens Dashboard, Alt+G opens Goal Tracker
+  1181→
+  1182→---
+  1183→
+  1184→## 3. Unresolved Issues / Risks / Priority Recommendations
+  1185→
+  1186→### Minor Issues (Low Priority)
+  1187→1. Framer Motion warning: `'oklab(0 0 0 / 0)' is not an animatable color` — cosmetic only, no functional impact
+  1188→2. Missing `DialogDescription` in some Dialog components — accessibility warning, not a bug
+  1189→3. Navbar tool buttons can be covered by tab bar on certain viewport sizes — workaround: use JS click or keyboard shortcuts
+  1190→
+  1191→### Recommended Next Steps (Priority Order)
+  1192→
+  1193→#### HIGH PRIORITY
+  1194→1. **PWA Support** — Add service worker + manifest.json for offline usage and install-to-homescreen
+  1195→2. **Report Card PDF Export** — Use the pdf skill to generate downloadable PDF reports
+  1196→3. **More Quiz Questions** — Currently 44 questions, could expand to 100+ for better replayability
+  1197→
+  1198→#### MEDIUM PRIORITY
+  1199→4. **Sound Effects** — Add audio feedback for interactions (coin sounds, card flips, correct/wrong answers)
+  1200→5. **Financial Word Scramble** — Another mini-game for learning financial terms
+  1201→6. **Leaderboard / Social Features** — Compare progress with friends
+  1202→7. **Goal Tracker: Recurring Savings** — Auto-deduct monthly from wallet
+  1203→8. **Health Checkup: Historical Trends** — Save and compare scores over time
+  1204→9. **Dashboard: Interactive Chart Drill-down** — Click on charts to see details
+  1205→
+  1206→#### LOW PRIORITY
+  1207→10. **Localization** — Add pure Hindi and English options beyond Hinglish
+  1208→11. **Expense Tracker: Receipt Photo Capture** — Camera integration for receipts
+  1209→12. **Savings Challenge: Custom Durations** — 7-day, 14-day options
+  1210→13. **Module Detail Enhancement** — LifePathMap subtopic content expansion
+  1211→14. **Financial News Feed** — Real-time financial news section
+  1212→15. **Keyboard Shortcuts for All Tools** — Alt+H for Health, Alt+E for Expense, etc.
+  1213→
+  1214→### Architecture Notes
+  1215→- All components use `'use client'` directive and are compatible with Next.js 16 App Router
+  1216→- State management via Zustand with localStorage persistence — no server-side state
+  1217→- API routes use z-ai-web-dev-sdk for LLM features (finance-advisor, sip-calculate)
+  1218→- Strategy components are lazy-loaded for performance
+  1219→- Custom DOM events (`rupaiya-shortcut`) bridge keyboard shortcuts to Navbar dialogs
+  1220→- Theme uses next-themes with `attribute="class"` for CSS variable switching
+  1221→
+  1222→---
+  1223→
+  1224→Task ID: 8-b
+  1225→Agent: Subagent
+  1226→Task: Create Financial News & Insights Widget
+  1227→
+  1228→Work Log:
+  1229→- Created backend API route `/src/app/api/financial-news/route.ts`:
+  1230→  - Uses `z-ai-web-dev-sdk` `functions.invoke('web_search')` for Indian financial news search
+  1231→  - Uses `z-ai-web-dev-sdk` LLM to generate 5 Hinglish financial tips with categories (savings/investment/budget/debt/tax)
+  1232→  - Returns JSON with `news`, `tips`, and `timestamp` fields
+  1233→  - Fallback tips provided if LLM fails
+  1234→- Created frontend component `/src/components/shared/FinancialNewsWidget.tsx`:
+  1235→  - Dialog-based component with `{ open, onClose }` props (same pattern as SIPCalculator, etc.)
+  1236→  - Tips section with color-coded category badges and left border accents
+  1237→  - News section with favicon, truncated titles, and external links
+  1238→  - Share button on tips (copies to clipboard with toast notification)
+  1239→  - Refresh button with spin animation
+  1240→  - Loading skeletons with shimmer animation
+  1241→  - Error state with retry button
+  1242→  - 30-minute client-side cache
+  1243→  - Stagger animation on load using framer-motion
+  1244→  - Mobile responsive with glass morphism styling
+  1245→- Integrated into Navbar:
+  1246→  - Added `Newspaper` icon import from lucide-react
+  1247→  - Added `useFinancialNewsOpen` hook state
+  1248→  - Added Financial News button with tooltip between Memory Match and SIP Calculator
+  1249→  - Added `<FinancialNewsWidget>` dialog rendering
+  1250→  - Added `setFinancialNewsOpen(false)` to close-dialog shortcut handler
+  1251→- Lint: zero errors
+  1252→- Dev server: compiling successfully
+  1253→
+  1254→Stage Summary:
+  1255→- Financial News & Insights Widget fully functional with backend API + frontend component + Navbar integration
+  1256→
+  1257→---
+  1258→
+  1259→Task ID: 8-a
+  1260→Agent: Main Agent
+  1261→Task: Create Financial Word Scramble game component
+  1262→
+  1263→Work Log:
+  1264→- Read worklog.md and analyzed existing codebase patterns (SpinWheel, QuizArena, MemoryMatch)
+  1265→- Updated Zustand store (useAppStore.ts):
+  1266→  - Added `wordScrambleHighScore: Record<string, number>` to interface and initialState
+  1267→  - Added `setWordScrambleHighScore: (mode: string, score: number) => void` action
+  1268→- Created `/home/z/my-project/src/components/shared/WordScramble.tsx` with:
+  1269→  - 3 difficulty levels: Easy (3-5 letters, 60s), Medium (6-8 letters, 45s), Hard (9+ letters, 30s)
+  1270→  - 30 Hinglish financial terms (10 per difficulty)
+  1271→  - Click-to-place letter tiles with animated scrabble-style cards
+  1272→  - Click-to-remove placed letters with smart index tracking
+  1273→  - Timer bar with gradient color changes (amber → orange → red)
+  1274→  - Hint button (5 coins, reveals first letter)
+  1275→  - Skip button (no coins, moves to next word)
+  1276→  - Scoring: Easy=10, Medium=20, Hard=30 coins per word
+  1277→  - Streak bonuses: 2x at 3+, 3x at 5+ streak
+  1278→  - Time bonus: +5 coins if solved under half time
+  1279→  - Confetti particle effect on correct answer
+  1280→  - Red shake animation on wrong answer
+  1281→  - Green glow on correct answer
+  1282→  - Results screen with S/A/B/C/D grade and coin animation
+  1283→  - Dark theme with amber accents matching app design
+  1284→  - Glass morphism cards, framer-motion animations throughout
+  1285→  - Mobile responsive design
+  1286→  - Uses refs pattern to avoid forward reference lint errors with useCallback
+  1287→- Updated Navbar.tsx:
+  1288→  - Added `Type` icon import from lucide-react
+  1289→  - Added WordScramble import
+  1290→  - Added useWordScrambleOpen hook
+  1291→  - Added wordScrambleOpen state and setWordScrambleOpen
+  1292→  - Added Word Scramble button with Type icon and tooltip
+  1293→  - Added WordScramble dialog component in render
+  1294→  - Added setWordScrambleOpen(false) to close-dialog shortcut handler
+  1295→- Ran `bun run lint` — zero errors, zero warnings
+  1296→- Dev server compiles successfully
+  1297→
+  1298→Stage Summary:
+  1299→- Word Scramble game fully functional with all specified features, store integration, and Navbar integration
+  1300→
+  1301→---
+  1302→
+  1303→Task ID: 10
+  1304→Agent: Main
+  1305→Task: Enhance Achievement Dashboard with Financial Health Timeline
+  1306→
+  1307→Work Log:
+  1308→- Read existing worklog.md and AchievementDashboard.tsx (987 lines)
+  1309→- Enhanced Zustand store (useAppStore.ts):
+  1310→  - Added `moduleCompletionDates: Record<number, string>` to AppState interface
+  1311→  - Added `moduleCompletionDates: {} as Record<number, string>` to initialState
+  1312→  - Refactored `completeModule` action to record completion date via `new Date().toISOString().split('T')[0]`
+  1313→  - Improved badge logic: added `first-module` badge for 1st module completion, kept existing badge checks
+  1314→  - Prevented double-completion rewards (coins/badges only awarded on first completion)
+  1315→- Enhanced AchievementDashboard.tsx with new "Financial Journey Timeline" section (Section J):
+  1316→  - **Achievement Summary Cards** (4 cards at top): Coins Earned (amber), Modules Done (green), Current Streak (orange), Badges Earned (purple) — each with colored left border, icon, animated counter, and mini progress bar
+  1317→  - **FinancialJourneySVG** component: Full SVG-based vertical timeline with:
+  1318→    - 16px node circles (green glow for completed, amber pulse for current, gray for incomplete)
+  1319→    - Gradient connecting lines (green for completed path, gray for incomplete)
+  1320→    - Animated node reveal with framer-motion spring animations
+  1321→    - Check marks inside completed nodes, module numbers inside incomplete nodes
+  1322→    - Module title cards next to each node with completion dates or progress %
+  1323→    - SVG filters for green glow and amber glow effects
+  1324→    - max-h-[480px] with overflow scroll for long timelines
+  1325→  - **Milestone Cards**: 5 milestone levels (Financial Beginner 🌱, Smart Learner 📚, Money Master 💰, Finance Expert 🏆, Rupaiya Guru 👑) — each showing achieved date or lock icon
+  1326→  - **ProgressForecast** component: Linear projection based on completion rate, showing estimated completion date in Hinglish
+  1327→- Added imports: `useRef`, `Milestone`, `Timeline` from lucide-react
+  1328→- Added `moduleCompletionDates` to useAppStore destructuring
+  1329→- All animations use framer-motion with staggered delays
+  1330→- Matches existing dark theme with glass morphism styling
+  1331→- `bun run lint` — zero errors, zero warnings
+  1332→
+  1333→Stage Summary:
+  1334→- Financial Journey Timeline fully implemented with SVG visualization, milestone tracking, summary cards, and progress forecast
+  1335→- Store enhanced with completion date tracking for accurate timeline data
+  1336→
+  1337→
+  1338→---
+  1339→
+  1340→Task ID: 9
+  1341→Agent: Styling Enhancement Agent
+  1342→Task: Deep Styling Enhancement Round — Premium Micro-Interactions & Visual Polish
+  1343→
+  1344→Work Log:
+  1345→- Added 160+ lines of premium CSS to globals.css (before light theme section):
+  1346→  - `.magnetic-hover` — button lift/scale on hover with press-down
+  1347→  - `@keyframes coinGlowPulse` / `.animate-coin-glow` — pulsing gold text-shadow
+  1348→  - `@keyframes cursorBlink` / `.typing-cursor::after` — typewriter cursor for AI chat
+  1349→  - `@keyframes radarSweep` / `.radar-sweep` — rotating radar for health checkup
+  1350→  - `@keyframes bounceInOvershoot` / `.animate-bounce-in` — overshoot spring entrance
+  1351→  - `.paper-texture` — subtle grid background for report card
+  1352→  - `.text-neon-gold` — glowing gold text with layered text-shadow
+  1353→  - `@keyframes orbit` / `.animate-orbit` — orbiting animation
+  1354→  - `@keyframes waveMotion` / `.animate-wave` — wave motion for budget fill
+  1355→  - `input:focus, textarea:focus, select:focus` — amber glow on focus
+  1356→  - `.chip-hover` — lift + shadow on tag/chip hover
+  1357→  - `.stagger-1` through `.stagger-8` — staggered animation delays
+  1358→  - `.card-3d` — perspective tilt on hover
+  1359→  - `@keyframes marchingAnts` / `.marching-border` — animated dashed border
+  1360→  - `@keyframes drawCheck` / `.animate-draw-check` — SVG checkmark draw animation
+  1361→  - `@keyframes pageIn` / `.page-transition` — page entrance fade+slide
+  1362→  - `.premium-dialog-overlay` — radial gradient + blur backdrop
+  1363→  - `@keyframes sparkle` / `.animate-sparkle` — sparkle effect
+  1364→  - `@keyframes countIncrement` / `.animate-count-increment` — counter roll-in
+  1365→
+  1366→- Enhanced Sidebar.tsx:
+  1367→  - Added `animate-breath-glow` class to level badge span
+  1368→  - Added motivational quote section below Dashboard button (rotates daily)
+  1369→  - Added "Today's Activity" mini section with streak progress bar and 7-day badge tracker
+  1370→
+  1371→- Enhanced PageContainer.tsx:
+  1372→  - Added `page-transition` class to main scroll container
+  1373→  - Added `particle-bg` class to inner content container
+  1374→
+  1375→- Enhanced Navbar.tsx:
+  1376→  - Added `magnetic-hover` class to all 12 tool buttons (Achievement Dashboard, Goal Tracker, Health Checkup, Expense Tracker, Savings Challenge, Quiz Arena, Spin Wheel, Memory Match, Word Scramble, Financial News, SIP Calculator, Badge/Trophy)
+  1377→
+  1378→- Updated page.tsx footer:
+  1379→  - Added 'Word Scramble' and 'Financial News' to AppFooter feature badges array (now 10 badges)
+  1380→
+  1381→- Enhanced WelcomeOnboarding.tsx:
+  1382→  - Added `animate-bounce-in` class to welcome title `<h1>`
+  1383→  - Added `text-neon-gold` class to RUPAIYA 101 span, step 1 heading, step 2 heading
+  1384→  - Added `glass-card-glow` class to info card and strategy selection cards
+  1385→
+  1386→- Ran `bun run lint` — zero errors confirmed
+  1387→- Dev server compiling successfully with no issues
+  1388→
+  1389→Stage Summary:
+  1390→- All 7 enhancement items completed without breaking existing functionality
+  1391→- Dark theme aesthetic fully preserved — only additive visual polish
+  1392→- Lint passes clean with zero errors
+  1393→
+  1394→---
+  1395→Task ID: 8-a
+  1396→Agent: Subagent (Full-stack Developer)
+  1397→Task: Create Financial Word Scramble game
+  1398→
+  1399→Work Log:
+  1400→- Created `/home/z/my-project/src/components/shared/WordScramble.tsx` — new interactive word scramble game
+  1401→- 3 difficulty levels: Easy (3-5 letters, 60s), Medium (6-8 letters, 45s), Hard (9+ letters, 30s)
+  1402→- 30 Hinglish financial terms across all difficulty levels
+  1403→- Click-to-place and click-to-remove letter mechanics with scrabble-style animated tiles
+  1404→- Timer bar with gradient color changes (amber → orange → red)
+  1405→- Hint button (5 coins, reveals first letter), Skip button (no coins)
+  1406→- Scoring: 10/20/30 coins per word + streak bonuses (2x at 3+, 3x at 5+) + time bonus
+  1407→- Confetti particles on correct answer, red shake on wrong answer
+  1408→- Results screen with S/A/B/C/D grade
+  1409→- Added `wordScrambleHighScore` and `setWordScrambleHighScore` to Zustand store
+  1410→- Integrated into Navbar with Type icon
+  1411→
+  1412→Stage Summary:
+  1413→- Word Scramble game fully functional ✅
+  1414→- Zero lint errors ✅
+  1415→
+  1416→---
+  1417→Task ID: 8-b
+  1418→Agent: Subagent (Full-stack Developer)
+  1419→Task: Create Financial News & Insights Widget
+  1420→
+  1421→Work Log:
+  1422→- Created `/home/z/my-project/src/app/api/financial-news/route.ts` — backend API route
+  1423→- Uses z-ai-web-dev-sdk for web search and LLM tip generation
+  1424→- Created `/home/z/my-project/src/components/shared/FinancialNewsWidget.tsx` — frontend component
+  1425→- Tips section with color-coded category badges (savings/investment/budget/debt/tax)
+  1426→- News section with source favicons and "Read more" links
+  1427→- Refresh button with spin animation + 30-minute cache
+  1428→- Loading skeleton + error state with retry
+  1429→- Integrated into Navbar with Newspaper icon
+  1430→
+  1431→Stage Summary:
+  1432→- Financial News widget fully functional ✅
+  1433→- API route returns 200 ✅
+  1434→- Zero lint errors ✅
+  1435→
+  1436→---
+  1437→Task ID: 9
+  1438→Agent: Subagent (Full-stack Developer)
+  1439→Task: Deep styling enhancement round
+  1440→
+  1441→Work Log:
+  1442→- Added 160+ lines of premium micro-interaction CSS to globals.css:
+  1443→  - `.magnetic-hover` — button lift/scale on hover
+  1444→  - `.animate-coin-glow` — pulsing gold text-shadow
+  1445→  - `.typing-cursor::after` — typewriter blinking cursor
+  1446→  - `.radar-sweep` — rotating radar animation
+  1447→  - `.animate-bounce-in` — overshoot spring entrance
+  1448→  - `.paper-texture` — subtle grid background
+  1449→  - `.text-neon-gold` — glowing gold text
+  1450→  - `.animate-orbit`, `.animate-wave`, `.card-3d`, `.marching-border`
+  1451→  - `.animate-draw-check`, `.page-transition`, `.premium-dialog-overlay`
+  1452→  - `.animate-sparkle`, `.animate-count-increment`
+  1453→  - Input focus glow, chip hover lift, stagger delays
+  1454→- Enhanced Sidebar: Added "Today's Activity" section, motivational quote, `animate-breath-glow` on level badge
+  1455→- Enhanced PageContainer: Added `page-transition` and `particle-bg` classes
+  1456→- Enhanced Navbar: Added `magnetic-hover` to all tool buttons
+  1457→- Updated footer badges to include Word Scramble and Financial News
+  1458→- Enhanced WelcomeOnboarding: Added `animate-bounce-in`, `text-neon-gold`, `glass-card-glow`
+  1459→
+  1460→Stage Summary:
+  1461→- 160+ lines of new premium CSS utilities ✅
+  1462→- Sidebar, PageContainer, Navbar, WelcomeOnboarding all enhanced ✅
+  1463→- Zero lint errors ✅
+  1464→
+  1465→---
+  1466→Task ID: 10
+  1467→Agent: Subagent (Full-stack Developer)
+  1468→Task: Enhanced Achievement Dashboard with Financial Journey Timeline
+  1469→
+  1470→Work Log:
+  1471→- Added `moduleCompletionDates: Record<number, string>` to Zustand store
+  1472→- Modified `completeModule` action to record completion dates
+  1473→- Added Financial Journey Timeline section to Achievement Dashboard:
+  1474→  - 4 achievement summary cards (Coins, Modules, Streak, Badges) with glow effects
+  1475→  - SVG-based vertical timeline with 16px nodes (green/amber/gray)
+  1476→  - Gradient connecting lines between nodes
+  1477→  - Module title cards with completion dates
+  1478→  - 5 milestone cards (Beginner → Rupaiya Guru)
+  1479→  - Progress forecast with date projection
+  1480→- Fixed `Timeline` icon import error (replaced with `Clock`)
+  1481→
+  1482→Stage Summary:
+  1483→- Financial Journey Timeline fully functional ✅
+  1484→- Module completion dates tracked ✅
+  1485→- Enhanced dashboard with 4 summary cards + SVG timeline + milestones ✅
+  1486→- Zero lint errors ✅
+  1487→
+  1488→---
+  1489→Task ID: 11
+  1490→Agent: Main Orchestrator
+  1491→Task: Bug fixes, QA testing, and integration verification
+  1492→
+  1493→Work Log:
+  1494→- Fixed `Timeline` icon import error in AchievementDashboard.tsx (not a valid lucide-react export)
+  1495→- Fixed CSS selector errors in globals.css: `text-[#a0a0b8]` etc. caused "No qualified name" parse errors
+  1496→  - Changed from `.light .text-[#a0a0b8]` to `.light [class*="text-[#a0a0b8]"]` pattern
+  1497→  - Applied to all 8 broken selectors (4 text colors + 4 background colors)
+  1498→- QA tested all 12 strategy tabs — zero JS errors
+  1499→- QA tested all 10+ tool dialogs — all open without errors
+  1500→- QA tested theme toggle (dark ↔ light) — works correctly
+  1501→- QA tested new features: Word Scramble, Financial News, Enhanced Dashboard — all functional
+  1502→- Verified zero lint errors and all HTTP 200 responses
+  1503→
+  1504→Stage Summary:
+  1505→- All bugs fixed ✅
+  1506→- All features verified via agent-browser QA ✅
+  1507→- Zero lint errors ✅
+  1508→- All routes returning HTTP 200 ✅
+  1509→
+  1510→---
+  1511→
+  1512→# COMPREHENSIVE HANDOVER DOCUMENT (Round 9)
+  1513→
+  1514→## 1. Current Project Status Assessment
+  1515→
+  1516→### App: RUPAIYA 101 — Financial Literacy App for Indian Youth (Hinglish)
+  1517→### Tech Stack: Next.js 16 + TypeScript 5 + Tailwind CSS 4 + Framer Motion + Zustand + Recharts + shadcn/ui + z-ai-web-dev-sdk
+  1518→
+  1519→### Overall Health: ✅ PRODUCTION-READY
+  1520→- Zero lint errors
+  1521→- Zero runtime JS errors across all 12 strategies and all tools
+  1522→- No CSS parse errors
+  1523→- Dev server running stably (HTTP 200)
+  1524→- All features functional and tested via agent-browser
+  1525→- Mobile responsive design working
+  1526→- Dark/Light theme toggle working
+  1527→- API routes returning 200
+  1528→
+  1529→### Feature Count: 22+ major features
+  1530→
+  1531→#### Core Strategies (12)
+  1532→1. ✅ LifePathMap — Interactive life journey SVG with pit stops
+  1533→2. ✅ FinancialGPS — Financial health navigator with animated car
+  1534→3. ✅ ConsequenceSim — Dual timeline what-if simulator
+  1535→4. ✅ InflationMonster — Chor vs Hero inflation visualizer
+  1536→5. ✅ SwipeBudget — Tinder-style expense categorizer
+  1537→6. ✅ RoomBudget — Room-by-room budget builder
+  1538→7. ✅ DebtDoors — 7-door debt trap animation
+  1539→8. ✅ CompoundingTree — Growing tree compounding visual
+  1540→9. ✅ ReportCard — School-style financial report card
+  1541→10. ✅ Dictionary — Financial terms explorer (40+ Hinglish terms)
+  1542→11. ✅ DailySimulator — Daily spending simulator
+  1543→12. ✅ MistakeMarket — Interactive error gallery
+  1544→
+  1545→#### Interactive Tools (10)
+  1546→1. ✅ Quiz Challenge Arena — 4 game modes
+  1547→2. ✅ Financial Fortune Spin Wheel — 8 segments
+  1548→3. ✅ SIP Calculator — Sliders, year-by-year breakdown, AI tips
+  1549→4. ✅ Memory Match Game — 3 difficulty levels
+  1550→5. ✅ **NEW** Word Scramble — 3 difficulty levels, 30 Hinglish financial terms, streak bonuses
+  1551→6. ✅ **NEW** Financial News & Insights — AI-powered Hinglish tips + web search news
+  1552→7. ✅ Savings Challenge — 30-day tracker
+  1553→8. ✅ Expense Tracker — 9 categories, pie chart
+  1554→9. ✅ Financial Health Checkup — 8-question quiz
+  1555→10. ✅ AI Financial Advisor Chatbot (Rupaiya Guru)
+  1556→
+  1557→#### Dashboard & Tracking (6)
+  1558→1. ✅ **ENHANCED** Achievement Dashboard — Now with Financial Journey Timeline (SVG timeline, milestone cards, progress forecast, 4 summary cards)
+  1559→2. ✅ Financial Goal Tracker
+  1560→3. ✅ Badge Gallery
+  1561→4. ✅ Daily Financial Tips Banner
+  1562→5. ✅ Share Progress
+  1563→6. ✅ Module Completion Date Tracking
+  1564→
+  1565→#### UX & System (4)
+  1566→1. ✅ Theme Toggle (Dark/Light)
+  1567→2. ✅ Keyboard Shortcuts
+  1568→3. ✅ Keyboard Shortcuts Help Dialog
+  1569→4. ✅ Welcome Onboarding
+  1570→
+  1571→### CSS Stats (Round 9)
+  1572→- 2156+ lines in globals.css
+  1573→- 30+ keyframe animations
+  1574→- 70+ utility classes
+  1575→- 160+ lines of NEW premium micro-interaction CSS (magnetic hover, coin glow, typing cursor, radar sweep, bounce-in, paper texture, neon gold, orbit, wave, 3D card, marching border, draw check, page transition, premium dialog overlay, sparkle, count increment)
+  1576→- Light theme with warm amber tones (working correctly)
+  1577→
+  1578→### Store Stats
+  1579→- 430+ lines
+  1580→- 28+ actions
+  1581→- Full localStorage persistence
+  1582→- **NEW**: `moduleCompletionDates`, `wordScrambleHighScore`, `setWordScrambleHighScore`
+  1583→
+  1584→---
+  1585→
+  1586→## 2. Current Goals / Completed Modifications / Verification Results
+  1587→
+  1588→### Goals for This Round
+  1589→1. ✅ Assess project status and perform QA via agent-browser
+  1590→2. ✅ Fix bugs found during QA (Timeline icon, CSS hex color selectors)
+  1591→3. ✅ Add new features: Word Scramble game, Financial News widget
+  1592→4. ✅ Enhance Achievement Dashboard with Financial Journey Timeline
+  1593→5. ✅ Deep styling improvements: 160+ lines of new micro-interaction CSS, enhanced Sidebar, PageContainer, Navbar, WelcomeOnboarding
+  1594→6. ✅ Full QA verification after all changes
+  1595→
+  1596→### Verification Results
+  1597→- **agent-browser QA**: All 12 strategies + 10 tools + theme toggle + new features tested = zero JS errors
+  1598→- **Lint**: Zero errors
+  1599→- **Dev server**: HTTP 200 on all routes
+  1600→- **CSS**: No parse errors
+  1601→- **Word Scramble**: Opens, renders game modes, letter tiles clickable
+  1602→- **Financial News**: Opens, shows tips, API route returns 200
+  1603→- **Enhanced Dashboard**: Opens, shows timeline SVG, summary cards, milestones
+  1604→- **Theme Toggle**: Switches dark ↔ light correctly
+  1605→
+  1606→---
+  1607→
+  1608→## 3. Unresolved Issues / Risks / Priority Recommendations
+  1609→
+  1610→### Minor Issues (Low Priority)
+  1611→1. Framer Motion warning: `'oklab(0 0 0 / 0)' is not an animatable color` — cosmetic only
+  1612→2. Financial News API takes ~4s on first call due to z-ai-web-dev-sdk cold start — acceptable
+  1613→3. Light theme hex color overrides use `[class*=]` attribute selectors — less performant but functional
+  1614→
+  1615→### Recommended Next Steps (Priority Order)
+  1616→
+  1617→#### HIGH PRIORITY
+  1618→1. **PWA Support** — Add service worker + manifest.json for offline and install-to-homescreen
+  1619→2. **Report Card PDF Export** — Use the pdf skill for downloadable PDF reports
+  1620→3. **More Quiz Questions** — Expand from 44 to 100+ for better replayability
+  1621→4. **Sound Effects** — Add audio feedback for interactions (coin sounds, card flips, correct/wrong)
+  1622→
+  1623→#### MEDIUM PRIORITY
+  1624→5. **Financial Word Scramble: More Words** — Expand to 60+ words for longer sessions
+  1625→6. **Leaderboard / Social Features** — Compare progress with friends
+  1626→7. **Health Checkup: Historical Trends** — Save and compare scores over time
+  1627→8. **Dashboard: Interactive Chart Drill-down** — Click on charts to see details
+  1628→9. **Goal Tracker: Recurring Savings** — Auto-deduct monthly from wallet
+  1629→10. **Financial News: Bookmark Tips** — Save favorite tips for later
+  1630→
+  1631→#### LOW PRIORITY
+  1632→11. **Localization** — Pure Hindi and English options beyond Hinglish
+  1633→12. **Expense Tracker: Receipt Photo Capture** — Camera integration
+  1634→13. **Savings Challenge: Custom Durations** — 7-day, 14-day options
+  1635→14. **Module Detail Enhancement** — LifePathMap subtopic content expansion
+  1636→15. **Keyboard Shortcuts for All Tools** — Alt+H for Health, Alt+E for Expense, etc.
+  1637→
+  1638→---
+  1639→
+  1640→Task ID: 12-a
+  1641→Agent: Priority Calculator Developer
+  1642→Task: Create Financial Priority Calculator Tool
+  1643→
+  1644→Work Log:
+  1645→- Read worklog.md and analyzed existing project structure (Navbar pattern, SIPCalculator pattern, store pattern)
+  1646→- Updated Zustand store (`useAppStore.ts`) with `priorityCalculatorIncome` state and `setPriorityCalculatorIncome` action
+  1647→- Created `/src/components/shared/PriorityCalculator.tsx` with all required features:
+  1648→  - Income input with slider (₹5,000–₹5,00,000) and quick preset buttons (₹10K, ₹25K, ₹50K, ₹1L)
+  1649→  - Animated rupee counter display with framer-motion spring animation
+  1650→  - Income level badge system (Shuruwaat Karnewala 🌱, Badhta Hua Climber 🧗, Smart Saver 💡, Wealth Builder 🏗️, Finance Star ⭐)
+  1651→  - 50/30/20 rule allocation visualization with interactive stacked bar
+  1652→  - Click-to-expand detail panels for Needs/Wants/Savings sections
+  1653→  - Three stat cards showing exact ₹ amounts for each category
+  1654→  - Priority Ranking with 8 financial priorities (Emergency Fund → Lifestyle Upgrades)
+  1655→  - Green checkmark/Lock icon progress indicators per priority
+  1656→  - Hinglish tips for each priority item
+  1657→  - Left color bars (red=high, amber=medium, green=low priority)
+  1658→  - Collapsible sections for priorities and smart recommendations
+  1659→  - Smart Recommendations section (LLM-powered via /api/priority-advisor)
+  1660→  - Fallback static tips if API fails
+  1661→  - Income level badge showcase at bottom
+  1662→  - Dark theme with glass morphism styling
+  1663→  - Mobile responsive design
+  1664→  - All animations using framer-motion
+  1665→- Created `/src/app/api/priority-advisor/route.ts`:
+  1666→  - Uses z-ai-web-dev-sdk (dynamic import, matching existing API patterns)
+  1667→  - Accepts income/expenses/savings in POST body
+  1668→  - Generates personalized Hinglish financial tips via LLM
+  1669→  - Robust JSON extraction with regex fallback
+  1670→  - Fallback to static tips if LLM fails
+  1671→- Integrated into Navbar.tsx:
+  1672→  - Added `ListOrdered` icon import from lucide-react
+  1673→  - Added `usePriorityCalculatorOpen` hook following exact same pattern
+  1674→  - Added Priority Calculator button in navbar (before SIP Calculator)
+  1675→  - Added dialog rendering with other tool dialogs
+  1676→  - Added to keyboard shortcut close handler
+  1677→- Lint: 0 errors, 0 warnings
+  1678→
+  1679→Stage Summary:
+  1680→- Financial Priority Calculator tool fully implemented with all 5 required features
+  1681→- Backend API with LLM-powered personalized Hinglish advice + fallback
+  1682→- Zustand store updated for persistent income state
+  1683→- Fully integrated into Navbar with consistent UI pattern
+  1684→- Zero lint errors
+  1685→
+  1686→---
+  1687→
+  1688→Task ID: 12-b
+  1689→Agent: Deep Styling Enhancement Agent
+  1690→Task: MANDATORY Deep Styling Enhancement Round 2 — Ultra-premium visual polish
+  1691→
+  1692→Work Log:
+  1693→1. **globals.css** — Added 20+ new CSS utility classes before `.light` overrides section:
+  1694→   - `.aurora-bg` — Animated aurora/gradient background with subtle shifting gradients
+  1695→   - `.glass-card-premium` — Glassmorphism card with inner glow and hover effects
+  1696→   - `.text-gradient-animated` — Animated gradient text for hero headings (4s infinite flow)
+  1697→   - `.ripple-effect` — Ripple effect on interactive card clicks
+  1698→   - `.glow-line` — Glow line separator with amber gradient
+  1699→   - `.hover-reveal` — Hover reveal text for secondary info
+  1700→   - `.corner-accent` — Decorative corner accents with amber border fragments
+  1701→   - `.dots-pattern` — Animated dots pattern for strategy backgrounds
+  1702→   - `.active-card-glow` — Rotating border glow using `@property` for CSS Houdini
+  1703→   - `.stat-flash` — Stat counter highlight flash animation
+  1704→   - `.breathing-dot` — Breathing dot indicator with scale/opacity pulse
+  1705→   - `.slide-up-reveal` — Slide-up reveal animation for cards
+  1706→   - `.tab-indicator-glow` — Enhanced tab indicator with glow
+  1707→   - `.hover-card-scale` — Hover card scale effect with cubic-bezier
+  1708→   - `.badge-pulse` — Micro pulse animation for notification badges
+  1709→   - `.count-transition` — Smooth count number transition
+  1710→   - `.new-item-shimmer` — Shimmer effect on new items
+  1711→   - `.gradient-border-fade` — Smooth gradient border with triple-color gradient
+  1712→
+  1713→2. **PageContainer.tsx** — Added `aurora-bg` class to main container for animated aurora background
+  1714→
+  1715→3. **CompoundingTree.tsx** — Enhanced with:
+  1716→   - `dots-pattern` on main container background
+  1717→   - `text-gradient-animated` on "Power of Compounding" heading
+  1718→   - `corner-accent` on tree visualization containers
+  1719→   - `glass-card-premium` on comparison tree card
+  1720→   - `glass-card-premium` on all three StatCards
+  1721→
+  1722→4. **InflationMonster.tsx** — Enhanced with:
+  1723→   - `aurora-bg` on main container
+  1724→   - `glass-card-premium` on Chor and Hero comparison cards
+  1725→   - `glow-line` separators between sections (before comparison bar and stats)
+  1726→
+  1727→5. **DebtDoors.tsx** — Enhanced with:
+  1728→   - `ripple-effect` on door "Kholo!" buttons
+  1729→   - `hover-card-scale` on exit strategy cards
+  1730→   - `corner-accent` on bottom insight panel
+  1731→
+  1732→6. **ReportCard.tsx** — Enhanced with:
+  1733→   - `paper-texture` on report card container
+  1734→   - `corner-accent` on overall grade display
+  1735→   - `slide-up-reveal` on subject rows with staggered animation delays
+  1736→
+  1737→7. **FinancialGPS.tsx** — Enhanced with:
+  1738→   - `glass-card-premium` on all three health metric StatCards
+  1739→   - `breathing-dot` next to current location indicator (Car icon)
+  1740→   - `glow-line` separators between route segments
+  1741→
+  1742→8. **Sidebar.tsx** — Enhanced with:
+  1743→   - `corner-accent` on dashboard button
+  1744→   - `gradient-border-fade` on share progress button
+  1745→   - `badge-pulse` on streak number when streak > 0
+  1746→   - `hover-card-scale` on each module item
+  1747→
+  1748→9. **page.tsx** — Updated AppFooter feature badges to include 'Priority Calculator'
+  1749→
+  1750→10. **StatCard.tsx** — Added optional `className` prop to support passing custom CSS classes
+  1751→
+  1752→Stage Summary:
+  1753→- 20+ new CSS utility classes added for ultra-premium visual effects
+  1754→- 8 components enhanced with new styling classes (no functionality changes)
+  1755→- All enhancements are additive — no existing classes or functionality removed
+  1756→- Zero lint errors confirmed
+  1757→
+  1758→---
+  1759→Task ID: 12-a
+  1760→Agent: Subagent (Full-stack Developer)
+  1761→Task: Create Financial Priority Calculator tool
+  1762→
+  1763→Work Log:
+  1764→- Created `/home/z/my-project/src/components/shared/PriorityCalculator.tsx` — full interactive tool
+  1765→- Income Input: Slider (₹5K–₹5L) + quick preset buttons (₹10K, ₹25K, ₹50K, ₹1L)
+  1766→- Animated Rupee Counter with spring animation
+  1767→- Income Level Badges: 🌱 Shuruwaat Karnewala → 🧗 Climber → 💡 Smart Saver → 🏗️ Wealth Builder → ⭐ Finance Star
+  1768→- 50/30/20 Allocation Bar: Interactive stacked bar with click-to-expand detail panels
+  1769→- Priority Ranking: 8 financial priorities with checkmark/lock icons, progress bars, Hinglish tips
+  1770→- Smart Recommendations: LLM-powered via backend API with fallback static tips
+  1771→- Created `/home/z/my-project/src/app/api/priority-advisor/route.ts` — backend API using z-ai-web-dev-sdk
+  1772→- Added `priorityCalculatorIncome` and `setPriorityCalculatorIncome` to Zustand store
+  1773→- Integrated into Navbar with ListOrdered icon
+  1774→
+  1775→Stage Summary:
+  1776→- Priority Calculator fully functional ✅
+  1777→- API route returns 200 ✅
+  1778→- Zero lint errors ✅
+  1779→
+  1780→---
+  1781→Task ID: 12-b
+  1782→Agent: Subagent (Full-stack Developer)
+  1783→Task: Deep Styling Enhancement Round 2
+  1784→
+  1785→Work Log:
+  1786→- Added 20+ ultra-premium CSS utility classes to globals.css:
+  1787→  - `aurora-bg` — Animated aurora/gradient background with shifting radial gradients
+  1788→  - `glass-card-premium` — Glassmorphism card with inner glow, backdrop blur, hover lift
+  1789→  - `text-gradient-animated` — Animated gold gradient text (4s infinite flow)
+  1790→  - `ripple-effect` — Click ripple effect on interactive cards
+  1791→  - `glow-line` — Amber glow line separator
+  1792→  - `corner-accent` — Decorative corner accents with amber border fragments
+  1793→  - `dots-pattern` — Subtle dots pattern background
+  1794→  - `active-card-glow` — CSS Houdini rotating border glow
+  1795→  - `breathing-dot` — Pulsing indicator dot
+  1796→  - `slide-up-reveal` — Slide-up reveal animation with stagger
+  1797→  - `hover-card-scale` — Hover scale effect with custom cubic-bezier
+  1798→  - `badge-pulse` — Micro pulse animation for badges
+  1799→  - `gradient-border-fade` — Triple-color gradient border
+  1800→  - And more (stat-flash, count-transition, new-item-shimmer, tab-indicator-glow, hover-reveal)
+  1801→- Enhanced PageContainer with `aurora-bg` for all strategy pages
+  1802→- Enhanced CompoundingTree: dots-pattern, text-gradient-animated, corner-accent, glass-card-premium
+  1803→- Enhanced InflationMonster: aurora-bg, glass-card-premium on Chor/Hero cards, glow-line separators
+  1804→- Enhanced DebtDoors: ripple-effect on door buttons, hover-card-scale, corner-accent
+  1805→- Enhanced ReportCard: paper-texture, corner-accent on grade, slide-up-reveal with stagger
+  1806→- Enhanced FinancialGPS: glass-card-premium, breathing-dot, glow-line separators
+  1807→- Enhanced Sidebar: corner-accent, gradient-border-fade, badge-pulse on streak, hover-card-scale
+  1808→- Updated footer badges to include Priority Calculator
+  1809→- Enhanced StatCard with optional className prop
+  1810→
+  1811→Stage Summary:
+  1812→- 20+ new ultra-premium CSS utilities ✅
+  1813→- 6 strategy components visually enhanced ✅
+  1814→- Sidebar and PageContainer enhanced ✅
+  1815→- Zero lint errors ✅
+  1816→
+  1817→---
+  1818→Task ID: 13
+  1819→Agent: Main Orchestrator
+  1820→Task: QA testing, bug fixes, integration verification
+  1821→
+  1822→Work Log:
+  1823→- Read worklog.md and assessed project status (22+ features, production-ready)
+  1824→- QA tested all 12 strategy tabs via agent-browser — zero JS errors
+  1825→- QA tested all 11 tool dialogs — all functional
+  1826→- QA tested Priority Calculator — opens, renders, API returns 200
+  1827→- QA tested theme toggle — works correctly
+  1828→- QA tested enhanced strategy components (LifePathMap, InflationMonster, DebtDoors, CompoundingTree, ReportCard, FinancialGPS) — all styled correctly
+  1829→- Verified zero lint errors
+  1830→- Verified all HTTP 200 responses
+  1831→- No bugs found in this round
+  1832→
+  1833→Stage Summary:
+  1834→- All features verified via agent-browser QA ✅
+  1835→- Zero bugs found ✅
+  1836→- Zero lint errors ✅
+  1837→- All routes returning HTTP 200 ✅
+  1838→
+  1839→---
+  1840→
+  1841→# COMPREHENSIVE HANDOVER DOCUMENT (Round 10)
+  1842→
+  1843→## 1. Current Project Status Assessment
+  1844→
+  1845→### App: RUPAIYA 101 — Financial Literacy App for Indian Youth (Hinglish)
+  1846→### Tech Stack: Next.js 16 + TypeScript 5 + Tailwind CSS 4 + Framer Motion + Zustand + Recharts + shadcn/ui + z-ai-web-dev-sdk
+  1847→
+  1848→### Overall Health: ✅ PRODUCTION-READY
+  1849→- Zero lint errors
+  1850→- Zero runtime JS errors across all 12 strategies and all tools
+  1851→- Dev server running stably (HTTP 200)
+  1852→- All features functional and tested via agent-browser
+  1853→- Mobile responsive design working
+  1854→- Dark/Light theme toggle working
+  1855→- 3 API routes returning 200 (finance-advisor, sip-calculate, priority-advisor, financial-news)
+  1856→
+  1857→### Feature Count: 25+ major features
+  1858→
+  1859→#### Core Strategies (12)
+  1860→1. ✅ LifePathMap — Interactive life journey SVG with pit stops
+  1861→2. ✅ FinancialGPS — Financial health navigator with animated car
+  1862→3. ✅ ConsequenceSim — Dual timeline what-if simulator
+  1863→4. ✅ InflationMonster — Chor vs Hero inflation visualizer
+  1864→5. ✅ SwipeBudget — Tinder-style expense categorizer
+  1865→6. ✅ RoomBudget — Room-by-room budget builder
+  1866→7. ✅ DebtDoors — 7-door debt trap animation
+  1867→8. ✅ CompoundingTree — Growing tree compounding visual
+  1868→9. ✅ ReportCard — School-style financial report card
+  1869→10. ✅ Dictionary — Financial terms explorer (40+ Hinglish terms)
+  1870→11. ✅ DailySimulator — Daily spending simulator
+  1871→12. ✅ MistakeMarket — Interactive error gallery
+  1872→
+  1873→#### Interactive Tools (11)
+  1874→1. ✅ Quiz Challenge Arena — 4 game modes
+  1875→2. ✅ Financial Fortune Spin Wheel — 8 segments
+  1876→3. ✅ SIP Calculator — Sliders, year-by-year breakdown, AI tips
+  1877→4. ✅ Memory Match Game — 3 difficulty levels
+  1878→5. ✅ Word Scramble — 3 difficulty levels, 30 Hinglish financial terms
+  1879→6. ✅ Financial News & Insights — AI-powered Hinglish tips + web search
+  1880→7. ✅ **NEW** Priority Calculator — 50/30/20 rule, 8 financial priorities, income badges, LLM advice
+  1881→8. ✅ Savings Challenge — 30-day tracker
+  1882→9. ✅ Expense Tracker — 9 categories, pie chart
+  1883→10. ✅ Financial Health Checkup — 8-question quiz
+  1884→11. ✅ AI Financial Advisor Chatbot (Rupaiya Guru)
+  1885→
+  1886→#### Dashboard & Tracking (6)
+  1887→1. ✅ Achievement Dashboard with Financial Journey Timeline (SVG timeline, milestone cards, progress forecast, 4 summary cards)
+  1888→2. ✅ Financial Goal Tracker
+  1889→3. ✅ Badge Gallery
+  1890→4. ✅ Daily Financial Tips Banner
+  1891→5. ✅ Share Progress
+  1892→6. ✅ Module Completion Date Tracking
+  1893→
+  1894→#### UX & System (4)
+  1895→1. ✅ Theme Toggle (Dark/Light)
+  1896→2. ✅ Keyboard Shortcuts
+  1897→3. ✅ Keyboard Shortcuts Help Dialog
+  1898→4. ✅ Welcome Onboarding
+  1899→
+  1900→### CSS Stats (Round 10)
+  1901→- 2400+ lines in globals.css
+  1902→- 40+ keyframe animations
+  1903→- 90+ utility classes
+  1904→- **NEW Round 10 additions**: aurora-bg, glass-card-premium, text-gradient-animated, ripple-effect, glow-line, corner-accent, dots-pattern, active-card-glow, breathing-dot, slide-up-reveal, hover-card-scale, badge-pulse, gradient-border-fade, stat-flash, count-transition, new-item-shimmer, tab-indicator-glow, hover-reveal
+  1905→- Light theme with warm amber tones
+  1906→
+  1907→### Store Stats
+  1908→- 440+ lines
+  1909→- 30+ actions
+  1910→- Full localStorage persistence
+  1911→- `moduleCompletionDates`, `wordScrambleHighScore`, `priorityCalculatorIncome`
+  1912→
+  1913→### API Routes (4)
+  1914→1. `/api/finance-advisor` — LLM-powered chatbot
+  1915→2. `/api/sip-calculate` — SIP projection calculator
+  1916→3. `/api/financial-news` — Web search + LLM tips
+  1917→4. `/api/priority-advisor` — Priority-based LLM advice
+  1918→
+  1919→---
+  1920→
+  1921→## 2. Current Goals / Completed Modifications / Verification Results
+  1922→
+  1923→### Goals for This Round
+  1924→1. ✅ Assess project status and perform QA via agent-browser
+  1925→2. ✅ No bugs found — app is stable
+  1926→3. ✅ Add new feature: Financial Priority Calculator with LLM-powered advice
+  1927→4. ✅ Deep styling improvements: 20+ new ultra-premium CSS utilities, enhanced 6 strategy components, sidebar, page container
+  1928→5. ✅ Full QA verification after all changes
+  1929→
+  1930→### Verification Results
+  1931→- **agent-browser QA**: All 12 strategies + 11 tools + theme toggle = zero JS errors
+  1932→- **Lint**: Zero errors
+  1933→- **Dev server**: HTTP 200 on all routes
+  1934→- **Priority Calculator**: Opens, income slider works, allocation bar renders, API returns 200
+  1935→- **Enhanced strategies**: CompoundingTree, InflationMonster, DebtDoors, ReportCard, FinancialGPS all render with new styling
+  1936→- **Theme Toggle**: Dark ↔ light works correctly
+  1937→
+  1938→---
+  1939→
+  1940→## 3. Unresolved Issues / Risks / Priority Recommendations
+  1941→
+  1942→### Minor Issues (Low Priority)
+  1943→1. Framer Motion warning: `'oklab(0 0 0 / 0)' is not an animatable color` — cosmetic only
+  1944→2. Financial News/Priority APIs take 2-5s on first call — acceptable for LLM calls
+  1945→3. Light theme hex color overrides use `[class*=]` attribute selectors — less performant but functional
+  1946→4. Some dialogs may overlap on very small viewports — minor UX issue
+  1947→
+  1948→### Recommended Next Steps (Priority Order)
+  1949→
+  1950→#### HIGH PRIORITY
+  1951→1. **PWA Support** — Add service worker + manifest.json for offline and install-to-homescreen
+  1952→2. **Report Card PDF Export** — Use the pdf skill for downloadable PDF reports
+  1953→3. **Sound Effects** — Add audio feedback for interactions (coin sounds, card flips, correct/wrong)
+  1954→4. **More Quiz Questions** — Expand from 44 to 100+ for better replayability
+  1955→
+  1956→#### MEDIUM PRIORITY
+  1957→5. **Leaderboard / Social Features** — Compare progress with friends
+  1958→6. **Health Checkup: Historical Trends** — Save and compare scores over time
+  1959→7. **Goal Tracker: Recurring Savings** — Auto-deduct monthly from wallet
+  1960→8. **Financial News: Bookmark Tips** — Save favorite tips for later
+  1961→9. **Priority Calculator: Expense Comparison** — Compare actual vs recommended allocation
+  1962→10. **Word Scramble: More Words** — Expand to 60+ words
+  1963→
+  1964→#### LOW PRIORITY
+  1965→11. **Localization** — Pure Hindi and English options beyond Hinglish
+  1966→12. **Expense Tracker: Receipt Photo Capture** — Camera integration
+  1967→13. **Savings Challenge: Custom Durations** — 7-day, 14-day options
+  1968→14. **Module Detail Enhancement** — LifePathMap subtopic content expansion
+  1969→15. **Keyboard Shortcuts for All Tools** — Alt+H for Health, Alt+E for Expense, etc.
+  1970→
+  1971→### Architecture Notes
+  1972→- All components use 'use client' directive, compatible with Next.js 16 App Router
+  1973→- State management via Zustand with localStorage persistence — no server-side state
+  1974→- 4 API routes use z-ai-web-dev-sdk for LLM/search features
+  1975→- Strategy components are lazy-loaded for performance
+  1976→- Custom DOM events bridge keyboard shortcuts to Navbar dialogs
+  1977→- Theme uses next-themes with attribute="class" for CSS variable switching
+  1978→- Aurora-bg and glass-card-premium provide modern visual depth across strategy pages
+  1979→
+  1980→---
+  1981→
+  1982→Task ID: 14-a
+  1983→Agent: Subagent
+  1984→Task: Create Financial Age Calculator tool
+  1985→
+  1986→Work Log:
+  1987→- Created `/home/z/my-project/src/components/shared/FinancialAgeCalculator.tsx` with full implementation:
+  1988→  - 10-question quiz in Hinglish with 4 options each (1/2/3/4 points)
+  1989→  - Animated question transitions (slide in/out) with Framer Motion AnimatePresence
+  1990→  - Progress bar with gradient fill showing question X/10
+  1991→  - Questions cover: budgeting, emergency fund, investing, credit cards, insurance, goals, expense tracking, tax planning, loans/EMI, future planning
+  1992→  - Financial age calculation with 5 result tiers: Financial Bachcha 👶 (5-12), Financial Teenager 🧑‍🎓 (13-19), Financial Young Adult 🧑‍💼 (20-29), Financial Adult 💼 (30-45), Financial Guru 🧙‍♂️ (45+)
+  1993→  - Results screen with animated age counter, progress ring with glow, confetti particles
+  1994→  - Top 3 improvement areas based on weakest answers with progress bars
+  1995→  - Share button (copies Hinglish text to clipboard): "🎒 Mera Financial Age hai XX! Tumhara kitna hai? RUPAIYA 101 se check karo!"
+  1996→  - Retake quiz button, coin reward of 15 coins
+  1997→  - Dialog using shadcn/ui Dialog, dark theme with amber accents, glass morphism cards
+  1998→  - Mobile responsive, animated option buttons with amber border + glow on selection
+  1999→
+  2000→- Updated `/home/z/my-project/src/lib/store/useAppStore.ts`:
+
+[showing lines 1-2000 of 2512; use offset=2001 with limit to continue reading]
