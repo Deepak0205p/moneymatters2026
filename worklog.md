@@ -2945,3 +2945,294 @@ Files Created:
 
 Files Modified:
 - src/app/dashboard/page.tsx (removed SwipeCardViewer + helpers, changed onClick to router.push, 66% size reduction)
+
+---
+
+Task ID: STRAT-5-8
+Agent: Main Orchestrator (no reviewer, per user request)
+Task: Build 4 interactive strategy components — GharKaBudget, DebtTrapDarwaza, CompoundingTree, ReportCard
+
+Work Log:
+- Read project state (worklog.md, useAppStore.ts, globals.css, utils.ts) to understand the design system, CSS utility classes (glass, glass-card, glass-card-premium, glow-*, text-gradient-*, btn-emerald, btn-gold, etc.), and the Zustand store API (addCoins, addBadge, completedModules, moduleProgress, quizScores, streak, coins, userName).
+- Confirmed all 4 components are NEW files (distinct from existing RoomBudget.tsx / DebtDoors.tsx / ReportCard.tsx / etc.), each starting with "use client" and using default exports.
+
+Files Created (4 strategy components):
+
+1. src/components/strategies/GharKaBudget.tsx (349 lines) — Strategy 5: Ghar Ka Budget
+   - ₹25,000 salary split across 5 categories: Rent 🏠, Food 🍔, Transport 🚌, Entertainment 🎬, Savings 🐷
+   - Visual room simulator that morphs with allocation: bed scales with rent, fridge becomes 🧊 when food is low, 📺 + 🎮 appear with entertainment spend, 🐷 piggy bank glows when savings ≥ 20%
+   - Budget Health meter (circular SVG, color-coded emerald/amber/red) with score 0-100 derived from deviation of each category vs ideal %
+   - Tips ticker that appears on over-allocation (rent > 35%, food > 30%, etc.)
+   - Savings < 20% → amber warning "Bhai, future ke liye kuch toh bachao!"
+   - Total > salary → red warning + auto-deducted from "Bacha" indicator
+   - Auto-rewards +15 coins when health first crosses 75 (one-time per session)
+   - Refactored reward logic OUT of useEffect into the updateCat handler to satisfy react-hooks/set-state-in-effect rule
+
+2. src/components/strategies/DebtTrapDarwaza.tsx (308 lines) — Strategy 6: Debt Trap Ka Darwaza
+   - Dark, moody UI with radial #050a15 → #0a0f1c background gradient
+   - 7 doors in 2x3 + 1 grid, each with Hinglish label, emoji, and skull danger rating (1-3 💀)
+   - 7 doors: EMI Ka Chakkar 📱, Credit Card Ka Jaal 💳, Buy Now Pay Later 🛒, Personal Loan Trap 🏦, 0% EMI Illusion 🎭, Lifestyle EMI 🏠, Payday Loan 💸
+   - Click door → modal opens with rotateY spring animation; inside each door: Trap scenario, Math calculation (e.g., "₹50,000 → ₹1,10,000"), and "Kaise Bacho" tip
+   - Doors visited counter (X/7); opened doors get emerald glow + unlocked state
+   - After all 7 opened: "Debt Trap Survivor 🏆" badge appears with 7 golden rules summary, awards +50 coins and 'debt-trap-survivor' badge
+   - Each door opens = +10 coins
+
+3. src/components/strategies/CompoundingTree.tsx (311 lines) — Strategy 7: Power of Compounding
+   - 3 sliders: Monthly SIP (₹500-₹50,000), Time Period (1-30 yrs), Expected Return (8-15%, default 12%)
+   - Animated CSS/SVG tree that grows taller and wider with years; trunk + dynamic leaf count (5 to 50 leaves arranged in radial pattern)
+   - 5 growth stages: 🌰 Seed (0-2y) → 🌱 Sapling (3-5y) → 🌿 Young (6-12y) → 🌳 Full Tree (13-22y) → ✨ Golden Tree (23y+, leaves turn gold with rotating ⭐)
+   - Falling golden leaves 🍂 particle effect (12 leaves with staggered Framer Motion delay) activates at year 20+
+   - Stats row: "Tum Lagaye" (invested) | "Milega" (FV) | "Fayda" (gain), with multiplier badge
+   - Rule of 72 panel: shows years to double = 72 ÷ rate
+   - 4 milestone badges: ₹1 Lakh 🥉, ₹5 Lakh 🥈, ₹10 Lakh 🥇, ₹1 Crore 💎 — each milestone awards +20 coins; crorepati dream also awards badge
+   - Formula displayed at bottom: FV = P × [((1+r/12)^(n×12) − 1) / (r/12)] × (1+r/12)
+
+4. src/components/strategies/ReportCard.tsx (298 lines) — Strategy 8: Financial Health Report Card
+   - Indian school report card design with decorative corner brackets, gold-bordered glass card
+   - Header: "RUPAIYA 101 — Financial Vidyalaya" with 🎓 GraduationCap crest, motto "Padho, Bachao, Badho"
+   - Student name pulled from Zustand store (userName fallback to "Student")
+   - 5 subjects with grades derived from store data:
+     • Saving Habits 🐷 — from completedModules count (0-11 modules × ~9%)
+     • Budget Planning 📊 — from quizScores average
+     • Debt Awareness 💀 — from moduleProgress average
+     • Investment Knowledge 📈 — from coins earned (0-500 → 0-100%)
+     • Financial Discipline 🔥 — from streak (×10)
+   - Grade scale: A+ (90+, emerald) | A (80+, green) | B (70+, yellow) | C (60+, orange) | D (50+, red) | F (<50, deep red), shown as colored badges in table
+   - Overall average row + overall grade badge
+   - Principal's Remark — dynamic one-liner based on average score (5 tiers of encouragement)
+   - Stamp animation: DISTINCTION (≥75, emerald) / PASS (≥50, gold) / NEEDS WORK (<50, red) — slams onto card with scale 3→1 + rotate spring + glow text-shadow, fires after 600ms delay
+   - Improvement tips section for any subject scoring < 60
+   - Distinction banner for top scorers
+   - "Share Report Card" button (btn-emerald) — awards +5 coins per share, shows "Copied!" confirmation
+
+Code Quality:
+- All 4 files: "use client" directive, default exports, TypeScript, Tailwind CSS utility classes, Framer Motion animations, lucide-react icons, Hinglish content
+- Zero ESLint errors in any of the 4 new files (verified via `bun run lint` — only pre-existing RupaiyaDictionary.tsx errors remain, untouched)
+- Dev server compiles cleanly; no errors in dev.log
+- Each component is self-contained — no new dependencies, no API calls, uses existing CSS utility classes (glass-card, glass-card-premium, glow-green, glow-gold, text-gradient-emerald, text-gradient-gold, btn-emerald, number-highlight, etc.)
+
+Files Created:
+- src/components/strategies/GharKaBudget.tsx
+- src/components/strategies/DebtTrapDarwaza.tsx
+- src/components/strategies/CompoundingTree.tsx
+- src/components/strategies/ReportCard.tsx
+
+---
+
+Task ID: STRAT-9-11
+Agent: Strategy Components Builder
+Task: Build 3 self-contained interactive strategy components (Strategies 9, 10, 11) with Midnight Wealth + Emerald Growth theme
+
+Work Log:
+- Read worklog.md and project structure to understand existing patterns (glass, glass-card-premium, btn-emerald, btn-gold, text-gradient-* utility classes verified in globals.css)
+- Read useAppStore.ts to confirm addCoins(), coins, userName, completedModules, moduleProgress API surface
+- Reviewed existing Dictionary.tsx and MistakeMarket.tsx for code style consistency before replacing
+
+Files Created / Overwritten:
+- src/components/strategies/RupaiyaDictionary.tsx (NEW, Strategy 9 — Floating Bubbles)
+  • 28 hardcoded financial terms with Hinglish "Seedhi Baat" + "Real Life Mein" sections
+  • Floating bubble animation via Framer Motion (y-axis bob loop, per-bubble phase delay)
+  • 3 categories with distinct colors: Basic (blue), Intermediate (purple), Advanced (gold)
+  • Different bubble sizes per category (small/medium/large)
+  • Click bubble → expands into glass-card-premium detail card with emoji, seedhi baat, real-life example, mini-quiz (MCQ 2-3 options with green/red feedback)
+  • Search bar with clear button + 3 category filter chips + All chip
+  • Tracks explored terms count (X/28), progress bar
+  • +50 coins reward when all 28 terms explored (with "Dictionary Master" trophy summary)
+  • Mark-as-explored logic moved into click handler (handleOpenTerm) to avoid setState-in-effect lint error
+
+- src/components/strategies/EkDinKaKharcha.tsx (NEW, Strategy 10 — Daily Spending Simulator)
+  • 8 time slots (8 AM → 11 PM) with 2-3 choices each, all 24 choices per spec
+  • Starting balance ₹500, animated wallet counter (red when < ₹50)
+  • Day timeline strip showing completed/active/upcoming slots with time labels
+  • "Out of budget" disabled state when choice.cost > balance
+  • Game over screens: "broke" (red, AlertTriangle) and "smart spender" (gold, Trophy)
+  • End-of-day summary: total spent, total saved, category breakdown (chai/food/entertainment/skip)
+  • "Try Again" replay button (resets all state)
+  • Smart coin rewards: 30 for ₹200+ saved, 20 for ₹100+, 10 otherwise
+  • Wisdom tips shown after each choice (Hinglish one-liners)
+
+- src/components/strategies/MistakeMarket.tsx (OVERWRITTEN, Strategy 11 — Virtual Marketplace)
+  • 7 stalls with quirky names + emojis per spec (EMI Trap, Lifestyle Inflation, No Emergency Fund, Credit Card Min Payment, Impulse Buying, No Insurance, YOLO Spending)
+  • Each stall has unique color accent + top gradient strip
+  • Glass grid (1/2/3 columns responsive)
+  • Click stall → modal opens with mistake explanation, scary stat, 3 "Kaise Bacho" tips, and "Main Nahi Karunga" pledge button
+  • Visited stalls show checkmark badge + colored glow ring
+  • Pledge gives +10 coins, pledged badge appears on card
+  • Progress tracker: "X/7 stalls visited" with red→amber→emerald gradient progress bar
+  • After visiting all 7: "Market Expert" trophy summary with +50 coins reward
+
+Theme Implementation:
+- All cards use glass / glass-card / glass-card-premium + rounded-2xl
+- Emerald #10B981 for primary actions, Gold #F59E0B for rewards, Purple #8B5CF6 for AI/pledge, Red #EF4444 for mistakes
+- text-gradient-emerald for main headings, text-gradient-gold for reward headings
+- btn-emerald / btn-gold button styles reused from design system
+- hover-card-scale, glow-gold, custom-scroll utilities applied
+- font-display class on all H2/H3 headings
+- Mobile-first responsive (1 col → 2 col → 3 col grids)
+- Framer Motion used throughout (initial/animate/exit, layout, AnimatePresence, whileHover/whileTap, spring transitions)
+
+Quality Checks:
+- ESLint passes clean (`bun run lint` returns 0 errors, 0 warnings)
+- No setState-in-effect patterns (refactored RupaiyaDictionary to use click handler for explore+completion logic)
+- All 3 files start with "use client" and default-export their component
+- Each file is 300-450 lines (Dictionary is longest due to 28 term data objects)
+- All content in Hinglish as required
+- No external API calls; all data hardcoded in components
+- Dev server log confirms clean compilation (no errors)
+
+Stage Summary:
+- 3 production-ready strategy components delivered
+- All integrated with Zustand useAppStore (addCoins + coins used across all three)
+- Ready to be wired into strategy registry / page render
+
+---
+Task ID: STRAT-1-4 (4 Interactive Strategy Components)
+Agent: Strategy Component Developer (no reviewer, per user request)
+Task: Build 4 self-contained interactive React strategy components for RUPAIYA 101 FinTech education app. Each is a full interactive experience using Framer Motion + Zustand store. Theme: Midnight Wealth + Emerald Growth. Content in Hinglish.
+
+Work Log:
+- Read /home/z/my-project/worklog.md (project state: premium FinTech UI, capital-mastery shell, Context-Aware AI Tutor, SwipeCardViewer as module page).
+- Read src/lib/store/useAppStore.ts to confirm Zustand API: addCoins(amount), coins, userName, completedModules, moduleProgress.
+- Read tailwind.config.ts to verify color tokens (emerald, ai, gold, ink, midnight) and font-display family. Confirmed text-ink/text-ink-muted utilities exist via colors.ink.DEFAULT/muted.
+- Read src/app/globals.css to verify utility classes exist: glass, glass-card, glass-card-premium, glass-strong, card-shine, glow-green/glow-gold/glow-red/glow-purple, text-gradient-emerald/gold/brand, btn-emerald, ambient-glow, bg-texture-dots, aurora-bg, hover-card-scale, slide-up-reveal, custom-scroll, scrollbar-none, number-highlight.
+- Read existing src/components/strategies/FinancialGPS.tsx as a structural reference for similar strategy components.
+
+- Created src/components/strategies/PaiseKaGPS.tsx (~290 lines):
+  • STRATEGY 1: Financial Health Navigator with forked road SVG.
+  • 7 Hinglish MCQ questions (savings %, credit card bill, emergency fund, investing style, big purchases, monthly budget, active loans).
+  • A/B choice cards in glassmorphic style — emerald for right choice, red for wrong choice.
+  • SVG road: main horizontal road forks at 70% progress into RIGHT (up to Freedom City 🏙️) and LEFT (down to Debt Trap Nagar 🏚️).
+  • Animated car 🚗 with motion.g using spring physics — moves along main road, then forks based on score.
+  • Score-based path: score >= 50 → right path → Freedom City (emerald glow); else → left path → Debt Trap Nagar (red glow).
+  • Progress bar with emerald gradient.
+  • AnimatePresence for question card transitions.
+  • Result card with: Trophy/AlertTriangle icon, personalized message using userName, Score (X/100), ETA to Financial Freedom (40 - score×0.35 years, min 3), "Dobara Khelo" reset button.
+  • addCoins(25) on completion. Bottom legend with Car/MapPin/AlertTriangle icons.
+
+- Created src/components/strategies/KyaHotaAgar.tsx (~270 lines):
+  • STRATEGY 2: Consequence Simulator with split-screen What-If visualization.
+  • 3 scenarios: Student (₹15K), Working Pro (₹35K), Freelancer (₹50K) — chosen via emerald/glass pill buttons.
+  • LEFT panel (red-tinted glass): "Agar aise hi chala" — 5% overspend + 18% CC interest → debt accumulates. Shows Total Savings ₹0, Debt, Net Worth (negative).
+  • RIGHT panel (green-tinted glass + glow-green): "Agar smart bane" — 20% SIP @12% annual compounding (monthly compounding via FV annuity formula). Shows Invested, Returns, Net Worth.
+  • Custom `useCountUp` hook (rAF-based, cubic ease-out) for smooth number interpolation as slider changes — used for carelessTotal, smartTotal, smartReturns.
+  • Animated emojis: 😟 (left, shaking rotate) vs 😎 (right, bouncing y).
+  • "Difference banner" (glass-card-premium + gold gradient) showing net worth gap.
+  • Bottom horizontal year slider (1→20) — updates both panels simultaneously. Calendar icon + "Year X" display.
+  • `formatINR` helper converts to K/L/Cr Indian format.
+  • Pro Tip footer about SIP timing.
+  • addCoins(2) on scenario switch.
+
+- Created src/components/strategies/ChhupaHuaChor.tsx (~260 lines):
+  • STRATEGY 3: Inflation Monster with growing thief visualization.
+  • Three sliders: Amount (₹10K-₹10L, default ₹1L), Years (1-30, default 10), Inflation Rate (4-10%, default 6%).
+  • Chor character: 🥷 at years<20, 👹 at years≥20. Scale grows 1x→2.5x with years via motion animate.scale. Drop-shadow red glow.
+  • Money pile 💰 shrinks with realValue/amount ratio via motion animate.scale.
+  • Coin stack: 🪙 × 10 — coins fade out one-by-one as value drops (opacity 1→0.15, scale 1→0.7).
+  • Background progressively darkens/reddens with years (redIntensity = years/30, clamped 0-1) — applied to outer container's linear-gradient rgba red.
+  • Big result number card (glass-card-premium): "Tumhara ₹X aaj ki kimat me ₹Y ke barabar feel hoga Z saal baad" with red color.
+  • Count-up animation for realValue and lostPct.
+  • Warning flash at years≥20 AND lostPct≥50: pulsing red banner via AnimatePresence with opacity [1, 0.55, 1] infinite loop. Text: "🚨 DANGER! Inflation ne tumhare paise ka X% kha liya!"
+  • Lost % badge (red-tinted pill with TrendingDown icon).
+  • Educational tooltip at bottom: explains inflation (₹100 → ₹179 in 10 yrs @6%), recommends SIP/Mutual Funds/Equity as inflation-beating options.
+  • Formula display: `Real Value = Amount ÷ (1 + Rate/100)^Years`.
+  • Reward button "🛡️ Inflation Beat Karne ka Seekha! +10 Coins" — addCoins(10).
+  • Calculation: `realValue = amount / Math.pow(1 + rate/100, years)`.
+
+- Created src/components/strategies/BudgetKhel.tsx (~310 lines):
+  • STRATEGY 4: Tinder-Style Swipe Game.
+  • 18 pre-built Hinglish expense cards: Monthly Rent 🏠, Groceries 🥬, Electricity ⚡, Netflix 📺, Gym 💪, Chai Tapri ☕, iPhone EMI 📱, Mobile Recharge 📲, Swiggy/Zomato 🛵, Petrol ⛽, Movie Tickets 🎬, Doctor Visit 🏥, Branded Clothes 👕, EMI for Old Loan 📃, Friend Birthday Party 🎂, Books/Online Course 📚, Smokes/Cold Drink 🚬, Internet Bill 🌐.
+  • Each card has: emoji, name, amount, optional note, system NEED/WANT.
+  • Framer Motion drag gestures: drag="x", dragConstraints={{left:0,right:0}}, dragElastic=0.7, onDragEnd threshold 100px.
+  • Swipe RIGHT (offset.x>100) = NEED → green flash overlay "NEED ✓" + card flies right with +25° rotation.
+  • Swipe LEFT (offset.x<-100) = WANT → gold flash overlay "WANT 💡" + card flies left with -25° rotation.
+  • Spring-based exit (stiffness 280, damping 22).
+  • AnimatePresence mode="popLayout" for smooth transitions.
+  • Tap buttons (WANT gold / NEED emerald) as mobile fallback.
+  • Progress bar with gold gradient.
+  • Summary screen: 🎉 header, budget score (100 - (needDeviation + wantDeviation)×1.5).
+  • CSS conic-gradient pie chart (40×40 size, emerald for needs %, gold for wants %, midnight inner circle showing card count).
+  • Stats grid: Needs count + money%, Wants count + money%.
+  • 50-30-20 rule benchmark: progress bars with ideal marker lines at 50% (needs) and 30% (wants).
+  • Contextual advice based on score: 75+ 🏆 perfect / 50-74 👍 improve / <50 ⚠️ alert.
+  • "Dobara Khelo" Play Again button (resets all state).
+  • addCoins(30) on summary.
+
+Verification (lint + tsc):
+- `bun run lint` → zero ESLint errors, zero warnings.
+- `bunx tsc --noEmit` → zero TypeScript errors in any of the 4 new files (pre-existing errors in unrelated files only: examples/websocket, skills/, src/app/_archive/, src/app/api/financial-news, src/app/api/priority-advisor, src/app/tools/page.tsx).
+- Dev server confirmed running on http://localhost:3000 (Ready in 590ms, all routes 200).
+
+Stage Summary:
+- 4 self-contained interactive strategy components delivered, all in Hinglish, all using Framer Motion + Zustand, all matching Midnight Wealth + Emerald Growth design theme.
+- Each component is a default export with "use client"; directive, 260-310 lines, no external props needed.
+- PaiseKaGPS: forked road SVG + 7 MCQ + animated car + ETA result.
+- KyaHotaAgar: split-screen careless-vs-smart with year slider + count-up animation.
+- ChhupaHuaChor: inflation monster visualization with growing chor + shrinking money + warning flash.
+- BudgetKhel: Tinder-style swipe with 18 cards + conic-gradient pie chart summary + 50-30-20 benchmark.
+- All 4 components standalone — can be imported via `@/components/strategies/{Name}` when ready to wire into routes.
+
+Files Created:
+- src/components/strategies/PaiseKaGPS.tsx (~290 lines)
+- src/components/strategies/KyaHotaAgar.tsx (~270 lines)
+- src/components/strategies/ChhupaHuaChor.tsx (~260 lines)
+- src/components/strategies/BudgetKhel.tsx (~310 lines)
+- agent-ctx/STRAT-1-4-strategy-components.md (work record)
+
+Unresolved Issues / Risks:
+- None — all 4 files compile cleanly with zero lint + tsc errors.
+- Components are not yet wired into any route (per user request — just write the files). To use them, import as shown in the agent-ctx file.
+
+---
+Task ID: STRATEGIES (11 Interactive Strategies Embedded in Learning Modules)
+Agent: Main Orchestrator + 3 Subagents (no reviewer, per user request)
+Task: Build 11 interactive strategy components and embed them inside learning modules via "Try It Now" trigger cards. Each strategy opens as a full-screen modal with slide-up animation. Award gold coins on completion. Strict Midnight Wealth + Emerald Growth theme.
+
+Work Log:
+- Read the master prompt (upload/strategies_module.md) — 11 strategies mapped to specific modules, each with detailed UI specs, features, and coin rewards.
+- Created infrastructure:
+  • TryItNow.tsx — reusable inline trigger card with pulsing glow border, strategy icon, name, description, arrow. Appears while user reads module content.
+  • StrategyModal.tsx — full-screen modal wrapper with slide-up animation, accent glow bar, header with title + coin reward badge, close button. Awards coins on close.
+  • StrategyRenderer.tsx — lazy-loads the correct strategy component based on strategy ID, renders it inside StrategyModal.
+  • strategyRegistry.ts — maps 11 strategies to modules with trigger card indices, accent colors, coin rewards.
+- Dispatched 3 subagents in parallel to build all 11 strategy components:
+  • Subagent 1 (STRAT-1-4): PaiseKaGPS, KyaHotaAgar, ChhupaHuaChor, BudgetKhel
+  • Subagent 2 (STRAT-5-8): GharKaBudget, DebtTrapDarwaza, CompoundingTree, ReportCard
+  • Subagent 3 (STRAT-9-11): RupaiyaDictionary, EkDinKaKharcha, MistakeMarket
+- Fixed strategy registry: debt-trap-darwaza moduleId corrected from 5 (Banking Basics) to 6 (Debt Aur Credit).
+- Wired TryItNow triggers into SwipeCardViewer:
+  • Imports getStrategiesForModule + TryItNow + StrategyRenderer.
+  • activeStrategy state tracks which strategy modal is open.
+  • After interactive payloads (quiz/calculator/choice), checks if any strategy should trigger at the current card index.
+  • Renders TryItNow cards for matching strategies (filter by triggerAfterCard === currentIndex or -1 for last card).
+  • StrategyRenderer modal rendered at the end of SwipeCardViewer.
+- Strategy-to-Module mapping:
+  • Module 1 (Paise Ki Basic Samajh): Rupaiya Dictionary (card 2)
+  • Module 3 (Saving Strategies): Kya Hota Agar (card 1), Chhupa Hua Chor (card 3), Compounding Tree (card 5)
+  • Module 6 (Debt Aur Credit): Debt Trap Darwaza (card 2)
+  • Module 10 (Budgeting In Real Life): Paise Ka GPS (card 1), Budget Khel (card 3), Ghar Ka Budget (card 5), Ek Din Ka Kharcha (card 7), Mistake Market (card 9), Report Card (last card)
+
+Verification:
+- Zero ESLint errors.
+- All routes 200 (/, /dashboard, /dashboard/module/1, /dashboard/module/3).
+- DOM verification: navigated to /dashboard/module/1, advanced to card 2 via keyboard arrows, confirmed `hasTryItNow: true` and `hasRupaiyaDict: true` — the TryItNow trigger for Rupaiya Dictionary renders on the correct card.
+- All 11 strategy components built with: "use client", default exports, Framer Motion animations, Hinglish content, Zustand store integration, Midnight Wealth + Emerald Growth theme, glassmorphism, rounded-2xl.
+
+Files Created:
+- src/components/shared/TryItNow.tsx (reusable trigger card)
+- src/components/shared/StrategyModal.tsx (full-screen modal wrapper)
+- src/components/shared/StrategyRenderer.tsx (lazy-loads strategy components)
+- src/lib/data/strategyRegistry.ts (strategy-to-module mapping)
+- src/components/strategies/PaiseKaGPS.tsx
+- src/components/strategies/KyaHotaAgar.tsx
+- src/components/strategies/ChhupaHuaChor.tsx
+- src/components/strategies/BudgetKhel.tsx
+- src/components/strategies/GharKaBudget.tsx
+- src/components/strategies/DebtTrapDarwaza.tsx
+- src/components/strategies/CompoundingTree.tsx (overwritten with new version)
+- src/components/strategies/ReportCard.tsx (overwritten with new version)
+- src/components/strategies/RupaiyaDictionary.tsx
+- src/components/strategies/EkDinKaKharcha.tsx
+- src/components/strategies/MistakeMarket.tsx (overwritten with new version)
+
+Files Modified:
+- src/components/shared/SwipeCardViewer.tsx (added TryItNow triggers + StrategyRenderer modal)

@@ -1,633 +1,298 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useProgress } from '@/lib/hooks/useProgress';
 import { useAppStore } from '@/lib/store/useAppStore';
-import { getGrade, getFinancialHealthScore } from '@/lib/utils';
-import { modules } from '@/lib/data/modules';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import {
-  GraduationCap,
-  Share2,
-  Award,
-  AlertCircle,
-  PenLine,
-  Stamp,
-  Star,
-  BookOpen,
-  TrendingUp,
-  XCircle,
-} from 'lucide-react';
+import { Share2, GraduationCap, Star, Award, TrendingUp, Lightbulb } from 'lucide-react';
 
-// ─── Grade color mapping ────────────────────────────────
-function getGradeColor(grade: string): { bg: string; text: string; border: string } {
-  switch (grade) {
-    case 'A+':
-      return { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-300' };
-    case 'A':
-      return { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' };
-    case 'B':
-      return { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' };
-    case 'C':
-      return { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300' };
-    case 'D':
-      return { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300' };
-    default:
-      return { bg: 'bg-gray-100', text: 'text-gray-500', border: 'border-gray-300' };
-  }
+type Grade = 'A+' | 'A' | 'B' | 'C' | 'D' | 'F';
+
+const gradeMeta: Record<Grade, { color: string; bg: string; pct: string }> = {
+  'A+': { color: '#10B981', bg: 'bg-emerald-500/15 border-emerald-500/40', pct: '90-100%' },
+  A: { color: '#34D399', bg: 'bg-green-500/15 border-green-500/40', pct: '80-89%' },
+  B: { color: '#FACC15', bg: 'bg-yellow-500/15 border-yellow-500/40', pct: '70-79%' },
+  C: { color: '#FB923C', bg: 'bg-orange-500/15 border-orange-500/40', pct: '60-69%' },
+  D: { color: '#F87171', bg: 'bg-red-500/15 border-red-500/40', pct: '50-59%' },
+  F: { color: '#EF4444', bg: 'bg-red-600/20 border-red-600/50', pct: '<50%' },
+};
+
+function scoreToGrade(s: number): Grade {
+  if (s >= 90) return 'A+';
+  if (s >= 80) return 'A';
+  if (s >= 70) return 'B';
+  if (s >= 60) return 'C';
+  if (s >= 50) return 'D';
+  return 'F';
 }
 
-// ─── Remarks generator (Hinglish) ───────────────────────
-interface ModuleGrade {
-  moduleId: number;
-  title: string;
-  grade: string;
-  percentage: number;
-}
-
-function generateRemarks(grades: ModuleGrade[]): string[] {
-  const remarks: string[] = [];
-
-  // Find weakest modules (D, C, or no grade)
-  const weakModules = grades
-    .filter((g) => g.grade === 'D' || g.grade === 'C' || g.grade === '-')
-    .sort((a, b) => {
-      const order: Record<string, number> = { '-': 0, D: 1, C: 2 };
-      return (order[a.grade] || 3) - (order[b.grade] || 3);
-    })
-    .slice(0, 3);
-
-  // Hinglish advice per module
-  const adviceMap: Record<number, string> = {
-    1: 'Paisa ka basic samajh weak hai — Module 1 zaroor padho!',
-    2: 'Budgeting mein weak ho — Module 2 review karo!',
-    3: 'Saving strategies clear nahi hain — Module 3 se seekho!',
-    4: 'Emergency fund ka importance samjho — Module 4 karo!',
-    5: 'Debt se bachne ke liye Module 5 zaroor karo!',
-    6: 'Banking basics strong karo — Module 6 padho!',
-    7: 'Investment basics clear nahi hai — Module 7 padho!',
-    8: 'Financial independence ka plan banao — Module 8 karo!',
-    9: 'Insurance ki zaroorat samjho — Module 9 complete karo!',
-    10: 'Tax planning se paisa bachao — Module 10 zaroor karo!',
-    11: 'Real-world scenarios ke liye Module 11 complete karo!',
-  };
-
-  if (weakModules.length === 0) {
-    remarks.push('Bahut badhiya! Financial literacy mein strong ho! 🎉');
-    remarks.push('Aur improvement ke liye advanced topics explore karo!');
-  } else {
-    weakModules.forEach((m) => {
-      if (m.grade === '-') {
-        remarks.push(`Module ${m.moduleId} abhi tak nahi kiya — jaldi shuru karo!`);
-      } else {
-        remarks.push(adviceMap[m.moduleId] || `Module ${m.moduleId} mein improvement chahiye!`);
-      }
-    });
-  }
-
-  // Positive remark if some modules done well
-  const strongModules = grades.filter((g) => g.grade === 'A+' || g.grade === 'A');
-  if (strongModules.length > 0 && weakModules.length > 0) {
-    const strongNames = strongModules
-      .slice(0, 2)
-      .map((m) => `Module ${m.moduleId}`)
-      .join(', ');
-    remarks.push(`${strongNames} mein bahut acche ho — isi tarah aage badho!`);
-  }
-
-  return remarks;
-}
-
-// ─── Main Component ─────────────────────────────────────
 export default function ReportCard() {
-  const { completionPercentage, modulesCompleted, getQuizAverage } = useProgress();
-  const { completedModules, quizScores, userName, setUserName } = useAppStore();
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState(userName || '');
-  const [showStamp, setShowStamp] = useState(false);
+  const { userName, completedModules, moduleProgress, quizScores, streak, coins, addCoins } = useAppStore();
+  const [stampShown, setStampShown] = useState(false);
+  const [shared, setShared] = useState(false);
 
-  // ─── Calculate grades for each module ─────────────────
-  const moduleGrades: ModuleGrade[] = useMemo(() => {
-    return modules.map((mod) => {
-      // Find quiz scores for this module
-      const moduleQuizKeys = Object.keys(quizScores).filter((key) =>
-        key.startsWith(`m${mod.id}-`)
-      );
+  const student = userName?.trim() || 'Student';
 
-      if (moduleQuizKeys.length > 0) {
-        const totalScore = moduleQuizKeys.reduce((sum, key) => sum + quizScores[key], 0);
-        const avgScore = totalScore / moduleQuizKeys.length;
-        return {
-          moduleId: mod.id,
-          title: mod.title,
-          grade: getGrade(avgScore),
-          percentage: Math.round(avgScore),
-        };
-      } else if (completedModules.includes(mod.id)) {
-        return {
-          moduleId: mod.id,
-          title: mod.title,
-          grade: 'B',
-          percentage: 70,
-        };
-      }
+  // Subject scoring (0-100)
+  const subjects = useMemo(() => {
+    const modulesDone = completedModules.length;
+    const modProgressAvg =
+      Object.keys(moduleProgress).length > 0
+        ? Object.values(moduleProgress).reduce((a, b) => a + b, 0) / Object.keys(moduleProgress).length
+        : 0;
+    const quizAvg =
+      Object.keys(quizScores).length > 0
+        ? Object.values(quizScores).reduce((a, b) => a + b, 0) / Object.keys(quizScores).length
+        : 0;
 
-      return {
-        moduleId: mod.id,
-        title: mod.title,
-        grade: '-',
-        percentage: 0,
-      };
-    });
-  }, [quizScores, completedModules]);
+    const saving = Math.min(100, (modulesDone / 11) * 100);
+    const budget = Math.round(quizAvg);
+    const debt = Math.min(100, Math.round(modProgressAvg));
+    const investment = Math.min(100, Math.round((coins / 500) * 100));
+    const discipline = Math.min(100, streak * 10);
 
-  const remarks = useMemo(() => generateRemarks(moduleGrades), [moduleGrades]);
-  const healthScore = useMemo(
-    () => getFinancialHealthScore(completedModules, quizScores),
-    [completedModules, quizScores]
-  );
+    return [
+      { name: 'Saving Habits', emoji: '🐷', score: Math.round(saving), tip: 'Modules complete karo — har module ₹50 deta hai!' },
+      { name: 'Budget Planning', emoji: '📊', score: budget, tip: 'Quiz attempts karo, score improve hoga.' },
+      { name: 'Debt Awareness', emoji: '💀', score: debt, tip: 'Debt modules ko 100% complete karo.' },
+      { name: 'Investment Knowledge', emoji: '📈', score: investment, tip: 'Coins kamao — activities complete karke.' },
+      { name: 'Financial Discipline', emoji: '🔥', score: discipline, tip: 'Daily login — streak badhao!' },
+    ];
+  }, [completedModules, moduleProgress, quizScores, coins, streak]);
 
-  // Determine if promoted (overall average >= 60% or all modules completed)
-  const isPromoted = useMemo(() => {
-    const gradedModules = moduleGrades.filter((g) => g.grade !== '-');
-    if (gradedModules.length === 0) return false;
-    const avgPercentage =
-      gradedModules.reduce((sum, g) => sum + g.percentage, 0) / gradedModules.length;
-    return avgPercentage >= 60;
-  }, [moduleGrades]);
+  const avgScore = Math.round(subjects.reduce((a, s) => a + s.score, 0) / subjects.length);
+  const avgGrade = scoreToGrade(avgScore);
 
-  // Class level based on completion
-  const classLevel = useMemo(() => {
-    if (completionPercentage >= 90) return 'V — Financial Guru';
-    if (completionPercentage >= 70) return 'IV — Advanced Learner';
-    if (completionPercentage >= 50) return 'III — Intermediate';
-    if (completionPercentage >= 25) return 'II — Beginner Plus';
-    return 'I — Beginner';
-  }, [completionPercentage]);
+  const stamp = avgScore >= 75 ? 'DISTINCTION' : avgScore >= 50 ? 'PASS' : 'NEEDS WORK';
 
-  // Overall grade
-  const overallGrade = useMemo(() => {
-    const avg = getQuizAverage();
-    if (avg === 0 && modulesCompleted === 0) return '-';
-    return getGrade(avg || completionPercentage);
-  }, [getQuizAverage, completionPercentage, modulesCompleted]);
+  const remark = useMemo(() => {
+    if (avgScore >= 90) return '🌟 Outstanding! Tum true Financial Vidhyarthi ho. Aise hi chalte raho!';
+    if (avgScore >= 75) return '👏 Bahut achha! Thoda aur practice aur tum top pe ho.';
+    if (avgScore >= 60) return '👍 Theek chal raha hai. Modules aur quizzes par dhyaan do.';
+    if (avgScore >= 50) return '💪 Mehnat kar rahe ho. Daily streak maintain karo, farak dikhega!';
+    return '📚 Abhi shuruwat hai. Ek-ek module complete karo, score khud badhega!';
+  }, [avgScore]);
 
-  const handleSaveName = () => {
-    if (nameInput.trim()) {
-      setUserName(nameInput.trim());
-    }
-    setIsEditingName(false);
-  };
-
-  const handleShare = async () => {
-    const shareText = `🎓 RUPAIYA VIDYALAYA Report Card\nStudent: ${userName || 'Student'}\nOverall Grade: ${overallGrade}\nModules Done: ${modulesCompleted}/11\nHealth Score: ${healthScore}%\n\n#Rupaiya101 #FinancialLiteracy`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'My Financial Report Card', text: shareText });
-      } catch {
-        // User cancelled
-      }
-    } else {
-      await navigator.clipboard.writeText(shareText);
-    }
-  };
+  const lowScorers = subjects.filter((s) => s.score < 60);
 
   // Trigger stamp animation on mount
-  const handleStampClick = () => {
-    setShowStamp(true);
-    setTimeout(() => setShowStamp(false), 2500);
+  useEffect(() => {
+    const t = setTimeout(() => setStampShown(true), 600);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleShare = () => {
+    setShared(true);
+    addCoins(5);
+    setTimeout(() => setShared(false), 2000);
   };
 
   return (
-    <div className="w-full flex justify-center">
-      <motion.div
-        className="w-full max-w-[800px]"
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: 'easeOut' }}
+    <div className="max-w-3xl mx-auto">
+      <div className="text-center mb-5">
+        <h2 className="font-display text-3xl md:text-4xl font-bold text-gradient-emerald">
+          Financial Health Report Card 📜
+        </h2>
+        <p className="text-zinc-400 mt-1 text-sm">Tumhari financial journey ka school report card</p>
+      </div>
+
+      {/* REPORT CARD BODY */}
+      <div
+        className="relative glass-card rounded-2xl p-6 md:p-8"
+        style={{ border: '2px solid rgba(245,158,11,0.25)' }}
       >
-        {/* ─── Report Card Container ──────────────────── */}
-        <div
-          className="relative rounded-xl overflow-hidden watermark-bg paper-texture"
-          style={{
-            background: '#fef3c7',
-            border: '3px solid #1e3a5f',
-            boxShadow: '4px 4px 0px #1e3a5f, 8px 8px 20px rgba(0,0,0,0.3)',
-          }}
-        >
-          {/* PASSED / NEEDS IMPROVEMENT Stamp Overlay */}
+        {/* Decorative corners */}
+        {['top-2 left-2', 'top-2 right-2', 'bottom-2 left-2', 'bottom-2 right-2'].map((p) => (
+          <div key={p} className={`absolute ${p} w-6 h-6 border-amber-500/40`} style={{
+            borderTop: p.includes('top') ? '2px solid' : 'none',
+            borderBottom: p.includes('bottom') ? '2px solid' : 'none',
+            borderLeft: p.includes('left') ? '2px solid' : 'none',
+            borderRight: p.includes('right') ? '2px solid' : 'none',
+            borderRadius: p.includes('left') && p.includes('top') ? '8px 0 0 0' :
+                          p.includes('right') && p.includes('top') ? '0 8px 0 0' :
+                          p.includes('left') && p.includes('bottom') ? '0 0 0 8px' :
+                          '0 0 8px 0',
+          }} />
+        ))}
+
+        {/* SCHOOL HEADER */}
+        <div className="text-center border-b-2 border-amber-500/30 pb-4 mb-5 relative">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/15 border-2 border-amber-500/40 mb-2">
+            <GraduationCap className="w-9 h-9 text-amber-400" />
+          </div>
+          <h3 className="font-display text-2xl md:text-3xl font-bold text-gradient-gold">
+            RUPAIYA 101
+          </h3>
+          <p className="text-sm text-zinc-300 tracking-wide">Financial Vidyalaya</p>
+          <p className="text-xs text-zinc-500 italic mt-1">"Padho, Bachao, Badho" — Est. 2024</p>
+
+          {/* STAMP */}
           <AnimatePresence>
-            {showStamp && (
+            {stampShown && (
               <motion.div
-                className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                initial={{ scale: 3, rotate: -45, opacity: 0 }}
+                animate={{ scale: 1, rotate: -12, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+                className="absolute top-0 right-0 md:top-2 md:right-2 px-4 py-2 rounded-lg border-4"
+                style={{
+                  borderColor: stamp === 'DISTINCTION' ? '#10B981' : stamp === 'PASS' ? '#F59E0B' : '#EF4444',
+                  color: stamp === 'DISTINCTION' ? '#10B981' : stamp === 'PASS' ? '#F59E0B' : '#EF4444',
+                  background: 'rgba(0,0,0,0.3)',
+                  textShadow: '0 0 8px currentColor',
+                }}
               >
-                <motion.div
-                  className="border-4 rounded-md px-6 py-3"
-                  style={{
-                    borderColor: isPromoted ? '#16a34a' : '#dc2626',
-                    color: isPromoted ? '#16a34a' : '#dc2626',
-                    transform: 'rotate(-15deg)',
-                    backgroundColor: isPromoted ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)',
-                    fontFamily: 'Georgia, serif',
-                  }}
-                  initial={{ scale: 3, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 0.7 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 0.5, ease: [0.36, 0.07, 0.19, 0.97] }}
-                >
-                  <span className="text-3xl font-black tracking-widest">
-                    {isPromoted ? '✓ PASSED' : '✗ NEEDS IMPROVEMENT'}
-                  </span>
-                </motion.div>
+                <p className="font-display font-black text-lg md:text-xl tracking-wider">{stamp}</p>
               </motion.div>
             )}
           </AnimatePresence>
-          {/* ─── Decorative top border ─────────────────── */}
-          <div
-            className="h-3 w-full"
-            style={{
-              background: 'repeating-linear-gradient(90deg, #1e3a5f 0px, #1e3a5f 20px, #fef3c7 20px, #fef3c7 40px)',
-            }}
-          />
+        </div>
 
-          {/* ─── Header ────────────────────────────────── */}
-          <div className="text-center py-5 px-4" style={{ borderBottom: '2px solid #1e3a5f' }}>
-            {/* School emblem */}
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: '#1e3a5f' }}
-              >
-                <GraduationCap size={28} className="text-[#fef3c7]" />
-              </div>
-            </div>
-            <h2
-              className="text-xl md:text-2xl font-bold tracking-wide"
-              style={{ color: '#1e3a5f', fontFamily: 'Georgia, serif' }}
-            >
-              RUPAIYA VIDYALAYA
-            </h2>
-            <p className="text-sm mt-1" style={{ color: '#3b5f8a', fontFamily: 'Georgia, serif' }}>
-              Financial Literacy Report Card
-            </p>
-            <p className="text-[10px] mt-0.5" style={{ color: '#6b8db5' }}>
-              Established 2024 &bull; &ldquo;Paisa seekho, aage badho&rdquo;
-            </p>
+        {/* STUDENT INFO */}
+        <div className="grid grid-cols-2 gap-3 mb-5 text-sm">
+          <div className="glass rounded-lg p-2.5">
+            <span className="text-zinc-500 text-xs">Student Name:</span>
+            <p className="text-white font-semibold">{student}</p>
           </div>
+          <div className="glass rounded-lg p-2.5">
+            <span className="text-zinc-500 text-xs">Academic Year:</span>
+            <p className="text-white font-semibold">2024-25</p>
+          </div>
+          <div className="glass rounded-lg p-2.5">
+            <span className="text-zinc-500 text-xs">Coins Earned:</span>
+            <p className="text-amber-400 font-semibold">{coins} 🪙</p>
+          </div>
+          <div className="glass rounded-lg p-2.5">
+            <span className="text-zinc-500 text-xs">Streak:</span>
+            <p className="text-emerald-400 font-semibold">{streak} days 🔥</p>
+          </div>
+        </div>
 
-          {/* ─── Student Info ──────────────────────────── */}
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4 sm:px-6 py-4"
-            style={{ borderBottom: '1px dashed #1e3a5f' }}
-          >
-            {/* Student Name */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold shrink-0" style={{ color: '#1e3a5f' }}>
-                Student Name:
-              </span>
-              {isEditingName ? (
-                <div className="flex items-center gap-1 flex-1">
-                  <Input
-                    value={nameInput}
-                    onChange={(e) => setNameInput(e.target.value)}
-                    className="h-7 text-sm bg-white border-[#1e3a5f]/30"
-                    style={{ color: '#1e3a5f' }}
-                    autoFocus
-                    onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-                    placeholder="Apna naam likho"
-                  />
-                  <Button
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    style={{ backgroundColor: '#1e3a5f', color: '#fef3c7' }}
-                    onClick={handleSaveName}
+        {/* SUBJECTS TABLE */}
+        <div className="rounded-xl overflow-hidden border border-white/10">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-amber-500/15 text-amber-300">
+                <th className="text-left p-2.5 font-display font-semibold">Subject</th>
+                <th className="text-center p-2.5 font-display font-semibold">Score</th>
+                <th className="text-center p-2.5 font-display font-semibold">Grade</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subjects.map((s, i) => {
+                const g = scoreToGrade(s.score);
+                const meta = gradeMeta[g];
+                return (
+                  <motion.tr
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="border-t border-white/5 hover:bg-white/[0.02]"
                   >
-                    Save
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1">
-                  <span className="text-sm underline" style={{ color: '#1e3a5f' }}>
-                    {userName || 'Student'}
+                    <td className="p-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{s.emoji}</span>
+                        <span className="text-white font-medium">{s.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-2.5 text-center text-zinc-300">{s.score}/100</td>
+                    <td className="p-2.5 text-center">
+                      <span className={`inline-flex items-center justify-center w-9 h-9 rounded-lg border font-display font-bold ${meta.bg}`} style={{ color: meta.color }}>
+                        {g}
+                      </span>
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-amber-500/30 bg-amber-500/5">
+                <td className="p-2.5 font-display font-bold text-amber-300">Overall Average</td>
+                <td className="p-2.5 text-center font-bold text-white">{avgScore}/100</td>
+                <td className="p-2.5 text-center">
+                  <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg border font-display font-bold text-lg" style={{ color: gradeMeta[avgGrade].color, borderColor: `${gradeMeta[avgGrade].color}40`, background: `${gradeMeta[avgGrade].color}15` }}>
+                    {avgGrade}
                   </span>
-                  <button
-                    onClick={() => {
-                      setNameInput(userName || '');
-                      setIsEditingName(true);
-                    }}
-                    className="p-0.5 rounded hover:bg-[#1e3a5f]/10 transition-colors"
-                  >
-                    <PenLine size={12} style={{ color: '#6b8db5' }} />
-                  </button>
-                </div>
-              )}
-            </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
 
-            {/* Class */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold shrink-0" style={{ color: '#1e3a5f' }}>
-                Class:
-              </span>
-              <span className="text-sm" style={{ color: '#3b5f8a' }}>
-                Level {classLevel}
-              </span>
-            </div>
+        {/* Grade scale legend */}
+        <div className="flex flex-wrap gap-1.5 mt-3 text-[10px]">
+          {(Object.keys(gradeMeta) as Grade[]).map((g) => (
+            <span key={g} className="px-2 py-0.5 rounded border" style={{ color: gradeMeta[g].color, borderColor: `${gradeMeta[g].color}40` }}>
+              {g} = {gradeMeta[g].pct}
+            </span>
+          ))}
+        </div>
 
-            {/* Roll Number */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold shrink-0" style={{ color: '#1e3a5f' }}>
-                Roll No:
-              </span>
-              <span className="text-sm" style={{ color: '#3b5f8a' }}>
-                RUP-{String(healthScore).padStart(3, '0')}
-              </span>
-            </div>
-
-            {/* Overall Grade */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold shrink-0" style={{ color: '#1e3a5f' }}>
-                Overall Grade:
-              </span>
-              <span
-                className="text-sm font-bold px-2 py-0.5 rounded corner-accent"
-                style={{
-                  color: getGradeColor(overallGrade).text.replace('text-', ''),
-                  backgroundColor: getGradeColor(overallGrade).bg.replace('bg-', ''),
-                }}
-              >
-                {overallGrade}
-              </span>
-            </div>
+        {/* PRINCIPAL'S REMARK */}
+        <div className="mt-5 p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-emerald-500/10 border border-purple-500/20">
+          <div className="flex items-center gap-2 mb-1">
+            <Star className="w-4 h-4 text-amber-400" />
+            <p className="text-xs uppercase tracking-wide text-amber-400 font-semibold">Principal's Remark</p>
           </div>
+          <p className="text-sm text-white italic">"{remark}"</p>
+          <p className="text-xs text-zinc-400 mt-2 text-right">— Principal, RUPAIYA 101</p>
+        </div>
 
-          {/* ─── Grades Table ──────────────────────────── */}
-          <div className="px-3 sm:px-4 py-3 overflow-x-auto">
-            <table className="w-full border-collapse min-w-[300px]" style={{ fontFamily: 'Georgia, serif' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#1e3a5f' }}>
-                  <th className="text-left text-xs px-3 py-2 text-[#fef3c7] font-semibold w-8">
-                    #
-                  </th>
-                  <th className="text-left text-xs px-3 py-2 text-[#fef3c7] font-semibold">
-                    Module Name
-                  </th>
-                  <th className="text-center text-xs px-3 py-2 text-[#fef3c7] font-semibold w-20">
-                    Grade
-                  </th>
-                  <th className="text-center text-xs px-3 py-2 text-[#fef3c7] font-semibold w-24">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {moduleGrades.map((mg, index) => {
-                  const gradeStyle = getGradeColor(mg.grade);
-                  const isCompleted = completedModules.includes(mg.moduleId);
-                  const rowBg = index % 2 === 0 ? 'rgba(30,58,95,0.03)' : 'transparent';
-
-                  return (
-                    <motion.tr
-                      key={mg.moduleId}
-                      className="slide-up-reveal"
-                      style={{
-                        backgroundColor: rowBg,
-                        borderBottom: '1px solid rgba(30,58,95,0.1)',
-                        animationDelay: `${0.1 + index * 0.08}s`,
-                        opacity: 0,
-                      }}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + index * 0.05 }}
-                    >
-                      <td
-                        className="text-xs px-3 py-2"
-                        style={{ color: '#6b8db5' }}
-                      >
-                        {mg.moduleId}
-                      </td>
-                      <td
-                        className="text-xs px-3 py-2 font-medium"
-                        style={{ color: '#1e3a5f' }}
-                      >
-                        {mg.title}
-                      </td>
-                      <td className="text-center px-3 py-2">
-                        <span
-                          className={`inline-flex items-center justify-center w-9 h-7 rounded-md text-xs font-bold ${gradeStyle.bg} ${gradeStyle.text} ${gradeStyle.border} border`}
-                        >
-                          {mg.grade}
-                        </span>
-                      </td>
-                      <td className="text-center px-3 py-2">
-                        {mg.grade === '-' ? (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-500">
-                            Not Started
-                          </span>
-                        ) : isCompleted ? (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-                            Completed
-                          </span>
-                        ) : (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
-                            In Progress
-                          </span>
-                        )}
-                      </td>
-                    </motion.tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* ─── Summary Stats ─────────────────────────── */}
-          <div
-            className="grid grid-cols-3 gap-2 sm:gap-3 px-4 sm:px-6 py-3"
-            style={{ borderTop: '2px solid #1e3a5f', borderBottom: '1px dashed #1e3a5f' }}
-          >
-            <div className="text-center">
-              <p className="text-[9px] sm:text-[10px]" style={{ color: '#6b8db5' }}>Modules Done</p>
-              <p className="text-base sm:text-lg font-bold" style={{ color: '#1e3a5f' }}>{modulesCompleted}/11</p>
+        {/* IMPROVEMENT TIPS */}
+        {lowScorers.length > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb className="w-4 h-4 text-emerald-400" />
+              <p className="text-xs uppercase tracking-wide text-emerald-400 font-semibold">Improvement Tips</p>
             </div>
-            <div className="text-center">
-              <p className="text-[9px] sm:text-[10px]" style={{ color: '#6b8db5' }}>Quiz Average</p>
-              <p className="text-base sm:text-lg font-bold" style={{ color: '#1e3a5f' }}>{getQuizAverage()}%</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[9px] sm:text-[10px]" style={{ color: '#6b8db5' }}>Health Score</p>
-              <p className="text-base sm:text-lg font-bold" style={{ color: '#1e3a5f' }}>{healthScore}</p>
-            </div>
-          </div>
-
-          {/* ─── Remarks Section ───────────────────────── */}
-          <div className="px-4 sm:px-6 py-4" style={{ borderBottom: '1px dashed #1e3a5f' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <BookOpen size={16} style={{ color: '#1e3a5f' }} />
-              <h3
-                className="text-sm font-bold underline"
-                style={{ color: '#1e3a5f', fontFamily: 'Georgia, serif' }}
-              >
-                Teacher&apos;s Remarks:
-              </h3>
-            </div>
-            <div className="space-y-2 pl-2">
-              {remarks.map((remark, i) => (
+            <div className="space-y-1.5">
+              {lowScorers.map((s, i) => (
                 <motion.div
                   key={i}
-                  className="flex items-start gap-2"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8 + i * 0.1 }}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                  className="text-xs text-zinc-300 flex items-start gap-2 p-2 rounded-lg bg-white/[0.03]"
                 >
-                  <Star size={10} className="shrink-0 mt-1" style={{ color: '#f59e0b' }} />
-                  <p className="text-xs leading-relaxed" style={{ color: '#1e3a5f' }}>
-                    {remark}
-                  </p>
+                  <span className="text-base">{s.emoji}</span>
+                  <div>
+                    <span className="font-semibold text-white">{s.name}:</span> {s.tip}
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
+        )}
 
-          {/* ─── Parent/Teacher Comment Section ────────── */}
-          <div className="px-4 sm:px-6 py-4" style={{ borderBottom: '1px dashed #1e3a5f', backgroundColor: 'rgba(30,58,95,0.03)' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <PenLine size={14} style={{ color: '#3b5f8a' }} />
-              <h3
-                className="text-xs font-bold"
-                style={{ color: '#1e3a5f', fontFamily: 'Georgia, serif' }}
-              >
-                Parent / Guardian Advice:
-              </h3>
-            </div>
-            <div className="space-y-1.5 pl-6 border-l-2" style={{ borderColor: '#1e3a5f20' }}>
-              {(isPromoted ? [
-                'Accha ja raha hai! Aur practice karo — SIP shuru karo agar abhi tak nahi kiya.',
-                'Budgeting ka habit banao — roz thoda bachana seekho.',
-                'Financial literacy tumhari superpower hai — ise continue karo!',
-              ] : [
-                'Abhi seekhne ka waqt hai — modules complete karo aur quiz attempt karo.',
-                'Paisa ka basic samjho — Module 1 se shuru karo.',
-                'Galtiyan karna seekhne ka hissa hai — improve karte raho!',
-              ]).map((advice, i) => (
-                <p key={i} className="text-[11px] italic" style={{ color: '#3b5f8a' }}>
-                  • {advice}
-                </p>
-              ))}
-            </div>
-          </div>
-
-          {/* ─── Stamp Area ────────────────────────────── */}
-          <div className="relative px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Stamp */}
-            <div className="relative">
-              <motion.button
-                onClick={handleStampClick}
-                className="cursor-pointer"
-                whileTap={{ scale: 0.95 }}
-              >
-                <div
-                  className="w-28 h-28 rounded-full flex flex-col items-center justify-center border-4"
-                  style={{
-                    borderColor: isPromoted ? '#dc2626' : '#6b7280',
-                    backgroundColor: 'transparent',
-                    transform: 'rotate(-12deg)',
-                  }}
-                >
-                  <Stamp size={20} style={{ color: isPromoted ? '#dc2626' : '#6b7280' }} />
-                  <span
-                    className="text-[10px] font-bold mt-1 text-center leading-tight"
-                    style={{
-                      color: isPromoted ? '#dc2626' : '#6b7280',
-                      fontFamily: 'Georgia, serif',
-                    }}
-                  >
-                    {isPromoted ? 'PROMOTED' : 'NEEDS\nIMPROVEMENT'}
-                  </span>
-                  <span
-                    className="text-[7px] mt-0.5"
-                    style={{ color: isPromoted ? '#dc2626' : '#6b7280' }}
-                  >
-                    {new Date().getFullYear()}
-                  </span>
-                </div>
-              </motion.button>
-
-              {/* Stamp animation overlay */}
-              <AnimatePresence>
-                {showStamp && (
-                  <motion.div
-                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    initial={{ scale: 3, opacity: 0, rotate: -12 }}
-                    animate={{ scale: 0.9, opacity: 0.6, rotate: -12 }}
-                    exit={{ scale: 1, opacity: 0, rotate: -12 }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                  >
-                    <div
-                      className="w-28 h-28 rounded-full border-4 flex items-center justify-center"
-                      style={{
-                        borderColor: isPromoted ? '#dc2626' : '#6b7280',
-                        backgroundColor: isPromoted ? 'rgba(220,38,38,0.1)' : 'rgba(107,114,128,0.1)',
-                      }}
-                    >
-                      <span
-                        className="text-xs font-bold text-center"
-                        style={{ color: isPromoted ? '#dc2626' : '#6b7280' }}
-                      >
-                        {isPromoted ? '✓ PROMOTED' : '✗ NEEDS\nIMPROVEMENT'}
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Share button */}
-            <Button
-              onClick={handleShare}
-              className="flex items-center gap-2"
-              style={{
-                backgroundColor: '#1e3a5f',
-                color: '#fef3c7',
-                fontFamily: 'Georgia, serif',
-              }}
-            >
-              <Share2 size={14} />
-              <span className="text-xs">Share Report</span>
-            </Button>
-          </div>
-
-          {/* ─── Footer ────────────────────────────────── */}
-          <div
-            className="px-4 sm:px-6 py-3 text-center"
-            style={{ backgroundColor: '#1e3a5f' }}
+        {/* ACHIEVEMENT BANNER */}
+        {stamp === 'DISTINCTION' && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="mt-4 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-center"
           >
-            <p className="text-[10px] text-[#fef3c7]">
-              RUPAIYA VIDYALAYA &bull; Financial Literacy for Indian Youth &bull; &ldquo;Paisa seekho, aage badho&rdquo;
+            <Award className="w-6 h-6 text-emerald-400 inline-block mb-1" />
+            <p className="text-sm text-emerald-300 font-semibold">
+              🎉 Distinction Holder! Tum top 10% students mein ho!
             </p>
-            <p className="text-[8px] text-[#6b8db5] mt-1">
-              This report card is auto-generated based on your progress in RUPAIYA 101
-            </p>
-          </div>
+          </motion.div>
+        )}
+      </div>
 
-          {/* Decorative bottom border */}
-          <div
-            className="h-3 w-full"
-            style={{
-              background:
-                'repeating-linear-gradient(90deg, #1e3a5f 0px, #1e3a5f 20px, #fef3c7 20px, #fef3c7 40px)',
-            }}
-          />
-        </div>
-      </motion.div>
+      {/* SHARE BUTTON */}
+      <div className="text-center mt-5">
+        <motion.button
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={handleShare}
+          className="btn-emerald inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold text-sm"
+        >
+          <Share2 className="w-4 h-4" />
+          {shared ? 'Copied!' : 'Share Report Card'}
+        </motion.button>
+        <p className="text-[11px] text-zinc-500 mt-2">
+          Share karne par +5 coins milte hain 🪙
+        </p>
+      </div>
     </div>
   );
 }

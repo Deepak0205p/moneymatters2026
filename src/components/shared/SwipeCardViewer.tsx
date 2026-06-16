@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/lib/store/useAppStore';
 import { getModuleById, getAllCardsForModule } from '@/data/modulesIndex';
 import { ContextTutorChat } from '@/components/shared/ContextTutorChat';
+import { TryItNow } from '@/components/shared/TryItNow';
+import { StrategyRenderer } from '@/components/shared/StrategyRenderer';
+import { getStrategiesForModule, type StrategyDef } from '@/lib/data/strategyRegistry';
 import {
   X, Zap, Play, BookOpen, CheckCircle2, Sparkles, ArrowUp,
   Bookmark, FileText, Send, Trash2,
@@ -42,6 +45,10 @@ export function SwipeCardViewer({
   const [notes, setNotes] = useState<string[]>([]);
   const [newNote, setNewNote] = useState('');
   const [bookmarked, setBookmarked] = useState(false);
+  const [activeStrategy, setActiveStrategy] = useState<StrategyDef | null>(null);
+
+  // Get strategies embedded in this module
+  const moduleStrategies = getStrategiesForModule(moduleId);
 
   const isLast = currentIndex === allCards.length - 1;
   const currentCard = allCards[currentIndex];
@@ -269,6 +276,20 @@ export function SwipeCardViewer({
                 {currentCard.interactiveType === 'calculator' && currentCard.calcData && <InteractiveCalculatorViewer data={currentCard.calcData} color={currentCard.color} />}
                 {currentCard.interactiveType === 'choice_sim' && currentCard.choiceData && <InteractiveChoiceViewer data={currentCard.choiceData} color={currentCard.color} />}
 
+                {/* ── "Try It Now" Strategy Triggers ── */}
+                {moduleStrategies
+                  .filter((s) => s.triggerAfterCard === currentIndex || (s.triggerAfterCard === -1 && isLast))
+                  .map((strategy) => (
+                    <TryItNow
+                      key={strategy.id}
+                      strategyName={strategy.name}
+                      strategyDescription={strategy.description}
+                      icon={<span className="text-xl">{strategy.iconName}</span>}
+                      accentColor={strategy.accentColor}
+                      onOpen={() => setActiveStrategy(strategy)}
+                    />
+                  ))}
+
                 {/* Module Complete */}
                 {isLast && (
                   <motion.div
@@ -361,6 +382,13 @@ export function SwipeCardViewer({
 
       {/* Context-Aware AI Tutor */}
       <ContextTutorChat />
+
+      {/* Strategy Modal (opens when user clicks "Try It Now") */}
+      <StrategyRenderer
+        strategy={activeStrategy}
+        isOpen={activeStrategy !== null}
+        onClose={() => setActiveStrategy(null)}
+      />
     </main>
   );
 }
