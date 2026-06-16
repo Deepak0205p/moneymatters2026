@@ -28,153 +28,77 @@ const Dictionary = lazy(() => import('@/components/strategies/Dictionary'));
 const DailySimulator = lazy(() => import('@/components/strategies/DailySimulator'));
 const MistakeMarket = lazy(() => import('@/components/strategies/MistakeMarket'));
 
+const STRATEGY_COMPONENTS: Record<number, React.LazyExoticComponent<React.ComponentType>> = {
+  1: LifePathMap,
+  2: FinancialGPS,
+  3: ConsequenceSim,
+  4: InflationMonster,
+  5: SwipeBudget,
+  6: RoomBudget,
+  7: DebtDoors,
+  8: CompoundingTree,
+  9: ReportCard,
+  10: Dictionary,
+  11: DailySimulator,
+  12: MistakeMarket,
+};
+
 function StrategyLoading() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-amber-400/30 border-t-amber-400 rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-[#a0a0b8] text-sm font-medium">Loading strategy...</p>
+        <div className="w-12 h-12 border-4 border-emerald/20 border-t-emerald rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-ink-muted text-sm font-medium">Loading strategy...</p>
       </div>
     </div>
   );
 }
 
 function renderStrategy(activeStrategy: number) {
-  const StrategyComponent = ({ id, children }: { id: number; children: React.ReactNode }) => (
-    <PageContainer strategyId={id}>{children}</PageContainer>
+  const StrategyComponent = STRATEGY_COMPONENTS[activeStrategy] ?? LifePathMap;
+  return (
+    <PageContainer strategyId={activeStrategy}>
+      <Suspense fallback={<StrategyLoading />}>
+        <StrategyComponent />
+      </Suspense>
+    </PageContainer>
   );
-
-  switch (activeStrategy) {
-    case 1:
-      return (
-        <StrategyComponent id={1}>
-          <Suspense fallback={<StrategyLoading />}>
-            <LifePathMap />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 2:
-      return (
-        <StrategyComponent id={2}>
-          <Suspense fallback={<StrategyLoading />}>
-            <FinancialGPS />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 3:
-      return (
-        <StrategyComponent id={3}>
-          <Suspense fallback={<StrategyLoading />}>
-            <ConsequenceSim />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 4:
-      return (
-        <StrategyComponent id={4}>
-          <Suspense fallback={<StrategyLoading />}>
-            <InflationMonster />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 5:
-      return (
-        <StrategyComponent id={5}>
-          <Suspense fallback={<StrategyLoading />}>
-            <SwipeBudget />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 6:
-      return (
-        <StrategyComponent id={6}>
-          <Suspense fallback={<StrategyLoading />}>
-            <RoomBudget />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 7:
-      return (
-        <StrategyComponent id={7}>
-          <Suspense fallback={<StrategyLoading />}>
-            <DebtDoors />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 8:
-      return (
-        <StrategyComponent id={8}>
-          <Suspense fallback={<StrategyLoading />}>
-            <CompoundingTree />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 9:
-      return (
-        <StrategyComponent id={9}>
-          <Suspense fallback={<StrategyLoading />}>
-            <ReportCard />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 10:
-      return (
-        <StrategyComponent id={10}>
-          <Suspense fallback={<StrategyLoading />}>
-            <Dictionary />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 11:
-      return (
-        <StrategyComponent id={11}>
-          <Suspense fallback={<StrategyLoading />}>
-            <DailySimulator />
-          </Suspense>
-        </StrategyComponent>
-      );
-    case 12:
-      return (
-        <StrategyComponent id={12}>
-          <Suspense fallback={<StrategyLoading />}>
-            <MistakeMarket />
-          </Suspense>
-        </StrategyComponent>
-      );
-    default:
-      return (
-        <StrategyComponent id={1}>
-          <Suspense fallback={<StrategyLoading />}>
-            <LifePathMap />
-          </Suspense>
-        </StrategyComponent>
-      );
-  }
 }
 
-// App Footer
+const FOOTER_FEATURES = [
+  '12 Strategies', 'Story Mode', 'Quiz Arena', 'Memory Match', 'SIP Calculator',
+  'Health Checkup', 'Expense Tracker', 'Savings Challenge', 'AI Advisor', 'Word Scramble',
+  'Financial News', 'Priority Calculator', 'Financial Age', 'Invest Compare', 'Emergency Fund', 'Habit Tracker',
+];
+
+// App Footer — sticky to bottom, premium glassmorphism
 function AppFooter() {
   return (
-    <footer className="app-footer relative py-8 px-4 md:ml-72" role="contentinfo">
-      {/* Ambient glow behind footer */}
-      <div className="absolute inset-0 bg-gradient-to-t from-amber-500/[0.02] to-transparent pointer-events-none" />
+    <footer className="app-footer relative py-8 px-4 md:ml-72 mt-auto" role="contentinfo">
+      <div className="absolute inset-0 bg-gradient-to-t from-emerald/[0.03] to-transparent pointer-events-none" />
 
       <div className="max-w-4xl mx-auto relative">
         {/* Top section with logo */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg" style={{ boxShadow: '0 0 12px rgba(245,158,11,0.3)' }}>
-              <IndianRupee className="w-4 h-4 text-[#0a0a0f]" strokeWidth={2.5} />
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
+                boxShadow: '0 0 14px rgba(16,185,129,0.30)',
+              }}
+            >
+              <IndianRupee className="w-4 h-4 text-midnight" strokeWidth={2.5} />
             </div>
             <span className="text-base font-bold">
-              <span className="text-amber-400">RUPAIYA</span>{' '}
-              <span className="text-gradient-gold">101</span>
+              <span className="text-emerald-soft">RUPAIYA</span>{' '}
+              <span className="text-gradient-brand">101</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-[10px] text-[#6666a0]">
+          <div className="flex items-center gap-4 text-[10px] text-ink-muted">
             <span className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-400/50" />
+              <Sparkles className="w-3 h-3 text-emerald/60" />
               Financial Literacy for Everyone
             </span>
             <span className="hidden md:inline">•</span>
@@ -186,10 +110,10 @@ function AppFooter() {
 
         {/* Feature badges */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-5">
-          {['12 Strategies', 'Story Mode', 'Quiz Arena', 'Memory Match', 'SIP Calculator', 'Health Checkup', 'Expense Tracker', 'Savings Challenge', 'AI Advisor', 'Word Scramble', 'Financial News', 'Priority Calculator', 'Financial Age', 'Invest Compare', 'Emergency Fund', 'Habit Tracker'].map((feature) => (
+          {FOOTER_FEATURES.map((feature) => (
             <span
               key={feature}
-              className="tag-hover px-2.5 py-1 rounded-full text-[9px] font-medium bg-white/[0.03] border border-white/[0.05] text-[#a0a0b8]"
+              className="tag-hover px-2.5 py-1 rounded-full text-[9px] font-medium bg-white/[0.04] border border-white/[0.06] text-ink-muted"
             >
               {feature}
             </span>
@@ -198,7 +122,7 @@ function AppFooter() {
 
         {/* Animated divider */}
         <div className="divider-animated mb-4" />
-        <div className="flex items-center justify-between text-[9px] text-[#5555a0]">
+        <div className="flex items-center justify-between text-[9px] text-ink-muted/70">
           <span>© {new Date().getFullYear()} Rupaiya 101 — Seekho, Bachao, Badhao</span>
           <span className="hidden md:inline">Paise ki samajh, sabse badi taakat</span>
         </div>
@@ -211,7 +135,6 @@ function AppFooter() {
 function MobileBottomNav() {
   const { activeStrategy, setActiveStrategy } = useAppStore();
 
-  // Show 5 key strategies in bottom nav
   const bottomNavItems = [
     strategies[0],  // LifePathMap
     strategies[2],  // ConsequenceSim
@@ -230,13 +153,12 @@ function MobileBottomNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#12121a]/95 backdrop-blur-md border-t border-white/[0.06] safe-area-bottom"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-strong border-t border-white/[0.06] safe-area-bottom"
       role="navigation"
       aria-label="Mobile bottom navigation"
-      style={{ boxShadow: '0 -1px 12px rgba(245,158,11,0.06)' }}
+      style={{ boxShadow: '0 -1px 12px rgba(16,185,129,0.06)' }}
     >
-      {/* Subtle top glow line */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald/30 to-transparent" />
       <div className="flex items-center justify-around h-14 px-1">
         {bottomNavItems.map((strategy) => {
           const isActive = activeStrategy === strategy.id;
@@ -247,7 +169,7 @@ function MobileBottomNav() {
               className={`
                 mobile-nav-item
                 flex flex-col items-center justify-center gap-0.5 px-2 py-1 rounded-lg min-w-[48px] min-h-[44px] transition-colors
-                ${isActive ? 'active text-amber-400 mobile-nav-active-line' : 'text-[#8888a0]'}
+                ${isActive ? 'active text-emerald-soft mobile-nav-active-line' : 'text-ink-muted'}
               `}
               whileTap={{ scale: 0.9 }}
               aria-label={strategy.title}
@@ -276,15 +198,16 @@ export default function Home() {
   const { activeStrategy, incrementStreak, setActiveStrategy } = useAppStore();
   const [keyboardShortcutsOpen, setKeyboardShortcutsOpen] = useState(false);
 
-  // Check daily streak on mount
   useEffect(() => {
     incrementStreak();
   }, [incrementStreak]);
 
-  // Keyboard shortcut callbacks
-  const handleSwitchStrategy = useCallback((strategyNumber: number) => {
-    setActiveStrategy(strategyNumber);
-  }, [setActiveStrategy]);
+  const handleSwitchStrategy = useCallback(
+    (strategyNumber: number) => {
+      setActiveStrategy(strategyNumber);
+    },
+    [setActiveStrategy]
+  );
 
   const handleOpenShortcutsHelp = useCallback(() => {
     setKeyboardShortcutsOpen(true);
@@ -294,7 +217,6 @@ export default function Home() {
     setKeyboardShortcutsOpen(false);
   }, []);
 
-  // Register keyboard shortcuts
   useKeyboardShortcuts({
     onSwitchStrategy: handleSwitchStrategy,
     onOpenShortcutsHelp: handleOpenShortcutsHelp,
@@ -302,11 +224,11 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0a0f] text-[#e8e8ed] overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-midnight text-ink overflow-x-hidden">
       <WelcomeOnboarding />
       <Navbar />
       {/* Theme Toggle — fixed top-right below navbar */}
-      <div className="fixed top-[62px] right-3 z-40">
+      <div className="fixed top-[60px] right-3 z-40">
         <ThemeToggle />
       </div>
       <div className="flex flex-1">

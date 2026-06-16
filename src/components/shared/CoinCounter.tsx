@@ -62,7 +62,7 @@ export default function CoinCounter({ amount, showLabel = true }: CoinCounterPro
         } : { scale: 1, rotate: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
-        <Coins size={20} className="text-[#f59e0b]" />
+        <Coins size={20} className="text-gold-soft" style={{ filter: 'drop-shadow(0 0 6px rgba(245,158,11,0.35))' }} />
       </motion.div>
 
       <div className="flex flex-col">
@@ -74,15 +74,14 @@ export default function CoinCounter({ amount, showLabel = true }: CoinCounterPro
             exit={{ y: -10, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className={cn(
-              'text-lg font-bold tabular-nums',
-              'text-[#f59e0b]'
+              'text-lg font-bold tabular-nums text-gradient-gold'
             )}
           >
             {formattedAmount}
           </motion.span>
         </AnimatePresence>
         {showLabel && (
-          <span className="text-[10px] text-[#8888a0] -mt-1">coins</span>
+          <span className="text-[10px] text-ink-muted -mt-1">coins</span>
         )}
       </div>
     </div>

@@ -15,12 +15,16 @@ interface StatCardProps {
   className?: string;
 }
 
+/**
+ * StatCard — premium glassmorphism stat card with animated counter.
+ * Uses the Midnight Wealth + Emerald Growth palette.
+ */
 export default function StatCard({
   label,
   value,
   prefix = '',
   suffix = '',
-  color = '#f59e0b',
+  color = '#10B981',
   icon,
   className,
 }: StatCardProps) {
@@ -34,7 +38,6 @@ export default function StatCard({
       ease: 'easeOut',
     });
 
-    // Subscribe to transform updates to manually update DOM
     const unsubscribe = rounded.on('change', (v) => {
       if (displayRef.current) {
         displayRef.current.textContent = `${prefix}${v.toLocaleString('en-IN')}${suffix}`;
@@ -49,42 +52,32 @@ export default function StatCard({
 
   return (
     <Card
-      className={`border-0 bg-[#12121a] overflow-hidden ${className || ''}`.trim()}
-      style={{ border: '1px solid rgba(255,255,255,0.06)' }}
+      className={`border-0 glass-card overflow-hidden card-shine ${className || ''}`.trim()}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            {/* Label */}
-            <p className="text-xs text-[#8888a0] mb-1 truncate">{label}</p>
-
-            {/* Animated value */}
-            <p className="text-2xl font-bold text-[#e8e8ed] tabular-nums truncate">
+            <p className="text-xs text-ink-muted mb-1 truncate">{label}</p>
+            <p className="text-2xl font-bold text-ink tabular-nums truncate">
               <span ref={displayRef}>
                 {prefix}{(0).toLocaleString('en-IN')}{suffix}
               </span>
             </p>
           </div>
 
-          {/* Optional icon */}
           {icon && (
             <div
               className="flex size-10 shrink-0 items-center justify-center rounded-lg"
-              style={{ backgroundColor: `${color}18` }}
+              style={{ backgroundColor: `${color}18`, boxShadow: `0 0 12px ${color}20` }}
             >
-              <DynamicIcon
-                name={icon}
-                size={20}
-                style={{ color }}
-              />
+              <DynamicIcon name={icon} size={20} style={{ color }} />
             </div>
           )}
         </div>
 
-        {/* Subtle bottom accent line */}
         <motion.div
           className="mt-3 h-0.5 rounded-full"
-          style={{ backgroundColor: `${color}30` }}
+          style={{ background: `linear-gradient(90deg, ${color}, transparent)` }}
           initial={{ width: '0%' }}
           animate={{ width: '60%' }}
           transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
