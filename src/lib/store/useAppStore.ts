@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useEffect, useState } from 'react';
+import {
+  BADGES,
+  getLevelInfo,
+  type ActivityType,
+  type ActivityEntry,
+} from '@/lib/data/badges';
 
 // Hook to detect when Zustand has finished hydrating from localStorage
 export function useHydration() {
@@ -23,6 +29,13 @@ export function useHydration() {
 }
 
 // ── User profile (capital-mastery auth shape, local-only — no Firebase) ──
+export type ProfileStatus =
+  | 'school'
+  | 'college'
+  | 'working'
+  | 'freelancer'
+  | 'job-seeker';
+
 export interface UserProfile {
   uid: string;
   email: string | null;
@@ -31,6 +44,16 @@ export interface UserProfile {
   dateOfBirth: string | null;
   age: number | null;
   photoURL: string | null;
+  /** Emoji avatar id (from PROFILE_AVATARS) — preferred over photoURL for cartoon set. */
+  avatarEmoji?: string | null;
+  /** Current life status. */
+  status?: ProfileStatus | null;
+  /** Monthly income/pocket money in ₹ (used for personalised suggestions). */
+  monthlyIncome?: number | null;
+  /** City (cost-of-living context). */
+  city?: string | null;
+  /** ISO date when the user first joined. */
+  joinedAt?: string | null;
 }
 
 export interface AdvisorMessage {
@@ -83,6 +106,9 @@ export interface HealthCheckupResult {
   recommendations: string[];
 }
 
+// Re-export ActivityEntry for downstream consumers
+export type { ActivityEntry, ActivityType };
+
 interface AppState {
   // Navigation
   activeStrategy: number;
@@ -98,6 +124,14 @@ interface AppState {
   streak: number;
   lastLoginDate: string;
   badges: string[];
+  /** Canonical earned-badge list (mirrored from `badges` for new consumers). */
+  earnedBadges: string[];
+  /** Experience points (drives Level calculation). */
+  xp: number;
+  /** Current level (1–10), recomputed whenever XP changes. */
+  level: number;
+  /** Last 20 user activities for the Profile Activity Feed. */
+  activityLog: ActivityEntry[];
   userName: string;
 
   // Strategy-specific state
@@ -184,6 +218,12 @@ interface AppState {
   incrementStreak: () => void;
   addBadge: (badgeId: string) => void;
   recordQuizScore: (quizId: string, score: number) => void;
+  /** Returns true if the user has earned the given badge. */
+  hasBadge: (badgeId: string) => boolean;
+  /** Award XP and recompute level (auto-awards Level-Up bonus + activity log). */
+  addXP: (amount: number) => void;
+  /** Push an activity entry into the activityLog (capped at last 20). */
+  logActivity: (type: ActivityType, description: string, coins: number) => void;
   setUserName: (name: string) => void;
   setSwipeScore: (score: number, total: number) => void;
   setDebtDoorLevel: (level: number) => void;
@@ -254,6 +294,10 @@ const initialState = {
   streak: 0,
   lastLoginDate: '',
   badges: [] as string[],
+  earnedBadges: [] as string[],
+  xp: 0,
+  level: 1,
+  activityLog: [] as ActivityEntry[],
   userName: '',
   swipeScore: 0,
   swipeTotal: 0,
@@ -388,9 +432,90 @@ export const useAppStore = create<AppState>()(
       },
 
       addBadge: (badgeId) =>
-        set((state) => ({
-          badges: state.badges.includes(badgeId) ? state.badges : [...state.badges, badgeId],
-        })),
+        set((state) => {
+          // Already earned — no-op
+          if (state.badges.includes(badgeId)) return {};
+          const badge = BADGES.find((b) => b.id === badgeId);
+          const updatedBadges = [...state.badges, badgeId];
+          const reward = badge?.rewardCoins ?? 0;
+          const xpGain =
+            (badge?.tier === 'diamond' ? 80 :
+             badge?.tier === 'gold'    ? 50 :
+             badge?.tier === 'silver'  ? 30 : 15);
+          const newXp = state.xp + xpGain;
+          const newLevel = getLevelInfo(newXp).level;
+          const leveledUp = newLevel > state.level;
+          const newActivity: ActivityEntry = {
+            id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            type: 'badge',
+            description: `🏆 Nayi badge mili: ${badge?.name ?? badgeId}${badge ? ` (${badge.tier})` : ''}`,
+            timestamp: Date.now(),
+            coins: reward,
+          };
+          const leveledUpActivity: ActivityEntry | null = leveledUp
+            ? {
+                id: `act-${Date.now()}-lvl-${Math.random().toString(36).slice(2, 7)}`,
+                type: 'level_up',
+                description: `🚀 Level Up! Ab tum Level ${newLevel} pe ho — ${getLevelInfo(newXp).name} ${getLevelInfo(newXp).emoji}`,
+                timestamp: Date.now(),
+                coins: 0,
+              }
+            : null;
+          const newActivityLog = [
+            ...(leveledUpActivity ? [leveledUpActivity] : []),
+            newActivity,
+            ...state.activityLog,
+          ].slice(0, 20);
+          return {
+            badges: updatedBadges,
+            earnedBadges: updatedBadges,
+            coins: state.coins + reward,
+            xp: newXp,
+            level: newLevel,
+            activityLog: newActivityLog,
+          };
+        }),
+
+      hasBadge: (badgeId) => {
+        const state = get();
+        return state.badges.includes(badgeId) || state.earnedBadges.includes(badgeId);
+      },
+
+      addXP: (amount) =>
+        set((state) => {
+          if (amount === 0) return {};
+          const newXp = Math.max(0, state.xp + amount);
+          const newLevel = getLevelInfo(newXp).level;
+          const leveledUp = newLevel > state.level;
+          if (leveledUp) {
+            const levelInfo = getLevelInfo(newXp);
+            const newActivity: ActivityEntry = {
+              id: `act-${Date.now()}-lvl-${Math.random().toString(36).slice(2, 7)}`,
+              type: 'level_up',
+              description: `🚀 Level Up! Ab tum Level ${newLevel} — ${levelInfo.name} ${levelInfo.emoji}`,
+              timestamp: Date.now(),
+              coins: 0,
+            };
+            return {
+              xp: newXp,
+              level: newLevel,
+              activityLog: [newActivity, ...state.activityLog].slice(0, 20),
+            };
+          }
+          return { xp: newXp, level: newLevel };
+        }),
+
+      logActivity: (type, description, coins) =>
+        set((state) => {
+          const entry: ActivityEntry = {
+            id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            type,
+            description,
+            timestamp: Date.now(),
+            coins,
+          };
+          return { activityLog: [entry, ...state.activityLog].slice(0, 20) };
+        }),
 
       recordQuizScore: (quizId, score) =>
         set((state) => {
@@ -621,6 +746,10 @@ export const useAppStore = create<AppState>()(
           completedModules: [],
           moduleProgress: {},
           badges: [],
+          earnedBadges: [],
+          xp: 0,
+          level: 1,
+          activityLog: [],
           userName: '',
         }),
     }),

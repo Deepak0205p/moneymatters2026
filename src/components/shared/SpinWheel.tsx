@@ -1,847 +1,400 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  IndianRupee,
-  BookOpen,
-  Target,
-  Flame,
-  Gift,
-  Lightbulb,
-  Sparkles,
-  Shield,
-  X,
+  X, Gift, Lightbulb, Sparkles, Shield, Clock, IndianRupee,
 } from 'lucide-react';
-import { useAppStore } from '@/lib/store/useAppStore';
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
+  Dialog, DialogContent, DialogTitle,
 } from '@/components/ui/dialog';
+import { useAppStore } from '@/lib/store/useAppStore';
 
-// ─── Segment Data ───────────────────────────────────────────
-interface Segment {
-  id: string;
-  label: string;
-  emoji: string;
-  color: string;
-  borderColor: string;
-  type: 'coins' | 'tip' | 'challenge' | 'shield' | 'mystery' | 'wisdom';
-  coinAmount?: number;
-}
-
-const SEGMENTS: Segment[] = [
-  { id: 'coins-10', label: '10 Coins', emoji: '🪙', color: '#b45309', borderColor: '#92400e', type: 'coins', coinAmount: 10 },
-  { id: 'tip', label: 'Financial Tip', emoji: '📚', color: '#1d4ed8', borderColor: '#1e40af', type: 'tip' },
-  { id: 'coins-25', label: '25 Coins', emoji: '🪙', color: '#d97706', borderColor: '#b45309', type: 'coins', coinAmount: 25 },
-  { id: 'challenge', label: 'Daily Challenge', emoji: '🎯', color: '#15803d', borderColor: '#166534', type: 'challenge' },
-  { id: 'coins-50', label: '50 Coins', emoji: '🪙', color: '#eab308', borderColor: '#ca8a04', type: 'coins', coinAmount: 50 },
-  { id: 'shield', label: 'Streak Shield', emoji: '🔥', color: '#c2410c', borderColor: '#9a3412', type: 'shield' },
-  { id: 'mystery', label: 'Mystery Box', emoji: '🎁', color: '#7c3aed', borderColor: '#6d28d9', type: 'mystery' },
-  { id: 'wisdom', label: 'Wisdom Quote', emoji: '💡', color: '#0d9488', borderColor: '#0f766e', type: 'wisdom' },
-];
-
-const SEGMENT_ANGLE = 360 / SEGMENTS.length; // 45 degrees
-
-// ─── Financial Tips Pool ────────────────────────────────────
-const FINANCIAL_TIPS = [
-  "SIP mein consistency sabse important hai — chota amount bhi regularly invest karo!",
-  "Emergency fund = 6 mahine ka kharcha — pehle yeh banao!",
-  "Credit card bill hamesha full pay karo — minimum payment = debt trap!",
-  "50-30-20 rule: 50% needs, 30% wants, 20% savings",
-  "Insurance zaroori hai — medical emergency mein savings khatam ho sakti hain!",
-  "FD se zyada return dete hai equity mutual funds — long term mein!",
-  "Har mahine apne expenses track karo — surprise se bachoge!",
-  "Lifestyle inflation se bacho — income badhne pe kharcha nahi badhana!",
-  "Tax saving ke liye PPF aur ELSS best options hain!",
-  "P2P lending aur crypto mein caution rakho — high risk hai!",
-];
-
-// ─── Daily Challenges Pool ──────────────────────────────────
-const DAILY_CHALLENGES = [
-  "Aaj ₹100 kam kharch karo aur savings mein daalo!",
-  "Aaj koi unnecessary subscription cancel karo!",
-  "Kisi bhi expense pe 24 ghante sochne ka rule follow karo!",
-  "Aaj apna net worth calculate karo!",
-  "Kisi family member ko ek financial tip sikhao!",
-  "Aaj homemade khana banao — delivery se paise bachao!",
-  "Apne saare subscriptions ka total nikalo — kahan cut kar sakte ho?",
-  "Ek naya financial term aaj seekho aur use karo!",
-];
-
-// ─── Wisdom Quotes Pool ─────────────────────────────────────
-const WISDOM_QUOTES = [
-  { text: "Paise se paise bante hain — lekin sirf agar tum unhe kaam pe lagaao!", author: "Rupaiya Wisdom" },
-  { text: "Rich banne ka shortcut nahi hota — lekin poor banne ke bahut shortcuts hain!", author: "Financial Wisdom" },
-  { text: "Jo log paisa save karte hain, woh future mein freedom kharidte hain!", author: "Rupaiya Wisdom" },
-  { text: "Investment mein time zaroori hai — patience returns deta hai!", author: "Financial Wisdom" },
-  { text: "Har rupee ka hisaab rakhna — yeh amiron ka secret hai!", author: "Rupaiya Wisdom" },
-  { text: "Abhi chota sacrifice = future mein bada comfort!", author: "Financial Wisdom" },
-  { text: "Financial literacy sabse bada asset hai — koi tax nahi lagta!", author: "Rupaiya Wisdom" },
-  { text: "Compound interest duniya ka 8th wonder hai — use samjho!", author: "Albert Einstein" },
-];
-
-// ─── Spin cost & cooldown ───────────────────────────────────
-const SPIN_COST = 5;
-const COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4 hours
-
-// ─── Confetti Component ─────────────────────────────────────
-function ConfettiBurst() {
-  const colors = ['#fbbf24', '#f59e0b', '#22c55e', '#a855f7', '#ef4444', '#3b82f6', '#ec4899'];
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-      {Array.from({ length: 30 }).map((_, i) => {
-        const x = Math.random() * 100;
-        const delay = Math.random() * 0.5;
-        const duration = 1 + Math.random() * 1.5;
-        const size = 4 + Math.random() * 6;
-        const color = colors[i % colors.length];
-        const rotation = Math.random() * 360;
-        return (
-          <motion.div
-            key={i}
-            className="absolute rounded-sm"
-            style={{
-              left: `${x}%`,
-              top: '40%',
-              width: size,
-              height: size,
-              backgroundColor: color,
-              borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-            }}
-            initial={{ y: 0, opacity: 1, rotate: 0, scale: 1 }}
-            animate={{
-              y: [0, -(100 + Math.random() * 150)],
-              x: [(Math.random() - 0.5) * 60, (Math.random() - 0.5) * 200],
-              opacity: [1, 1, 0],
-              rotate: [0, rotation + 360],
-              scale: [1, 1.2, 0.3],
-            }}
-            transition={{ duration, delay, ease: 'easeOut' }}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-// ─── Coin Counter Animation ─────────────────────────────────
-function CoinCounterAnim({ amount }: { amount: number }) {
-  const [display, setDisplay] = useState(0);
-  useEffect(() => {
-    const steps = 20;
-    const increment = amount / steps;
-    let current = 0;
-    const interval = setInterval(() => {
-      current += increment;
-      if (current >= amount) {
-        setDisplay(amount);
-        clearInterval(interval);
-      } else {
-        setDisplay(Math.floor(current));
-      }
-    }, 40);
-    return () => clearInterval(interval);
-  }, [amount]);
-
-  return (
-    <span className="text-gradient-gold text-5xl font-black number-highlight">
-      {display}
-    </span>
-  );
-}
-
-// ─── Reward Reveal Component ────────────────────────────────
-function RewardReveal({
-  segment,
-  onCollect,
-}: {
-  segment: Segment;
-  onCollect: () => void;
-}) {
-  const [showMystery, setShowMystery] = useState(false);
-
-  // Use useMemo for random selections to avoid setState in effect
-  const tipText = useMemo(
-    () => segment.type === 'tip' ? FINANCIAL_TIPS[Math.floor(Math.random() * FINANCIAL_TIPS.length)] : '',
-    [segment]
-  );
-  const challengeText = useMemo(
-    () => segment.type === 'challenge' ? DAILY_CHALLENGES[Math.floor(Math.random() * DAILY_CHALLENGES.length)] : '',
-    [segment]
-  );
-  const wisdomQuote = useMemo(
-    () => segment.type === 'wisdom' ? WISDOM_QUOTES[Math.floor(Math.random() * WISDOM_QUOTES.length)] : { text: '', author: '' },
-    [segment]
-  );
-  const mysteryAmount = useMemo(() => {
-    if (segment.type !== 'mystery') return 0;
-    const amounts = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100];
-    const weights = [20, 18, 15, 12, 10, 8, 7, 5, 3, 2];
-    const totalWeight = weights.reduce((a, b) => a + b, 0);
-    let random = Math.random() * totalWeight;
-    for (let i = 0; i < amounts.length; i++) {
-      random -= weights[i];
-      if (random <= 0) return amounts[i];
-    }
-    return 5;
-  }, [segment]);
-
-  useEffect(() => {
-    if (segment.type === 'mystery') {
-      const timer = setTimeout(() => setShowMystery(true), 1200);
-      return () => clearTimeout(timer);
-    }
-  }, [segment.type]);
-
-  const isBigWin = segment.type === 'coins' && (segment.coinAmount ?? 0) >= 50 || (segment.type === 'mystery' && mysteryAmount >= 50);
-
-  return (
-    <motion.div
-      className="flex flex-col items-center text-center gap-4 relative"
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-    >
-      {isBigWin && <ConfettiBurst />}
-
-      {/* Coin reward */}
-      {segment.type === 'coins' && (
-        <>
-          <motion.div
-            className="text-6xl"
-            animate={{ y: [0, -12, 0], rotate: [0, -5, 5, 0] }}
-            transition={{ duration: 0.8, repeat: 2, ease: 'easeInOut' }}
-          >
-            {segment.emoji}
-          </motion.div>
-          <div>
-            <p className="text-sm text-[#8888a0] mb-1">Tumne jeete!</p>
-            <CoinCounterAnim amount={segment.coinAmount ?? 0} />
-            <p className="text-lg font-bold text-amber-400 mt-1">Coins 🪙</p>
-          </div>
-        </>
-      )}
-
-      {/* Financial Tip */}
-      {segment.type === 'tip' && (
-        <motion.div
-          className="w-full max-w-xs"
-          initial={{ rotateY: 90 }}
-          animate={{ rotateY: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          style={{ perspective: 600 }}
-        >
-          <div className="glass-card-glow p-5 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <BookOpen className="w-5 h-5 text-blue-400" />
-              <span className="text-blue-400 font-bold text-sm">Financial Tip</span>
-            </div>
-            <p className="text-[#e8e8ed] text-sm leading-relaxed">{tipText}</p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Daily Challenge */}
-      {segment.type === 'challenge' && (
-        <motion.div
-          className="w-full max-w-xs"
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        >
-          <div className="glass-card-glow p-5 rounded-xl border-green-500/20">
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="w-5 h-5 text-green-400" />
-              <span className="text-green-400 font-bold text-sm">Aaj Ka Challenge</span>
-            </div>
-            <p className="text-[#e8e8ed] text-sm leading-relaxed">{challengeText}</p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Streak Shield */}
-      {segment.type === 'shield' && (
-        <motion.div
-          className="flex flex-col items-center"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-        >
-          <motion.div
-            className="w-20 h-20 rounded-full flex items-center justify-center mb-3"
-            style={{
-              background: 'radial-gradient(circle, rgba(249,115,22,0.3), rgba(249,115,22,0.1))',
-              boxShadow: '0 0 30px rgba(249,115,22,0.4), 0 0 60px rgba(249,115,22,0.15)',
-            }}
-            animate={{
-              boxShadow: [
-                '0 0 20px rgba(249,115,22,0.3), 0 0 40px rgba(249,115,22,0.1)',
-                '0 0 40px rgba(249,115,22,0.5), 0 0 80px rgba(249,115,22,0.2)',
-                '0 0 20px rgba(249,115,22,0.3), 0 0 40px rgba(249,115,22,0.1)',
-              ],
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Shield className="w-10 h-10 text-orange-400" />
-          </motion.div>
-          <p className="text-orange-400 font-bold text-lg">Streak Shield</p>
-          <p className="text-sm text-[#8888a0] mt-1">1 din ka streak safe! 🔥</p>
-        </motion.div>
-      )}
-
-      {/* Mystery Box */}
-      {segment.type === 'mystery' && (
-        <div className="flex flex-col items-center">
-          {!showMystery ? (
-            <motion.div
-              className="relative"
-              animate={{ rotate: [0, -3, 3, -3, 3, 0] }}
-              transition={{ duration: 1, repeat: Infinity, repeatDelay: 0.5 }}
-            >
-              <motion.div
-                className="text-7xl"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 0.6, repeat: Infinity }}
-              >
-                🎁
-              </motion.div>
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{ boxShadow: '0 0 30px rgba(124,58,237,0.4)' }}
-                animate={{ opacity: [0.3, 0.7, 0.3] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            >
-              <p className="text-sm text-[#8888a0] mb-1">Mystery Box se mila!</p>
-              <CoinCounterAnim amount={mysteryAmount} />
-              <p className="text-lg font-bold text-purple-400 mt-1">Coins 🪙</p>
-            </motion.div>
-          )}
-        </div>
-      )}
-
-      {/* Wisdom Quote */}
-      {segment.type === 'wisdom' && (
-        <motion.div
-          className="w-full max-w-xs"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div
-            className="p-5 rounded-xl relative overflow-hidden"
-            style={{
-              background: 'rgba(13,148,136,0.1)',
-              border: '2px solid rgba(13,148,136,0.3)',
-              boxShadow: '0 0 20px rgba(13,148,136,0.1)',
-            }}
-          >
-            <div className="absolute top-3 left-3 text-2xl opacity-30">❝</div>
-            <div className="flex items-center gap-2 mb-3">
-              <Lightbulb className="w-5 h-5 text-teal-400" />
-              <span className="text-teal-400 font-bold text-sm">Rupaiya Wisdom</span>
-            </div>
-            <p className="text-[#e8e8ed] text-sm leading-relaxed italic mb-3">"{wisdomQuote.text}"</p>
-            {wisdomQuote.author && (
-              <p className="text-xs text-teal-400/70">— {wisdomQuote.author}</p>
-            )}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Collect button */}
-      <motion.button
-        onClick={onCollect}
-        className="btn-gold px-8 py-3 rounded-xl text-base font-bold mt-2 min-w-[160px]"
-        whileHover={{ scale: 1.04 }}
-        whileTap={{ scale: 0.96 }}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        Collect! ✨
-      </motion.button>
-    </motion.div>
-  );
-}
-
-// ─── Main SpinWheel Component ───────────────────────────────
+/* ──────────────────────────────────────────────────────────────
+   Props
+   ────────────────────────────────────────────────────────────── */
 interface SpinWheelProps {
   open: boolean;
   onClose: () => void;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Wheel Segments
+   ────────────────────────────────────────────────────────────── */
+interface Segment {
+  id: string;
+  label: string;
+  emoji: string;
+  color: string;
+  type: 'coins' | 'tip' | 'badge' | 'shield' | 'mystery' | 'wisdom' | 'unlock' | 'retry';
+  coinAmount?: number;
+}
+
+const SEGMENTS: Segment[] = [
+  { id: 'c50', label: '+50 Coins', emoji: '🪙', color: '#F59E0B', type: 'coins', coinAmount: 50 },
+  { id: 'tip', label: 'Financial Tip', emoji: '💡', color: '#3B82F6', type: 'tip' },
+  { id: 'c100', label: '+100 Coins', emoji: '💰', color: '#10B981', type: 'coins', coinAmount: 100 },
+  { id: 'badge', label: 'Mystery Badge', emoji: '🎁', color: '#8B5CF6', type: 'badge' },
+  { id: 'c25', label: '+25 Coins', emoji: '🪙', color: '#FCD34D', type: 'coins', coinAmount: 25 },
+  { id: 'shield', label: 'Streak Shield', emoji: '🛡️', color: '#06B6D4', type: 'shield' },
+  { id: 'unlock', label: 'Tool Unlock', emoji: '🔓', color: '#EC4899', type: 'unlock' },
+  { id: 'retry', label: 'Better Luck!', emoji: '😅', color: '#64748B', type: 'retry' },
+];
+
+const TIPS = [
+  'SIP mein consistency > timing. Regular invest karo!',
+  'Emergency fund = 6 mahine ka kharcha. Pehle yeh!',
+  'Credit card ka hamesha full pay karo — minimum = trap!',
+  '50-30-20 rule: Needs 50%, Wants 30%, Savings 20%.',
+  'Insurance zaroori hai — medical emergency = savings killer!',
+  'FD se MF better — long-term mein returns zyada.',
+  'Lifestyle inflation se bacho — income badhi to kharcha nahi.',
+  'Tax saving ke liye PPF aur ELSS best options hain.',
+];
+
+const SEG_COUNT = SEGMENTS.length;
+const SEG_ANGLE = 360 / SEG_COUNT;
+const DAILY_COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
+
+/* ──────────────────────────────────────────────────────────────
+   Confetti burst
+   ────────────────────────────────────────────────────────────── */
+function ConfettiBurst() {
+  const pieces = Array.from({ length: 36 }, (_, i) => i);
+  const colors = ['#F59E0B', '#10B981', '#8B5CF6', '#EF4444', '#34D399', '#FCD34D'];
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-50">
+      {pieces.map((i) => (
+        <div
+          key={i}
+          className="confetti-piece"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: '-20px',
+            backgroundColor: colors[i % colors.length],
+            animationDelay: `${Math.random() * 0.6}s`,
+            transform: `rotate(${Math.random() * 360}deg)`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Format ms countdown → "23h 45m"
+   ────────────────────────────────────────────────────────────── */
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return 'Abhi spin kar sakte ho!';
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   History entry
+   ────────────────────────────────────────────────────────────── */
+interface HistoryEntry {
+  id: string;
+  emoji: string;
+  label: string;
+  color: string;
+  time: string;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Main Component
+   ────────────────────────────────────────────────────────────── */
 export function SpinWheel({ open, onClose }: SpinWheelProps) {
-  const {
-    coins,
-    lastSpinTime,
-    totalSpins,
-    spinWinnings,
-    spendCoins,
-    setLastSpinTime,
-    incrementTotalSpins,
-    addSpinWinnings,
-    addCoins,
-  } = useAppStore();
-
-  const [spinning, setSpinning] = useState(false);
+  const { lastSpinTime, totalSpins, spinWinnings, setLastSpinTime, incrementTotalSpins, addSpinWinnings, addBadge, addCoins } = useAppStore();
   const [rotation, setRotation] = useState(0);
-  const [winningSegment, setWinningSegment] = useState<Segment | null>(null);
-  const [showReward, setShowReward] = useState(false);
-  const [mysteryCoins, setMysteryCoins] = useState(0);
-  const wheelRef = useRef<HTMLDivElement>(null);
+  const [spinning, setSpinning] = useState(false);
+  const [result, setResult] = useState<Segment | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Cooldown calculation
-  const now = Date.now();
-  const timeSinceLastSpin = now - lastSpinTime;
-  const canSpin = timeSinceLastSpin >= COOLDOWN_MS;
-  const hasEnoughCoins = coins >= SPIN_COST;
-  const [cooldownDisplay, setCooldownDisplay] = useState('');
-
-  // Update cooldown timer display
+  // Tick for countdown
   useEffect(() => {
     if (!open) return;
-
-    const updateTimer = () => {
-      const elapsed = Date.now() - lastSpinTime;
-      const remaining = COOLDOWN_MS - elapsed;
-      if (remaining <= 0) {
-        setCooldownDisplay('');
-        return;
-      }
-      const hours = Math.floor(remaining / (1000 * 60 * 60));
-      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-      setCooldownDisplay(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [open, lastSpinTime]);
-
-  // Reset state when dialog closes
-  useEffect(() => {
-    if (!open) {
-      setShowReward(false);
-      setWinningSegment(null);
-      setSpinning(false);
-    }
+    setNow(Date.now());
+    tickRef.current = setInterval(() => setNow(Date.now()), 1000);
+    return () => { if (tickRef.current) clearInterval(tickRef.current); };
   }, [open]);
 
+  const cooldownLeft = Math.max(0, DAILY_COOLDOWN - (now - lastSpinTime));
+  const canSpin = cooldownLeft === 0 && !spinning;
+
   const handleSpin = useCallback(() => {
-    if (spinning || !canSpin || !hasEnoughCoins) return;
-
-    // Spend coins for spin
-    const spent = spendCoins(SPIN_COST);
-    if (!spent) return;
-
+    if (!canSpin || spinning) return;
     setSpinning(true);
-    setShowReward(false);
-    setWinningSegment(null);
+    setResult(null);
+    setShowConfetti(false);
 
-    // Pick a random segment
-    const segmentIndex = Math.floor(Math.random() * SEGMENTS.length);
-    const segment = SEGMENTS[segmentIndex];
+    // Pick random segment
+    const winIdx = Math.floor(Math.random() * SEG_COUNT);
+    const winningSegment = SEGMENTS[winIdx];
 
-    // Calculate the rotation to land on the segment
-    // The pointer is at the top (270 degrees from 3 o'clock)
-    // Each segment is SEGMENT_ANGLE degrees
-    // To land on segment i, the center of segment i should be at the top
-    // Segment i center angle = i * SEGMENT_ANGLE + SEGMENT_ANGLE/2
-    // We need to rotate so that this center is at 270 degrees
-    const segmentCenter = segmentIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
-    // Target rotation to align segment center with top (270 degrees / -90 degrees)
-    // Since wheel rotates clockwise, we need to calculate offset
-    const targetAngle = 360 - segmentCenter + 90; // +90 because pointer at top
-    // Add multiple full rotations for dramatic effect
-    const fullRotations = 5 + Math.floor(Math.random() * 3); // 5-7 full rotations
-    const totalRotation = fullRotations * 360 + targetAngle;
+    // Calculate target rotation
+    // We want the winning segment to land at the top pointer (12 o'clock position)
+    // Each segment spans SEG_ANGLE degrees. Segment i center is at i*SEG_ANGLE + SEG_ANGLE/2.
+    // We rotate the wheel so that the winning segment's center is at the top (under the pointer).
+    // After full rotations, add offset.
+    const fullSpins = 5 + Math.floor(Math.random() * 3); // 5-7 full rotations
+    const targetAngle = 360 - (winIdx * SEG_ANGLE + SEG_ANGLE / 2);
+    const newRotation = rotation + fullSpins * 360 + (targetAngle - (rotation % 360));
 
-    // Add small random offset within segment for realism
-    const randomOffset = (Math.random() - 0.5) * (SEGMENT_ANGLE * 0.6);
-    const finalRotation = rotation + totalRotation + randomOffset;
+    setRotation(newRotation);
 
-    setRotation(finalRotation);
-
-    // After spin stops, show reward
+    // After spin animation completes (~4.5s)
     setTimeout(() => {
       setSpinning(false);
-      setWinningSegment(segment);
-
-      // Calculate coins for mystery
-      if (segment.type === 'mystery') {
-        const amounts = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100];
-        const weights = [20, 18, 15, 12, 10, 8, 7, 5, 3, 2];
-        const totalWeight = weights.reduce((a, b) => a + b, 0);
-        let random = Math.random() * totalWeight;
-        let chosen = 5;
-        for (let i = 0; i < amounts.length; i++) {
-          random -= weights[i];
-          if (random <= 0) {
-            chosen = amounts[i];
-            break;
-          }
-        }
-        setMysteryCoins(chosen);
-      }
-
-      setShowReward(true);
+      setResult(winningSegment);
       setLastSpinTime(Date.now());
       incrementTotalSpins();
-    }, 4500); // Match CSS transition duration
-  }, [spinning, canSpin, hasEnoughCoins, spendCoins, rotation, setLastSpinTime, incrementTotalSpins]);
 
-  const handleCollect = useCallback(() => {
-    if (!winningSegment) return;
+      // Apply reward
+      if (winningSegment.type === 'coins' && winningSegment.coinAmount) {
+        addSpinWinnings(winningSegment.coinAmount);
+      } else if (winningSegment.type === 'badge') {
+        addBadge(`mystery-badge-${Date.now()}`);
+        addCoins(20); // small coin reward
+      } else if (winningSegment.type === 'shield') {
+        addBadge('streak-shield');
+        addCoins(20);
+      }
 
-    if (winningSegment.type === 'coins') {
-      addSpinWinnings(winningSegment.coinAmount ?? 0);
-    } else if (winningSegment.type === 'mystery') {
-      addSpinWinnings(mysteryCoins);
-    } else if (winningSegment.type === 'shield') {
-      addCoins(5); // Small coin bonus with shield
-    } else {
-      addCoins(3); // Small coin bonus for tips/challenges/wisdom
-    }
+      // Add to history
+      const entry: HistoryEntry = {
+        id: `spin-${Date.now()}`,
+        emoji: winningSegment.emoji,
+        label: winningSegment.label,
+        color: winningSegment.color,
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      };
+      setHistory((h) => [entry, ...h].slice(0, 8));
 
-    setShowReward(false);
-    setWinningSegment(null);
-  }, [winningSegment, mysteryCoins, addSpinWinnings, addCoins]);
+      // Show confetti for winning segments
+      if (winningSegment.type !== 'retry') {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
+      }
+    }, 4500);
+  }, [canSpin, spinning, rotation, setLastSpinTime, incrementTotalSpins, addSpinWinnings, addBadge, addCoins]);
 
-  // SVG wheel segments
-  const renderWheel = () => {
-    const radius = 140;
-    const center = 150;
-
-    return (
-      <svg
-        viewBox="0 0 300 300"
-        className="w-full h-full"
-        style={{ transform: 'rotate(0deg)' }}
-      >
-        {/* Outer gold ring */}
-        <circle
-          cx={center}
-          cy={center}
-          r={radius + 8}
-          fill="none"
-          stroke="#f59e0b"
-          strokeWidth="3"
-          opacity="0.5"
-        />
-
-        {/* Gold dot ticks around the wheel */}
-        {Array.from({ length: 32 }).map((_, i) => {
-          const angle = (i * 360) / 32;
-          const rad = (angle * Math.PI) / 180;
-          const x = center + (radius + 8) * Math.cos(rad);
-          const y = center + (radius + 8) * Math.sin(rad);
-          return (
-            <circle
-              key={`tick-${i}`}
-              cx={x}
-              cy={y}
-              r={1.5}
-              fill="#f59e0b"
-              opacity={0.6}
-            />
-          );
-        })}
-
-        {/* Segments */}
-        {SEGMENTS.map((segment, i) => {
-          const startAngle = i * SEGMENT_ANGLE;
-          const endAngle = (i + 1) * SEGMENT_ANGLE;
-          const startRad = ((startAngle - 90) * Math.PI) / 180;
-          const endRad = ((endAngle - 90) * Math.PI) / 180;
-
-          const x1 = center + radius * Math.cos(startRad);
-          const y1 = center + radius * Math.sin(startRad);
-          const x2 = center + radius * Math.cos(endRad);
-          const y2 = center + radius * Math.sin(endRad);
-
-          const largeArc = SEGMENT_ANGLE > 180 ? 1 : 0;
-
-          const pathData = `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-
-          // Text positioning
-          const textAngle = startAngle + SEGMENT_ANGLE / 2;
-          const textRad = ((textAngle - 90) * Math.PI) / 180;
-          const textRadius = radius * 0.65;
-          const tx = center + textRadius * Math.cos(textRad);
-          const ty = center + textRadius * Math.sin(textRad);
-
-          // Emoji positioning (slightly further out)
-          const emojiRadius = radius * 0.45;
-          const ex = center + emojiRadius * Math.cos(textRad);
-          const ey = center + emojiRadius * Math.sin(textRad);
-
-          return (
-            <g key={segment.id}>
-              <path
-                d={pathData}
-                fill={segment.color}
-                stroke={segment.borderColor}
-                strokeWidth="1.5"
-                style={{
-                  filter: winningSegment?.id === segment.id && showReward
-                    ? 'brightness(1.4)'
-                    : i % 2 === 0
-                    ? 'brightness(1)'
-                    : 'brightness(0.85)',
-                }}
-              />
-              {/* Emoji */}
-              <text
-                x={ex}
-                y={ey}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize="22"
-                style={{ userSelect: 'none' }}
-              >
-                {segment.emoji}
-              </text>
-              {/* Label text */}
-              <text
-                x={tx}
-                y={ty}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize="8"
-                fontWeight="bold"
-                fill="white"
-                style={{
-                  userSelect: 'none',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-                }}
-                transform={`rotate(${textAngle}, ${tx}, ${ty})`}
-              >
-                {segment.label}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Center hub */}
-        <circle
-          cx={center}
-          cy={center}
-          r="28"
-          fill="#1a1a2e"
-          stroke="#f59e0b"
-          strokeWidth="2.5"
-        />
-        <circle
-          cx={center}
-          cy={center}
-          r="24"
-          fill="url(#hubGradient)"
-        />
-        <text
-          x={center}
-          y={center}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize="20"
-          fontWeight="900"
-          fill="#0a0a0f"
-        >
-          ₹
-        </text>
-
-        {/* Gradient definitions */}
-        <defs>
-          <radialGradient id="hubGradient" cx="50%" cy="30%" r="60%">
-            <stop offset="0%" stopColor="#fde68a" />
-            <stop offset="50%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#b45309" />
-          </radialGradient>
-        </defs>
-      </svg>
-    );
-  };
+  const handleClaim = useCallback(() => {
+    setResult(null);
+  }, []);
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent
-        className="bg-[#0a0a0f] border-white/[0.08] sm:max-w-md p-0 overflow-hidden"
-        showCloseButton={!spinning}
-      >
-        <DialogTitle className="sr-only">Spin Wheel - Fortune Ka Daur</DialogTitle>
-
-        <div className="glass-card-glow p-4 sm:p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-400" />
-              <h2 className="text-lg font-bold text-gradient-gold">Fortune Ka Daur</h2>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="bg-midnight border-white/10 max-w-md p-0 overflow-hidden">
+        {/* Header */}
+        <div className="relative p-5 border-b border-white/10 glass-card-premium">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-ink-muted"
+          >
+            <X size={16} />
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F59E0B, #FCD34D)', boxShadow: '0 0 20px rgba(245,158,11,0.3)' }}>
+              <Gift size={20} className="text-midnight" />
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
-              aria-label="Close"
-              disabled={spinning}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Stats row */}
-          <div className="flex items-center gap-3 mb-4 text-xs">
-            <div className="stat-card flex-1 py-2 px-3">
-              <p className="text-[#8888a0]">Total Spins</p>
-              <p className="text-amber-400 font-bold text-sm">{totalSpins}</p>
-            </div>
-            <div className="stat-card flex-1 py-2 px-3">
-              <p className="text-[#8888a0]">Won from Spins</p>
-              <p className="text-amber-400 font-bold text-sm">🪙 {spinWinnings}</p>
-            </div>
-            <div className="stat-card flex-1 py-2 px-3">
-              <p className="text-[#8888a0]">Balance</p>
-              <p className="text-amber-400 font-bold text-sm">🪙 {coins}</p>
+            <div>
+              <h2 className="font-display text-xl font-extrabold text-white">Fortune Ka Daur 🎡</h2>
+              <p className="text-xs text-ink-muted mt-0.5">Roz ek free spin — coins, badges aur surprises!</p>
             </div>
           </div>
+        </div>
 
+        {/* Body */}
+        <div className="p-5 max-h-[72vh] overflow-y-auto">
           {/* Wheel container */}
-          <div className="relative flex items-center justify-center mb-4">
-            {/* Pointer / Arrow at top */}
-            <div
-              className="absolute top-0 left-1/2 -translate-x-1/2 z-20"
-              style={{ marginTop: '-2px' }}
-            >
-              <div
-                className="w-0 h-0"
-                style={{
-                  borderLeft: '10px solid transparent',
-                  borderRight: '10px solid transparent',
-                  borderTop: '18px solid #f59e0b',
-                  filter: 'drop-shadow(0 2px 4px rgba(245,158,11,0.5))',
-                }}
-              />
-            </div>
+          <div className="relative w-full aspect-square max-w-xs mx-auto mb-4">
+            {showConfetti && <ConfettiBurst />}
+
+            {/* Pointer at top */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-gold drop-shadow-lg" />
+
+            {/* Outer ring */}
+            <div className="absolute inset-0 rounded-full border-4 border-gold/30 shadow-[0_0_60px_rgba(245,158,11,0.2)]" />
 
             {/* Spinning wheel */}
-            <div
-              ref={wheelRef}
-              className="relative w-[280px] h-[280px] sm:w-[300px] sm:h-[300px]"
+            <motion.div
+              className="absolute inset-2 rounded-full overflow-hidden"
               style={{
-                transform: `rotate(${rotation}deg)`,
-                transition: spinning
-                  ? 'transform 4.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)'
-                  : 'none',
+                background: '#0B1220',
+                transformOrigin: 'center',
+                rotateY: '0deg',
               }}
+              animate={{ rotate: rotation }}
+              transition={{ duration: 4.5, ease: [0.17, 0.67, 0.16, 0.99] }}
             >
-              {renderWheel()}
-            </div>
+              <svg viewBox="0 0 200 200" className="w-full h-full">
+                {SEGMENTS.map((seg, i) => {
+                  const startAngle = i * SEG_ANGLE - 90;
+                  const endAngle = (i + 1) * SEG_ANGLE - 90;
+                  const startRad = (startAngle * Math.PI) / 180;
+                  const endRad = (endAngle * Math.PI) / 180;
+                  const x1 = 100 + 100 * Math.cos(startRad);
+                  const y1 = 100 + 100 * Math.sin(startRad);
+                  const x2 = 100 + 100 * Math.cos(endRad);
+                  const y2 = 100 + 100 * Math.sin(endRad);
+                  const path = `M 100 100 L ${x1} ${y1} A 100 100 0 0 1 ${x2} ${y2} Z`;
+                  // Label position
+                  const midAngle = (startAngle + endAngle) / 2;
+                  const midRad = (midAngle * Math.PI) / 180;
+                  const lx = 100 + 60 * Math.cos(midRad);
+                  const ly = 100 + 60 * Math.sin(midRad);
+                  return (
+                    <g key={seg.id}>
+                      <path d={path} fill={seg.color} stroke="#0B1220" strokeWidth="1" opacity={0.85} />
+                      <text x={lx} y={ly - 4} fill="white" fontSize="14" fontWeight="bold" textAnchor="middle" dominantBaseline="middle">{seg.emoji}</text>
+                      <text x={lx} y={ly + 10} fill="white" fontSize="6" fontWeight="bold" textAnchor="middle" dominantBaseline="middle">{seg.label}</text>
+                    </g>
+                  );
+                })}
+                {/* Center hub */}
+                <circle cx="100" cy="100" r="14" fill="#0B1220" stroke="#F59E0B" strokeWidth="2" />
+                <text x="100" y="100" fill="#F59E0B" fontSize="14" fontWeight="bold" textAnchor="middle" dominantBaseline="middle">₹</text>
+              </svg>
+            </motion.div>
 
-            {/* Glow effect when won */}
-            {showReward && winningSegment && (
-              <motion.div
-                className="absolute inset-0 rounded-full pointer-events-none"
+            {/* Center overlay */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full bg-midnight border-2 border-gold flex items-center justify-center text-gold-soft text-xl font-bold shadow-lg pointer-events-none">
+              ₹
+            </div>
+          </div>
+
+          {/* Spin button OR countdown */}
+          <div className="text-center">
+            {canSpin ? (
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={handleSpin}
+                disabled={spinning}
+                className="btn-3d rounded-2xl px-10 py-4 font-display text-lg font-extrabold text-midnight inline-flex items-center gap-2 shadow-2xl"
                 style={{
-                  boxShadow: `0 0 40px ${winningSegment.color}40, 0 0 80px ${winningSegment.color}20`,
+                  background: spinning ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #FCD34D, #F59E0B 60%, #D97706)',
+                  animation: spinning ? 'none' : 'pulse 2s infinite',
                 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 1, 0.5, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-            )}
-          </div>
-
-          {/* Spin button */}
-          <div className="flex flex-col items-center gap-3">
-            {!showReward ? (
-              <>
-                <motion.button
-                  onClick={handleSpin}
-                  disabled={spinning || !canSpin || !hasEnoughCoins}
-                  className={`
-                    relative px-8 py-3 rounded-xl text-base font-bold transition-all
-                    ${spinning
-                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                      : canSpin && hasEnoughCoins
-                      ? 'btn-gold cursor-pointer'
-                      : 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                    }
-                  `}
-                  whileHover={canSpin && hasEnoughCoins && !spinning ? { scale: 1.05 } : {}}
-                  whileTap={canSpin && hasEnoughCoins && !spinning ? { scale: 0.95 } : {}}
-                >
-                  {spinning ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-gray-400/30 border-t-gray-400 rounded-full animate-spin" />
-                      Ghumm raha hai...
-                    </span>
-                  ) : canSpin && hasEnoughCoins ? (
-                    <span className="flex items-center gap-2">
-                      <IndianRupee className="w-4 h-4" />
-                      Ghumao! (₹{SPIN_COST})
-                    </span>
-                  ) : null}
-                </motion.button>
-
-                {/* Status messages */}
-                {!hasEnoughCoins && canSpin && (
-                  <motion.p
-                    className="text-sm text-red-400/80"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    Pehle thode coins kamaao! 💪
-                  </motion.p>
-                )}
-                {!canSpin && cooldownDisplay && (
-                  <motion.p
-                    className="text-sm text-[#8888a0]"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    Agle spin mein <span className="text-amber-400 font-mono font-bold">{cooldownDisplay}</span> bache hain
-                  </motion.p>
-                )}
-                {canSpin && hasEnoughCoins && !spinning && (
-                  <p className="text-xs text-[#8888a0]">
-                    Spin ka kharch: 🪙 {SPIN_COST} coins
-                  </p>
-                )}
-              </>
-            ) : (
-              <AnimatePresence mode="wait">
-                {winningSegment && (
-                  <RewardReveal
-                    key={winningSegment.id}
-                    segment={winningSegment}
-                    onCollect={handleCollect}
-                  />
-                )}
-              </AnimatePresence>
-            )}
-          </div>
-
-          {/* Cooldown bar */}
-          {!canSpin && !showReward && (
-            <div className="mt-4">
-              <div className="journey-progress-track">
-                <div
-                  className="journey-progress-fill"
-                  style={{ width: `${Math.min(100, (timeSinceLastSpin / COOLDOWN_MS) * 100)}%` }}
-                />
+              >
+                {spinning ? 'Spinner Chal Raha Hai... 🌀' : 'SPIN! 🎡'}
+              </motion.button>
+            ) : spinning ? (
+              <div className="rounded-2xl px-8 py-4 bg-white/5 border border-white/10 inline-block">
+                <p className="text-sm font-bold text-white">Spinner Chal Raha Hai... 🌀</p>
               </div>
-              <p className="text-[10px] text-[#8888a0] text-center mt-1">
-                Cooldown progress
-              </p>
+            ) : (
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                className="rounded-2xl px-6 py-4 bg-white/5 border border-gold/30 inline-flex items-center gap-2"
+              >
+                <Clock size={16} className="text-gold-soft" />
+                <div className="text-left">
+                  <p className="text-xs font-bold text-gold-soft">Kal Phir Aana! ⏰</p>
+                  <p className="text-[10px] text-ink-muted">Next spin in {formatCountdown(cooldownLeft)}</p>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Result reveal */}
+          <AnimatePresence>
+            {result && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                className="mt-4 relative rounded-2xl border-2 p-5 text-center overflow-hidden"
+                style={{ borderColor: `${result.color}60`, background: `${result.color}15` }}
+              >
+                <motion.div
+                  initial={{ rotate: 0 }}
+                  animate={{ rotate: [0, -10, 10, -10, 0] }}
+                  transition={{ duration: 0.6 }}
+                  className="text-5xl mb-2"
+                >
+                  {result.emoji}
+                </motion.div>
+                <p className="text-[10px] font-bold text-ink-muted uppercase tracking-widest">Tumhe mila</p>
+                <p className="font-display text-xl font-extrabold text-white mb-1">{result.label}!</p>
+                {result.type === 'coins' && result.coinAmount && (
+                  <p className="text-sm font-bold" style={{ color: result.color }}>+{result.coinAmount} Coins 🎉</p>
+                )}
+                {result.type === 'tip' && (
+                  <div className="mt-2 rounded-lg bg-white/5 border border-white/10 p-2">
+                    <p className="text-[11px] text-white/90">{TIPS[Math.floor(Math.random() * TIPS.length)]}</p>
+                  </div>
+                )}
+                {result.type === 'badge' && <p className="text-xs text-ai font-bold">Naya badge unlocked! 🎁</p>}
+                {result.type === 'shield' && <p className="text-xs text-cyan-400 font-bold">Streak shield active! 🛡️</p>}
+                {result.type === 'unlock' && <p className="text-xs text-pink-400 font-bold">Premium tool unlocked! 🔓</p>}
+                {result.type === 'retry' && <p className="text-xs text-ink-muted font-bold">Koi baat nahi, kal phir try karo! 😅</p>}
+
+                <button
+                  onClick={handleClaim}
+                  className="btn-3d mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-midnight"
+                  style={{ background: 'linear-gradient(135deg, #34D399, #10B981)' }}
+                >
+                  Claim Karo! ✅
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-3 gap-2 mt-5">
+            <div className="rounded-xl bg-white/[0.04] border border-white/10 p-3 text-center">
+              <p className="font-display text-lg font-extrabold text-white">{totalSpins}</p>
+              <p className="text-[9px] text-ink-muted uppercase">Total Spins</p>
             </div>
-          )}
+            <div className="rounded-xl bg-white/[0.04] border border-white/10 p-3 text-center">
+              <p className="font-display text-lg font-extrabold text-gold-soft">{spinWinnings}</p>
+              <p className="text-[9px] text-ink-muted uppercase">Coins Won</p>
+            </div>
+            <div className="rounded-xl bg-white/[0.04] border border-white/10 p-3 text-center">
+              <p className="font-display text-lg font-extrabold text-emerald-soft">{cooldownLeft === 0 ? '✅' : '⏳'}</p>
+              <p className="text-[9px] text-ink-muted uppercase">Status</p>
+            </div>
+          </div>
+
+          {/* History log */}
+          <div className="mt-5">
+            <p className="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Sparkles size={12} className="text-ai" /> Spin History
+            </p>
+            {history.length === 0 ? (
+              <p className="text-xs text-ink-muted text-center py-4">Abhi tak koi spin nahi. Pehla spin karo! 🎡</p>
+            ) : (
+              <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                {history.map((h) => (
+                  <motion.div
+                    key={h.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/[0.05] p-2"
+                  >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: `${h.color}20`, border: `1px solid ${h.color}30` }}>
+                      {h.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-white truncate">{h.label}</p>
+                      <p className="text-[10px] text-ink-muted">{h.time}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

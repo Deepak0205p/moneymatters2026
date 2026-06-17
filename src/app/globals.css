@@ -258,6 +258,9 @@
 .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
 
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* ════════════════════════════════════════════════════════════════════════
    GLASSMORPHISM — Premium frosted surfaces
    ════════════════════════════════════════════════════════════════════════ */
@@ -1213,3 +1216,157 @@ input[type="range"]::-moz-range-thumb {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   CAPITAL MASTERY — Premium 3D Overhaul (Task P2-CSS)
+   Animated backgrounds · gradient text · shimmer · magnetic · spotlight
+   Loading bar · stagger reveal · scrollbar upgrade · selection
+   Coin rain · level-up burst
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Animated gradient background system — multi-hue radial wash */
+body {
+  background: #0B1220;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(245, 158, 11, 0.02) 0%, transparent 50%);
+}
+
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridShift 20s linear infinite;
+}
+@keyframes gridShift {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+
+/* 2. Animated gradient heading text */
+.heading-gradient {
+  background: linear-gradient(135deg, #10B981, #8B5CF6, #F59E0B, #10B981);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradientShift 8s ease infinite;
+}
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 3. Skeleton shimmer loading */
+.skeleton-card {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.02) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 4. Magnetic button effect */
+.btn-magnetic {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 5. Spotlight hover — radial light follows cursor */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+}
+.spotlight-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.06),
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.spotlight-card:hover::before { opacity: 1; }
+
+/* 6. Page loading bar (top of page) */
+.page-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #10B981, #8B5CF6);
+  z-index: 9999;
+  transition: width 0.3s ease;
+}
+
+/* 7. Staggered grid reveal animation */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: stagger-reveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes stagger-reveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 8. Glassmorphic scrollbar upgrade — emerald→violet gradient thumb */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #10B981, #8B5CF6);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #34D399, #A78BFA);
+}
+
+/* 9. Text selection — emerald-tinted premium */
+::selection {
+  background: rgba(16, 185, 129, 0.3);
+  color: #F8FAFC;
+}
+
+/* 10. Coin rain animation (for rewards) */
+.coin-rain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+}
+.coin-rain-piece {
+  position: absolute;
+  top: -20px;
+  font-size: 20px;
+  animation: coin-fall 2s linear forwards;
+}
+@keyframes coin-fall {
+  to { transform: translateY(100vh) rotate(360deg); }
+}
+
+/* 11. Level up celebration burst */
+.level-up-burst {
+  animation: level-up-burst 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes level-up-burst {
+  0%   { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+  50%  { transform: scale(1.2) rotate(5deg);  opacity: 1; }
+  100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   END — Capital Mastery Premium 3D Overhaul (P2-CSS)
+   ════════════════════════════════════════════════════════════════════════ */

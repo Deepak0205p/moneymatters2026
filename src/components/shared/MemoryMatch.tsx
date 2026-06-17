@@ -1,839 +1,534 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Brain,
-  Timer,
-  MousePointerClick,
-  RotateCcw,
-  Trophy,
-  Sparkles,
-  X,
-  Flame,
-  Star,
-  Medal,
+  X, Brain, Timer, RotateCcw, Trophy, Sparkles, Star, IndianRupee,
 } from 'lucide-react';
-import { useAppStore } from '@/lib/store/useAppStore';
-import { termsDictionary } from '@/lib/data/terms-dictionary';
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
+  Dialog, DialogContent, DialogTitle,
 } from '@/components/ui/dialog';
+import { useAppStore } from '@/lib/store/useAppStore';
 
-// ─── Types ──────────────────────────────────────────────────
+/* ──────────────────────────────────────────────────────────────
+   Props
+   ────────────────────────────────────────────────────────────── */
 interface MemoryMatchProps {
   open: boolean;
   onClose: () => void;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Term-definition pairs (financial literacy)
+   ────────────────────────────────────────────────────────────── */
+interface TermPair {
+  id: string;
+  term: string;
+  definition: string;
+  emoji: string;
+  color: string;
+}
+
+const ALL_PAIRS: TermPair[] = [
+  { id: 'sip', term: 'SIP', definition: 'Monthly Investment', emoji: '📈', color: '#10B981' },
+  { id: 'emi', term: 'EMI', definition: 'Equal Monthly Installment', emoji: '💳', color: '#EF4444' },
+  { id: 'nav', term: 'NAV', definition: 'Fund Price per Unit', emoji: '💎', color: '#8B5CF6' },
+  { id: 'fd', term: 'FD', definition: 'Fixed Deposit', emoji: '🏦', color: '#F59E0B' },
+  { id: 'cagr', term: 'CAGR', definition: 'Annual Growth Rate', emoji: '📊', color: '#06B6D4' },
+  { id: 'ppf', term: 'PPF', definition: '15-Year Saving Scheme', emoji: '🏛️', color: '#EC4899' },
+  { id: 'nps', term: 'NPS', definition: 'Pension Scheme', emoji: '👵', color: '#A855F7' },
+  { id: 'elss', term: 'ELSS', definition: 'Tax-Saving Mutual Fund', emoji: '🧾', color: '#34D399' },
+  { id: 'demat', term: 'Demat', definition: 'Shares Account', emoji: '📄', color: '#3B82F6' },
+  { id: 'inflation', term: 'Inflation', definition: 'Price Rise Rate', emoji: '🔥', color: '#F97316' },
+  { id: 'roi', term: 'ROI', definition: 'Return on Investment', emoji: '💰', color: '#FCD34D' },
+  { id: 'sip-vs-lump', term: 'Lumpsum', definition: 'One-Time Investment', emoji: '🎯', color: '#14B8A6' },
+];
+
+/* ──────────────────────────────────────────────────────────────
+   Difficulty config
+   ────────────────────────────────────────────────────────────── */
+type GameMode = 'easy' | 'medium' | 'hard';
+
+const MODE_CONFIG: Record<GameMode, { pairs: number; cols: string; label: string; description: string; coins: number; emoji: string }> = {
+  easy: { pairs: 3, cols: 'grid-cols-3', label: 'Easy', description: '3 pairs · 6 cards', coins: 10, emoji: '🌱' },
+  medium: { pairs: 6, cols: 'grid-cols-4', label: 'Medium', description: '6 pairs · 12 cards', coins: 20, emoji: '🔥' },
+  hard: { pairs: 8, cols: 'grid-cols-4', label: 'Hard', description: '8 pairs · 16 cards', coins: 35, emoji: '💀' },
+};
+
+/* ──────────────────────────────────────────────────────────────
+   Game Card type
+   ────────────────────────────────────────────────────────────── */
 interface GameCard {
   id: string;
   pairId: string;
   type: 'term' | 'definition';
   content: string;
-  shortContent: string;
+  emoji: string;
+  color: string;
   flipped: boolean;
   matched: boolean;
 }
 
-type GameMode = 'easy' | 'medium' | 'hard';
-
-interface GameResult {
-  time: number;
-  moves: number;
-  accuracy: number;
-  coinsEarned: number;
-  grade: 'S' | 'A' | 'B' | 'C' | 'D';
-  mode: GameMode;
-}
-
-// ─── Mode Config ────────────────────────────────────────────
-const MODE_CONFIG: Record<GameMode, { pairs: number; label: string; description: string; coins: number }> = {
-  easy: { pairs: 6, label: 'Easy', description: '6 pairs — Basic terms jaise SIP, EMI, FD', coins: 5 },
-  medium: { pairs: 8, label: 'Medium', description: '8 pairs — Mutual fund, Inflation jaise terms', coins: 10 },
-  hard: { pairs: 10, label: 'Hard', description: '10 pairs — Pura range ke financial terms!', coins: 15 },
-};
-
-// ─── Combo Multipliers ──────────────────────────────────────
-const COMBO_MULTIPLIERS = [1, 1, 2, 3, 5];
-
-// ─── Term Selection for Modes ───────────────────────────────
-const EASY_TERM_IDS = ['sip', 'emi', 'fd', 'rd', 'cibil-score', 'credit-card'];
-const MEDIUM_TERM_IDS = [...EASY_TERM_IDS, 'mutual-fund', 'inflation'];
-const HARD_TERM_IDS = [...MEDIUM_TERM_IDS, 'compound-interest', 'ppf'];
-
-function getTermsForMode(mode: GameMode) {
-  const ids = mode === 'easy' ? EASY_TERM_IDS : mode === 'medium' ? MEDIUM_TERM_IDS : HARD_TERM_IDS;
-  return ids
-    .map((id) => termsDictionary.find((t) => t.id === id))
-    .filter(Boolean) as typeof termsDictionary;
-}
-
-// ─── Truncate text for card display ────────────────────────
-function truncate(text: string, maxLen: number): string {
-  if (text.length <= maxLen) return text;
-  return text.slice(0, maxLen - 1) + '…';
-}
-
-// ─── Shuffle utility ────────────────────────────────────────
-function shuffle<T>(array: T[]): T[] {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-// ─── Create game cards from terms ───────────────────────────
-function createCards(mode: GameMode): GameCard[] {
-  const terms = getTermsForMode(mode);
-  const cards: GameCard[] = [];
-
-  terms.forEach((term) => {
-    cards.push({
-      id: `term-${term.id}`,
-      pairId: term.id,
-      type: 'term',
-      content: term.term,
-      shortContent: truncate(term.term, 22),
-      flipped: false,
-      matched: false,
-    });
-    cards.push({
-      id: `def-${term.id}`,
-      pairId: term.id,
-      type: 'definition',
-      content: term.definition,
-      shortContent: truncate(term.definition, 50),
-      flipped: false,
-      matched: false,
-    });
-  });
-
-  return shuffle(cards);
-}
-
-// ─── Calculate grade ────────────────────────────────────────
-function calculateGrade(accuracy: number, timeSeconds: number, mode: GameMode): 'S' | 'A' | 'B' | 'C' | 'D' {
-  const timeThreshold = mode === 'easy' ? 60 : mode === 'medium' ? 90 : 120;
-  if (accuracy >= 90 && timeSeconds <= timeThreshold) return 'S';
-  if (accuracy >= 80) return 'A';
-  if (accuracy >= 65) return 'B';
-  if (accuracy >= 50) return 'C';
-  return 'D';
-}
-
-// ─── Confetti Component ─────────────────────────────────────
-function ConfettiOverlay() {
-  const particles = useMemo(() =>
-    Array.from({ length: 60 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      delay: Math.random() * 0.5,
-      duration: 1.5 + Math.random() * 1.5,
-      color: ['#fbbf24', '#f59e0b', '#d97706', '#ef4444', '#22c55e', '#3b82f6', '#a855f7'][i % 7],
-      size: 4 + Math.random() * 6,
-      rotation: Math.random() * 360,
-    })),
-  []);
-
+/* ──────────────────────────────────────────────────────────────
+   Card component — 3D flip
+   ────────────────────────────────────────────────────────────── */
+function GameCard({
+  card, onClick, isFlipped, isMatched,
+}: {
+  card: GameCard;
+  onClick: () => void;
+  isFlipped: boolean;
+  isMatched: boolean;
+}) {
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden z-50">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute"
-          style={{
-            left: `${p.x}%`,
-            top: -10,
-            width: p.size,
-            height: p.size,
-            backgroundColor: p.color,
-            borderRadius: p.size > 7 ? '2px' : '50%',
-            rotate: p.rotation,
-          }}
-          initial={{ y: -20, opacity: 1 }}
-          animate={{ y: '110vh', opacity: 0, rotate: p.rotation + 720 }}
-          transition={{
-            delay: p.delay,
-            duration: p.duration,
-            ease: 'easeIn',
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ─── Grade Badge Component ──────────────────────────────────
-function GradeBadge({ grade }: { grade: string }) {
-  const colorMap: Record<string, string> = {
-    S: 'from-amber-300 to-yellow-500 text-amber-950',
-    A: 'from-emerald-400 to-green-500 text-emerald-950',
-    B: 'from-blue-400 to-cyan-500 text-blue-950',
-    C: 'from-orange-400 to-amber-500 text-orange-950',
-    D: 'from-gray-400 to-slate-500 text-gray-950',
-  };
-  const glowMap: Record<string, string> = {
-    S: 'shadow-[0_0_30px_rgba(251,191,36,0.5)]',
-    A: 'shadow-[0_0_20px_rgba(52,211,153,0.4)]',
-    B: 'shadow-[0_0_15px_rgba(96,165,250,0.3)]',
-    C: 'shadow-[0_0_10px_rgba(251,146,60,0.3)]',
-    D: 'shadow-[0_0_8px_rgba(148,163,184,0.2)]',
-  };
-
-  return (
-    <motion.div
-      className={`w-20 h-20 rounded-full bg-gradient-to-br ${colorMap[grade] || colorMap.D} flex items-center justify-center ${glowMap[grade] || ''}`}
-      initial={{ scale: 0, rotate: -180 }}
-      animate={{ scale: 1, rotate: 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.3 }}
+    <motion.button
+      layout
+      whileHover={!isFlipped && !isMatched ? { scale: 1.04, y: -3 } : {}}
+      whileTap={!isFlipped && !isMatched ? { scale: 0.96 } : {}}
+      onClick={onClick}
+      disabled={isFlipped || isMatched}
+      className="relative aspect-[3/4] rounded-2xl overflow-hidden"
+      style={{ perspective: '1000px' }}
+      // When matched becomes true, play the pulse keyframes once
+      animate={isMatched ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+      transition={{ duration: 0.4 }}
     >
-      <span className="text-4xl font-black">{grade}</span>
-    </motion.div>
+      <motion.div
+        className="absolute inset-0"
+        style={{ transformStyle: 'preserve-3d' }}
+        animate={{ rotateY: isFlipped || isMatched ? 180 : 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        {/* Card back — glassmorphic with ₹ */}
+        <div
+          className="absolute inset-0 rounded-2xl flex items-center justify-center"
+          style={{
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(139,92,246,0.05))',
+            border: `1px solid ${isMatched ? card.color : 'rgba(255,255,255,0.12)'}`,
+            boxShadow: isMatched ? `0 0 20px ${card.color}50` : '0 4px 20px rgba(0,0,0,0.3)',
+          }}
+        >
+          <span className="font-display text-3xl font-extrabold text-white/30">₹</span>
+        </div>
+
+        {/* Card front — term or definition */}
+        <div
+          className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center p-2 text-center"
+          style={{
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)',
+            background: isMatched
+              ? `linear-gradient(135deg, ${card.color}25, ${card.color}10)`
+              : 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+            border: `1px solid ${isMatched ? card.color : 'rgba(255,255,255,0.15)'}`,
+            boxShadow: isMatched ? `0 0 24px ${card.color}60` : 'none',
+          }}
+        >
+          <div className="text-xl mb-1">{card.emoji}</div>
+          {card.type === 'term' ? (
+            <p className="font-display text-xs font-extrabold text-white leading-tight">{card.content}</p>
+          ) : (
+            <p className="text-[9px] font-bold text-white/85 leading-tight">{card.content}</p>
+          )}
+        </div>
+      </motion.div>
+    </motion.button>
   );
 }
 
-// ─── Main Component ─────────────────────────────────────────
+/* ──────────────────────────────────────────────────────────────
+   Main Component
+   ────────────────────────────────────────────────────────────── */
 export default function MemoryMatch({ open, onClose }: MemoryMatchProps) {
-  // Game state
-  const [gameMode, setGameMode] = useState<GameMode | null>(null);
+  const { addCoins, setMemoryMatchBestTime, memoryMatchBestTimes } = useAppStore();
+  const [stage, setStage] = useState<'setup' | 'playing' | 'results'>('setup');
+  const [mode, setMode] = useState<GameMode>('medium');
   const [cards, setCards] = useState<GameCard[]>([]);
-  const [flippedIds, setFlippedIds] = useState<string[]>([]);
+  const [flipped, setFlipped] = useState<string[]>([]);
+  const [matched, setMatched] = useState<Set<string>>(new Set());
   const [moves, setMoves] = useState(0);
-  const [matches, setMatches] = useState(0);
-  const [combo, setCombo] = useState(0);
-  const [totalCoinsEarned, setTotalCoinsEarned] = useState(0);
-  const [timer, setTimer] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [result, setResult] = useState<GameResult | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [matchFlash, setMatchFlash] = useState<string | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
-
+  const [time, setTime] = useState(0);
+  const [coinToast, setCoinToast] = useState<{ amount: number; id: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const { addCoins, memoryMatchBestTimes, setMemoryMatchBestTime } = useAppStore();
 
-  // Start timer
-  const startTimer = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTimer((prev) => prev + 1);
-    }, 1000);
-  }, []);
+  const config = MODE_CONFIG[mode];
 
-  // Stop timer
-  const stopTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+  // ── Shuffle and create cards ──
+  const startGame = useCallback((gameMode: GameMode) => {
+    const cfg = MODE_CONFIG[gameMode];
+    const pairs = ALL_PAIRS.slice(0, cfg.pairs);
+    const newCards: GameCard[] = [];
+    pairs.forEach((p) => {
+      newCards.push({
+        id: `${p.id}-term`,
+        pairId: p.id,
+        type: 'term',
+        content: p.term,
+        emoji: p.emoji,
+        color: p.color,
+        flipped: false,
+        matched: false,
+      });
+      newCards.push({
+        id: `${p.id}-def`,
+        pairId: p.id,
+        type: 'definition',
+        content: p.definition,
+        emoji: p.emoji,
+        color: p.color,
+        flipped: false,
+        matched: false,
+      });
+    });
+    // Fisher-Yates shuffle
+    for (let i = newCards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newCards[i], newCards[j]] = [newCards[j], newCards[i]];
     }
-  }, []);
-
-  // Format time
-  const formatTime = useCallback((seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }, []);
-
-  // Initialize game
-  const startGame = useCallback((mode: GameMode) => {
-    const newCards = createCards(mode);
-    setGameMode(mode);
+    setMode(gameMode);
     setCards(newCards);
-    setFlippedIds([]);
+    setFlipped([]);
+    setMatched(new Set());
     setMoves(0);
-    setMatches(0);
-    setCombo(0);
-    setTotalCoinsEarned(0);
-    setTimer(0);
-    setIsPlaying(true);
-    setIsComplete(false);
-    setResult(null);
-    setShowConfetti(false);
-    setMatchFlash(null);
-    setIsChecking(false);
-    startTimer();
-  }, [startTimer]);
-
-  // Reset to menu
-  const resetToMenu = useCallback(() => {
-    stopTimer();
-    setGameMode(null);
-    setCards([]);
-    setFlippedIds([]);
-    setMoves(0);
-    setMatches(0);
-    setCombo(0);
-    setTotalCoinsEarned(0);
-    setTimer(0);
-    setIsPlaying(false);
-    setIsComplete(false);
-    setResult(null);
-    setShowConfetti(false);
-    setMatchFlash(null);
-    setIsChecking(false);
-  }, [stopTimer]);
-
-  // Handle card flip
-  const handleCardClick = useCallback((cardId: string) => {
-    if (isChecking) return;
-
-    const card = cards.find((c) => c.id === cardId);
-    if (!card || card.flipped || card.matched) return;
-    if (flippedIds.length >= 2) return;
-
-    const newFlipped = [...flippedIds, cardId];
-    setFlippedIds(newFlipped);
-
-    // Flip the card
-    setCards((prev) =>
-      prev.map((c) => (c.id === cardId ? { ...c, flipped: true } : c))
-    );
-
-    // If two cards flipped, check for match
-    if (newFlipped.length === 2) {
-      setMoves((prev) => prev + 1);
-      setIsChecking(true);
-
-      const [firstId, secondId] = newFlipped;
-      const first = cards.find((c) => c.id === firstId)!;
-      const second = cards.find((c) => c.id === secondId)!;
-
-      if (first.pairId === second.pairId && first.type !== second.type) {
-        // Match found!
-        const newCombo = combo + 1;
-        setCombo(newCombo);
-        const multiplier = COMBO_MULTIPLIERS[Math.min(newCombo, COMBO_MULTIPLIERS.length - 1)];
-        const coinsForMatch = multiplier;
-        setTotalCoinsEarned((prev) => prev + coinsForMatch);
-        setMatchFlash(first.pairId);
-
-        setTimeout(() => {
-          setCards((prev) =>
-            prev.map((c) =>
-              c.pairId === first.pairId ? { ...c, matched: true } : c
-            )
-          );
-          setFlippedIds([]);
-          setMatchFlash(null);
-          setIsChecking(false);
-          const newMatchCount = matches + 1;
-          setMatches(newMatchCount);
-          const totalPairs = gameMode ? MODE_CONFIG[gameMode].pairs : 0;
-          if (newMatchCount === totalPairs) {
-            // Game complete — compute result inline
-            stopTimer();
-            setIsPlaying(false);
-            setIsComplete(true);
-            const newMoves = moves + 1;
-            const accuracy = Math.round((totalPairs / newMoves) * 100);
-            const clampedAccuracy = Math.min(100, accuracy);
-            const grade = calculateGrade(clampedAccuracy, timer, gameMode);
-            const baseCoins = MODE_CONFIG[gameMode].coins;
-            const totalCoins = totalCoinsEarned + coinsForMatch + baseCoins;
-            setResult({
-              time: timer,
-              moves: newMoves,
-              accuracy: clampedAccuracy,
-              coinsEarned: totalCoins,
-              grade,
-              mode: gameMode,
-            });
-            addCoins(totalCoins);
-            const currentBest = memoryMatchBestTimes[gameMode] ?? Infinity;
-            if (timer < currentBest) {
-              setMemoryMatchBestTime(gameMode, timer);
-            }
-            if (gameMode === 'hard') {
-              setShowConfetti(true);
-              setTimeout(() => setShowConfetti(false), 4000);
-            }
-          }
-        }, 600);
-      } else {
-        // No match
-        setCombo(0);
-        setTimeout(() => {
-          setCards((prev) =>
-            prev.map((c) =>
-              c.id === firstId || c.id === secondId
-                ? { ...c, flipped: false }
-                : c
-            )
-          );
-          setFlippedIds([]);
-          setIsChecking(false);
-        }, 900);
-      }
-    }
-  }, [cards, flippedIds, combo, gameMode, stopTimer, isChecking, matches, moves, timer, totalCoinsEarned, addCoins, memoryMatchBestTimes, setMemoryMatchBestTime]);
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    setTime(0);
+    setStage('playing');
   }, []);
 
-  // Close handler
-  const handleClose = useCallback(() => {
-    stopTimer();
-    resetToMenu();
+  // ── Timer ──
+  useEffect(() => {
+    if (stage !== 'playing') return;
+    timerRef.current = setInterval(() => setTime((t) => t + 1), 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [stage]);
+
+  // ── Check match when 2 cards flipped ──
+  useEffect(() => {
+    if (flipped.length !== 2) return;
+    const [a, b] = flipped;
+    const cardA = cards.find((c) => c.id === a);
+    const cardB = cards.find((c) => c.id === b);
+    if (!cardA || !cardB) return;
+
+    setMoves((m) => m + 1);
+
+    if (cardA.pairId === cardB.pairId) {
+      // Match!
+      const newMatched = new Set(matched);
+      newMatched.add(a);
+      newMatched.add(b);
+      setMatched(newMatched);
+      setFlipped([]);
+      addCoins(5);
+      setCoinToast({ amount: 5, id: Date.now() });
+      setTimeout(() => setCoinToast(null), 1500);
+
+      // Check win
+      if (newMatched.size === cards.length) {
+        setTimeout(() => {
+          if (timerRef.current) clearInterval(timerRef.current);
+          const finalTime = time + 1;
+          setMemoryMatchBestTime(mode, finalTime);
+          addCoins(MODE_CONFIG[mode].coins);
+          setStage('results');
+        }, 600);
+      }
+    } else {
+      // No match — flip back after delay
+      const t = setTimeout(() => setFlipped([]), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [flipped, cards, matched, time, mode, addCoins, setMemoryMatchBestTime]);
+
+  // ── Handle card click ──
+  const handleCardClick = useCallback((cardId: string) => {
+    if (flipped.length >= 2) return;
+    if (flipped.includes(cardId)) return;
+    if (matched.has(cardId)) return;
+    setFlipped((prev) => [...prev, cardId]);
+  }, [flipped, matched]);
+
+  // ── Reset on close ──
+  const handleClose = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
     onClose();
-  }, [stopTimer, resetToMenu, onClose]);
+    setTimeout(() => {
+      setStage('setup');
+      setCards([]);
+      setFlipped([]);
+      setMatched(new Set());
+      setMoves(0);
+      setTime(0);
+    }, 300);
+  };
 
-  // Grid columns based on mode
-  const gridCols = gameMode === 'easy' ? 'grid-cols-3 sm:grid-cols-4' : gameMode === 'medium' ? 'grid-cols-4' : 'grid-cols-4 sm:grid-cols-5';
+  const bestTime = memoryMatchBestTimes[mode];
+  const minutes = Math.floor(time / 60);
+  const seconds = time % 60;
+  const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  // ─── Mode Selection Screen ───────────────────────────────
-  const renderModeSelection = () => (
-    <div className="flex flex-col items-center gap-6 py-4">
-      <motion.div
-        className="flex items-center gap-3"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-          <Brain className="w-6 h-6 text-[#0a0a0f]" />
-        </div>
-        <div>
-          <h2 className="text-xl font-extrabold text-gradient-gold">Memory Match</h2>
-          <p className="text-xs text-[#8888a0]">Financial Terms ko Match karo!</p>
-        </div>
-      </motion.div>
+  // Efficiency score for results
+  const efficiency = useMemo(() => {
+    if (cards.length === 0) return 0;
+    const perfect = cards.length / 2;
+    return Math.round((perfect / Math.max(moves, perfect)) * 100);
+  }, [cards.length, moves]);
 
-      <motion.p
-        className="text-sm text-[#8888a0] text-center max-w-md px-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-      >
-        Card flip karo aur financial term ko uski Hinglish definition ke saath match karo!
-        Consecutive matches se combo multiplier badhta hai — zyada coins kamao! 🪙
-      </motion.p>
+  const grade = efficiency >= 90 ? 'S' : efficiency >= 75 ? 'A' : efficiency >= 60 ? 'B' : efficiency >= 40 ? 'C' : 'D';
+  const gradeColor = efficiency >= 75 ? '#10B981' : efficiency >= 60 ? '#F59E0B' : '#EF4444';
 
-      <div className="flex flex-col gap-3 w-full max-w-sm">
-        {(Object.entries(MODE_CONFIG) as [GameMode, typeof MODE_CONFIG.easy][]).map(
-          ([mode, config], index) => {
-            const bestTime = memoryMatchBestTimes[mode];
-            return (
-              <motion.button
-                key={mode}
-                onClick={() => startGame(mode)}
-                className="glass-card-glow p-4 text-left hover:border-amber-400/30 transition-all group"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15 + index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-amber-400 font-bold text-lg">{config.label}</span>
-                      <span className="text-[10px] text-[#8888a0] bg-white/5 px-2 py-0.5 rounded-full">
-                        {config.pairs} pairs
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#8888a0] mt-1">{config.description}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-amber-400 text-sm font-bold flex items-center gap-1">
-                      🪙 +{config.coins}
-                    </span>
-                    {bestTime !== undefined && bestTime < Infinity && (
-                      <span className="text-[10px] text-emerald-400 flex items-center gap-1">
-                        <Timer className="w-3 h-3" />
-                        Best: {formatTime(bestTime)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </motion.button>
-            );
-          }
-        )}
-      </div>
-
-      {/* How to Play */}
-      <motion.div
-        className="card-dark p-4 w-full max-w-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        <h3 className="text-sm font-bold text-amber-400 mb-2">Kaise Khelein? 🤔</h3>
-        <ul className="text-xs text-[#8888a0] space-y-1.5">
-          <li className="flex items-start gap-2">
-            <span className="text-amber-400 mt-0.5">1.</span>
-            <span>2 cards flip karo — ek term aur ek definition</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-amber-400 mt-0.5">2.</span>
-            <span>Agar term aur definition match kiye = pair complete! ✨</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-amber-400 mt-0.5">3.</span>
-            <span>Consecutive matches = combo multiplier (1x → 2x → 3x → 5x) 🔥</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-amber-400 mt-0.5">4.</span>
-            <span>Kam moves aur fast time = better grade (S grade best!) 🏆</span>
-          </li>
-        </ul>
-      </motion.div>
-    </div>
-  );
-
-  // ─── Game Board ──────────────────────────────────────────
-  const renderGameBoard = () => {
-    const totalPairs = gameMode ? MODE_CONFIG[gameMode].pairs : 0;
-    const progressPercent = totalPairs > 0 ? Math.round((matches / totalPairs) * 100) : 0;
-    const multiplier = COMBO_MULTIPLIERS[Math.min(combo, COMBO_MULTIPLIERS.length - 1)];
-
-    return (
-      <div className="flex flex-col gap-3">
-        {/* Top Stats Bar */}
-        <div className="flex items-center justify-between gap-2">
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent className="bg-midnight border-white/10 max-w-2xl p-0 overflow-hidden">
+        {/* Header */}
+        <div className="relative p-5 border-b border-white/10 glass-card-premium">
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-ink-muted"
+          >
+            <X size={16} />
+          </button>
           <div className="flex items-center gap-3">
-            {/* Timer */}
-            <div className="stat-card !p-2 flex items-center gap-1.5">
-              <Timer className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-sm font-mono font-bold text-[#e8e8ed]">{formatTime(timer)}</span>
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #8B5CF6, #A855F7)', boxShadow: '0 0 20px rgba(139,92,246,0.3)' }}>
+              <Brain size={20} className="text-white" />
             </div>
-            {/* Moves */}
-            <div className="stat-card !p-2 flex items-center gap-1.5">
-              <MousePointerClick className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-sm font-bold text-[#e8e8ed]">{moves}</span>
+            <div>
+              <h2 className="font-display text-xl font-extrabold text-white">Memory Match 🃏</h2>
+              <p className="text-xs text-ink-muted mt-0.5">Term ↔ Definition match karo, brain sharpen karo!</p>
             </div>
-            {/* Combo */}
-            {combo > 0 && (
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="p-5 max-h-[72vh] overflow-y-auto relative">
+          {/* +5 coins toast */}
+          <AnimatePresence>
+            {coinToast && (
               <motion.div
-                key={`combo-${combo}`}
-                initial={{ scale: 1.4, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="stat-card !p-2 flex items-center gap-1.5 border-amber-400/30"
+                key={coinToast.id}
+                initial={{ opacity: 0, y: -20, scale: 0.5 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -40, scale: 0.5 }}
+                className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] rounded-full bg-gold/20 border border-gold/50 px-4 py-2 flex items-center gap-2"
+                style={{ boxShadow: '0 0 24px rgba(245,158,11,0.4)' }}
               >
-                <Flame className="w-3.5 h-3.5 text-orange-400" />
-                <span className="text-sm font-bold text-orange-400">{multiplier}x</span>
+                <span className="coin-spin-3d">🪙</span>
+                <span className="font-bold text-sm text-gold-soft">+{coinToast.amount} coins!</span>
               </motion.div>
             )}
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Coins earned this game */}
-            <div className="flex items-center gap-1 text-amber-400 text-sm font-bold">
-              <span>🪙</span>
-              <span>{totalCoinsEarned}</span>
-            </div>
-            {/* Close button */}
-            <button
-              onClick={handleClose}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
-              aria-label="Close game"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+          </AnimatePresence>
 
-        {/* Progress bar */}
-        <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
-          <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300"
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-          />
-        </div>
-
-        {/* Card Grid */}
-        <div className={`grid ${gridCols} gap-2`}>
-          <AnimatePresence mode="popLayout">
-            {cards.map((card) => (
+          <AnimatePresence mode="wait">
+            {/* SETUP */}
+            {stage === 'setup' && (
               <motion.div
-                key={card.id}
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="perspective-500"
-                style={{ perspective: '500px' }}
+                key="setup"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center py-4"
               >
                 <motion.div
-                  className="relative w-full cursor-pointer"
-                  style={{
-                    aspectRatio: card.type === 'term' ? '3/4' : '4/5',
-                    transformStyle: 'preserve-3d',
-                  }}
-                  animate={{
-                    rotateY: card.flipped || card.matched ? 180 : 0,
-                  }}
-                  transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                  onClick={() => handleCardClick(card.id)}
-                  whileHover={!card.flipped && !card.matched ? { scale: 1.05 } : {}}
-                  whileTap={!card.flipped && !card.matched ? { scale: 0.95 } : {}}
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: 1 }}
+                  className="text-6xl mb-3"
                 >
-                  {/* Front (unflipped) */}
-                  <div
-                    className={`absolute inset-0 rounded-xl backface-hidden flex items-center justify-center border transition-all duration-300 ${
-                      card.matched
-                        ? 'bg-amber-500/10 border-amber-400/30'
-                        : 'bg-[#1a1a2e] border-white/[0.08] hover:border-amber-400/20'
-                    }`}
-                    style={{ backfaceVisibility: 'hidden' }}
-                  >
-                    {card.matched ? (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="flex flex-col items-center gap-1"
-                      >
-                        <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                        <span className="text-[9px] text-amber-400 font-bold">Matched!</span>
-                      </motion.div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1">
-                        <Brain className="w-5 h-5 text-[#8888a0]" />
-                        <span className="text-[8px] text-[#8888a0]">
-                          {card.type === 'term' ? 'Term' : 'Def'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  🃏
+                </motion.div>
+                <h3 className="font-display text-2xl font-extrabold heading-gradient mb-2">
+                  Difficulty Choose Karo
+                </h3>
+                <p className="text-sm text-ink-muted mb-6 max-w-sm mx-auto">
+                  Financial terms ko unki definitions se match karo. Kam moves = zyada coins! 🧠
+                </p>
 
-                  {/* Back (flipped) */}
-                  <div
-                    className={`absolute inset-0 rounded-xl flex items-center justify-center p-2 border transition-all duration-300 ${
-                      card.matched
-                        ? 'bg-amber-500/10 border-amber-400/30'
-                        : matchFlash === card.pairId
-                        ? 'bg-amber-500/15 border-amber-400/40'
-                        : 'bg-[#12121a] border-amber-400/15'
-                    }`}
-                    style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                  >
-                    <div className="flex flex-col items-center justify-center text-center h-full">
-                      {card.type === 'term' ? (
-                        <span className="text-xs sm:text-sm font-bold text-amber-400 leading-tight">
-                          {card.shortContent}
-                        </span>
-                      ) : (
-                        <span className="text-[9px] sm:text-[10px] text-[#c8c8d4] leading-snug line-clamp-4">
-                          {card.shortContent}
-                        </span>
-                      )}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-md mx-auto">
+                  {(Object.keys(MODE_CONFIG) as GameMode[]).map((m) => {
+                    const cfg = MODE_CONFIG[m];
+                    return (
+                      <motion.button
+                        key={m}
+                        whileHover={{ y: -4, scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => startGame(m)}
+                        className="relative card-3d rounded-2xl border border-white/10 glass-card p-4 overflow-hidden group"
+                      >
+                        <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-30 group-hover:opacity-60 transition-opacity" style={{ backgroundColor: cfg.coins >= 30 ? '#EF4444' : cfg.coins >= 20 ? '#F59E0B' : '#10B981' }} />
+                        <div className="text-3xl mb-2">{cfg.emoji}</div>
+                        <h4 className="font-display text-base font-bold text-white">{cfg.label}</h4>
+                        <p className="text-[10px] text-ink-muted mb-2">{cfg.description}</p>
+                        <div className="flex items-center justify-center gap-1">
+                          {[1, 2, 3].map((s) => (
+                            <Star
+                              key={s}
+                              size={10}
+                              className={s <= (cfg.coins >= 30 ? 3 : cfg.coins >= 20 ? 2 : 1) ? 'text-gold-soft' : 'text-white/15'}
+                              fill={s <= (cfg.coins >= 30 ? 3 : cfg.coins >= 20 ? 2 : 1) ? 'currentColor' : 'none'}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-gold-soft font-bold mt-2">+{cfg.coins} coins</p>
+                        {memoryMatchBestTimes[m] && (
+                          <p className="text-[9px] text-ink-muted mt-1">Best: {memoryMatchBestTimes[m]}s</p>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* PLAYING */}
+            {stage === 'playing' && (
+              <motion.div
+                key="playing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {/* Stats bar */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                      <Timer size={14} className="text-emerald-soft" />
+                      <span className="text-sm font-bold text-white tabular-nums">{timeStr}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                      <span className="text-xs font-bold text-ink-muted">Moves</span>
+                      <span className="text-sm font-bold text-white">{moves}</span>
                     </div>
                   </div>
+                  <button
+                    onClick={() => setStage('setup')}
+                    className="text-xs font-bold text-ink-muted hover:text-white flex items-center gap-1"
+                  >
+                    <RotateCcw size={12} /> Restart
+                  </button>
+                </div>
 
-                  {/* Gold glow effect on match */}
-                  {matchFlash === card.pairId && (
-                    <motion.div
-                      className="absolute inset-0 rounded-xl pointer-events-none"
-                      initial={{ boxShadow: '0 0 0px rgba(245,158,11,0)' }}
-                      animate={{ boxShadow: '0 0 30px rgba(245,158,11,0.5), 0 0 60px rgba(245,158,11,0.2)' }}
-                      transition={{ duration: 0.3 }}
+                {/* Progress bar */}
+                <div className="h-1 rounded-full bg-white/5 overflow-hidden mb-4">
+                  <motion.div
+                    animate={{ width: `${(matched.size / cards.length) * 100}%` }}
+                    className="h-full bg-gradient-to-r from-emerald to-ai"
+                  />
+                </div>
+
+                {/* Cards grid */}
+                <div className={`grid ${config.cols} gap-2 sm:gap-3`}>
+                  {cards.map((card) => (
+                    <GameCard
+                      key={card.id}
+                      card={card}
+                      onClick={() => handleCardClick(card.id)}
+                      isFlipped={flipped.includes(card.id)}
+                      isMatched={matched.has(card.id)}
                     />
-                  )}
-                </motion.div>
+                  ))}
+                </div>
               </motion.div>
-            ))}
+            )}
+
+            {/* RESULTS */}
+            {stage === 'results' && (
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-4"
+              >
+                {/* Confetti */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {Array.from({ length: 30 }, (_, i) => (
+                    <div
+                      key={i}
+                      className="confetti-piece"
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        top: '-20px',
+                        backgroundColor: ['#10B981', '#F59E0B', '#8B5CF6', '#EF4444'][i % 4],
+                        animationDelay: `${Math.random() * 0.6}s`,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', delay: 0.2 }}
+                  className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4"
+                  style={{ background: `linear-gradient(135deg, ${gradeColor}, ${gradeColor}80)`, boxShadow: `0 0 40px ${gradeColor}80` }}
+                >
+                  <Trophy size={36} className="text-midnight" />
+                </motion.div>
+
+                <h3 className="font-display text-2xl font-extrabold heading-gradient mb-1">Sab Match Kar Diya! 🎉</h3>
+                <p className="text-sm text-ink-muted mb-4">{config.label} mode complete!</p>
+
+                {/* Grade */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: 'spring' }}
+                  className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4"
+                  style={{ background: `${gradeColor}25`, border: `2px solid ${gradeColor}` }}
+                >
+                  <span className="font-display text-4xl font-extrabold" style={{ color: gradeColor }}>{grade}</span>
+                </motion.div>
+
+                {/* Stats grid */}
+                <div className="grid grid-cols-3 gap-2 mt-4 max-w-sm mx-auto">
+                  <div className="rounded-xl bg-white/[0.04] border border-white/10 p-3">
+                    <Timer size={14} className="text-emerald-soft mx-auto mb-1" />
+                    <p className="font-display text-lg font-extrabold text-white">{timeStr}</p>
+                    <p className="text-[9px] text-ink-muted uppercase">Time</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] border border-white/10 p-3">
+                    <Sparkles size={14} className="text-ai mx-auto mb-1" />
+                    <p className="font-display text-lg font-extrabold text-white">{moves}</p>
+                    <p className="text-[9px] text-ink-muted uppercase">Moves</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] border border-white/10 p-3">
+                    <IndianRupee size={14} className="text-gold-soft mx-auto mb-1" />
+                    <p className="font-display text-lg font-extrabold text-gold-soft">+{config.coins + (cards.length / 2) * 5}</p>
+                    <p className="text-[9px] text-ink-muted uppercase">Coins</p>
+                  </div>
+                </div>
+
+                {bestTime && time < bestTime && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.8 }}
+                    className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-gold/15 border border-gold/30"
+                  >
+                    <Star size={12} className="text-gold-soft" fill="currentColor" />
+                    <span className="text-xs font-bold text-gold-soft">New Best Time!</span>
+                  </motion.div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-2 mt-6">
+                  <button
+                    onClick={() => startGame(mode)}
+                    className="flex-1 rounded-xl py-3 text-sm font-bold text-white bg-white/5 hover:bg-white/10 flex items-center justify-center gap-2"
+                  >
+                    <RotateCcw size={14} /> Phir Khelo
+                  </button>
+                  <button
+                    onClick={() => setStage('setup')}
+                    className="flex-1 btn-3d rounded-xl py-3 text-sm font-bold text-midnight flex items-center justify-center gap-2"
+                    style={{ background: 'linear-gradient(135deg, #34D399, #10B981)' }}
+                  >
+                    Difficulty Badlo <Brain size={14} />
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
-
-        {/* Bottom info */}
-        <div className="flex items-center justify-between text-xs text-[#8888a0]">
-          <span>{matches}/{totalPairs} pairs matched</span>
-          <span className="flex items-center gap-1">
-            <Medal className="w-3 h-3" />
-            {gameMode && MODE_CONFIG[gameMode].label} Mode
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-  // ─── Results Screen ──────────────────────────────────────
-  const renderResults = () => {
-    if (!result) return null;
-
-    const modeConfig = MODE_CONFIG[result.mode];
-    const isNewBest = memoryMatchBestTimes[result.mode] === result.time;
-
-    return (
-      <div className="flex flex-col items-center gap-5 py-4 relative">
-        {showConfetti && <ConfettiOverlay />}
-
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-center"
-        >
-          <h2 className="text-2xl font-extrabold text-gradient-gold">Game Complete! 🎉</h2>
-          <p className="text-sm text-[#8888a0] mt-1">
-            {modeConfig.label} Mode khatam — {result.grade === 'S' ? 'Perfect performance!' : result.grade === 'A' ? 'Bahut achha!' : result.grade === 'B' ? 'Achha hai!' : 'Aur practice karo!'}
-          </p>
-        </motion.div>
-
-        {/* Grade Badge */}
-        <GradeBadge grade={result.grade} />
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-          <motion.div
-            className="stat-card"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Timer className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-            <p className="text-lg font-bold text-[#e8e8ed]">{formatTime(result.time)}</p>
-            <p className="text-[10px] text-[#8888a0]">Total Time</p>
-            {isNewBest && (
-              <span className="text-[9px] text-emerald-400 font-bold mt-0.5 block">★ New Best!</span>
-            )}
-          </motion.div>
-
-          <motion.div
-            className="stat-card"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <MousePointerClick className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-            <p className="text-lg font-bold text-[#e8e8ed]">{result.moves}</p>
-            <p className="text-[10px] text-[#8888a0]">Total Moves</p>
-          </motion.div>
-
-          <motion.div
-            className="stat-card"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Sparkles className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-            <p className="text-lg font-bold text-[#e8e8ed]">{result.accuracy}%</p>
-            <p className="text-[10px] text-[#8888a0]">Accuracy</p>
-          </motion.div>
-
-          <motion.div
-            className="stat-card"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Trophy className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-            <p className="text-lg font-bold text-amber-400">🪙 {result.coinsEarned}</p>
-            <p className="text-[10px] text-[#8888a0]">Coins Earned</p>
-          </motion.div>
-        </div>
-
-        {/* Grade Legend */}
-        <motion.div
-          className="card-dark p-3 w-full max-w-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <p className="text-[10px] text-[#8888a0] text-center">
-            <span className="text-amber-400 font-bold">S</span> = 90%+ accuracy + fast time &nbsp;|&nbsp;
-            <span className="text-emerald-400 font-bold">A</span> = 80%+ &nbsp;|&nbsp;
-            <span className="text-blue-400 font-bold">B</span> = 65%+ &nbsp;|&nbsp;
-            <span className="text-orange-400 font-bold">C</span> = 50%+ &nbsp;|&nbsp;
-            <span className="text-gray-400 font-bold">D</span> = Below 50%
-          </p>
-        </motion.div>
-
-        {/* Action Buttons */}
-        <motion.div
-          className="flex items-center gap-3"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
-          <button
-            onClick={() => gameMode && startGame(gameMode)}
-            className="btn-gold flex items-center gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Phir Khelo!
-          </button>
-          <button
-            onClick={resetToMenu}
-            className="btn-ghost-gold flex items-center gap-2"
-          >
-            <Brain className="w-4 h-4" />
-            Mode Change
-          </button>
-        </motion.div>
-      </div>
-    );
-  };
-
-  // ─── Main Render ─────────────────────────────────────────
-  return (
-    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
-      <DialogContent
-        className="bg-[#0a0a0f] border-white/[0.08] text-[#e8e8ed] max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-thin"
-        showCloseButton={false}
-      >
-        <DialogTitle className="sr-only">
-          Memory Match — Financial Term Card Game
-        </DialogTitle>
-
-        <AnimatePresence mode="wait">
-          {!gameMode && !isComplete && (
-            <motion.div
-              key="mode-select"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-            >
-              {/* Close button in top right */}
-              <div className="flex justify-end mb-2">
-                <button
-                  onClick={handleClose}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
-                  aria-label="Close"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              {renderModeSelection()}
-            </motion.div>
-          )}
-
-          {gameMode && isPlaying && !isComplete && (
-            <motion.div
-              key="game-board"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-            >
-              {renderGameBoard()}
-            </motion.div>
-          )}
-
-          {isComplete && (
-            <motion.div
-              key="results"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-            >
-              {renderResults()}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </DialogContent>
     </Dialog>
   );

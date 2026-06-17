@@ -1,10 +1,15 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
-  Shield, Plus, Minus, ChevronRight, ChevronLeft, Copy, Check,
-  AlertTriangle, Wallet, PiggyBank,
+  Shield,
+  Sparkles,
+  Plus,
+  Minus,
+  IndianRupee,
+  AlertTriangle,
+  Check,
 } from 'lucide-react';
 import {
   Dialog,
@@ -12,677 +17,371 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { formatCurrency, formatIndianNumber } from '@/lib/utils';
+import { useAppStore } from '@/lib/store/useAppStore';
+import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
-// ─── Props ──────────────────────────────────────────────────
+/* ============================================================
+   Emergency Fund Calculator — Protection Shield concept
+   ============================================================ */
+
 interface EmergencyFundCalculatorProps {
   open: boolean;
   onClose: () => void;
 }
 
-// ─── Expense Category ───────────────────────────────────────
-interface ExpenseCategory {
+interface ExpenseRow {
   key: string;
   label: string;
-  labelHi: string;
   emoji: string;
-  color: string;          // tailwind text color
-  bg: string;             // tailwind bg color
-  barColor: string;       // CSS color for bar
   defaultValue: number;
+  color: string;
 }
 
-// ─── Constants ──────────────────────────────────────────────
-const EXPENSE_CATEGORIES: ExpenseCategory[] = [
-  { key: 'rent',      label: 'Rent / EMI',   labelHi: 'Rent ya EMI',     emoji: '🏠', color: 'text-rose-400',    bg: 'bg-rose-400/10',    barColor: '#f43f5e', defaultValue: 15000 },
-  { key: 'food',      label: 'Food',          labelHi: 'Khana',           emoji: '🍛', color: 'text-amber-400',   bg: 'bg-amber-400/10',   barColor: '#f59e0b', defaultValue: 8000 },
-  { key: 'transport', label: 'Transport',     labelHi: 'Travel',          emoji: '🚗', color: 'text-blue-400',    bg: 'bg-blue-400/10',    barColor: '#3b82f6', defaultValue: 5000 },
-  { key: 'emi',       label: 'Other EMI',     labelHi: 'Aur EMI',         emoji: '💳', color: 'text-purple-400',  bg: 'bg-purple-400/10',  barColor: '#a855f7', defaultValue: 5000 },
-  { key: 'utilities', label: 'Utilities',     labelHi: 'Bills / Utility', emoji: '⚡', color: 'text-emerald-400', bg: 'bg-emerald-400/10', barColor: '#10b981', defaultValue: 4000 },
-  { key: 'other',     label: 'Other',         labelHi: 'Aur kharcha',     emoji: '📦', color: 'text-gray-400',    bg: 'bg-gray-400/10',    barColor: '#9ca3af', defaultValue: 3000 },
+const EXPENSE_ROWS: ExpenseRow[] = [
+  { key: 'rent',      label: 'Rent / Hostel',   emoji: '🏠', defaultValue: 8000,  color: '#f43f5e' },
+  { key: 'food',      label: 'Khana',            emoji: '🍛', defaultValue: 5000,  color: '#f59e0b' },
+  { key: 'transport', label: 'Travel',           emoji: '🚗', defaultValue: 2000,  color: '#3b82f6' },
+  { key: 'utilities', label: 'Bills (Phone/Net)',emoji: '⚡', defaultValue: 1000,  color: '#10b981' },
+  { key: 'emi',       label: 'EMI / Loan',       emoji: '💳', defaultValue: 0,     color: '#a855f7' },
+  { key: 'other',     label: 'Aur Kharcha',      emoji: '📦', defaultValue: 1500,  color: '#94a3b8' },
 ];
 
-const MONTH_OPTIONS = [3, 6, 9, 12];
+type JobType = 'student' | 'employed' | 'freelancer';
 
-const TIPS = [
-  { emoji: '🛡️', text: 'Emergency fund matlab insurance hai — bina policy waala! Job chale jaaye toh 6 mahine tak rent aur kharcha chalao.' },
-  { emoji: '🏦', text: 'Emergency fund ko alag account mein rakhho — savings account ya liquid fund, taki impulse spending na ho.' },
-  { emoji: '📈', text: 'Kam se kam 3 mahine ka kharcha save karo — ideally 6 mahine ka. Medical emergency kisi bhi waqt aa sakta hai!' },
-  { emoji: '🚫', text: 'Emergency fund se phone nahi, vacation nahi! Ye sirf real emergencies ke liye hai — job loss, medical, urgent repair.' },
-  { emoji: '⏳', text: 'Agar 6 mahine ka fund lag raha hai bahut, toh chhota se shuru karo — 1 mahine ka bhi bahut value hai!' },
-];
+const JOB_CONFIG: Record<JobType, { label: string; emoji: string; months: number; color: string }> = {
+  student:     { label: 'Student',     emoji: '🎓', months: 3,  color: 'text-violet-400' },
+  employed:    { label: 'Employed',    emoji: '💼', months: 6,  color: 'text-emerald-400' },
+  freelancer:  { label: 'Freelancer',  emoji: '💻', months: 9,  color: 'text-amber-400' },
+};
 
-// ─── Progress Ring Component ────────────────────────────────
-function AnimatedProgressRing({ progress, size = 180 }: { progress: number; size?: number }) {
-  const strokeWidth = 14;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const clamped = Math.min(100, Math.max(0, progress));
-  const strokeDashoffset = circumference - (clamped / 100) * circumference;
+const DEPENDENT_OPTIONS = [0, 1, 2, 3, 4];
 
-  // Color based on progress
-  const ringColor =
-    clamped >= 100 ? '#22c55e' :
-    clamped >= 75 ? '#84cc16' :
-    clamped >= 50 ? '#f59e0b' :
-    clamped >= 25 ? '#f97316' : '#ef4444';
-
-  return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        {/* Background circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="rgba(255,255,255,0.06)"
-          strokeWidth={strokeWidth}
-        />
-        {/* Progress arc */}
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={ringColor}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset }}
-          transition={{ duration: 1.2, ease: 'easeOut' }}
-        />
-        {/* Glow effect */}
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={ringColor}
-          strokeWidth={strokeWidth + 6}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference, opacity: 0.15 }}
-          animate={{ strokeDashoffset, opacity: 0.15 }}
-          transition={{ duration: 1.2, ease: 'easeOut' }}
-          style={{ filter: 'blur(6px)' }}
-        />
-      </svg>
-      {/* Center content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <motion.span
-          className="text-3xl font-extrabold tabular-nums"
-          style={{ color: ringColor, lineHeight: 1 }}
-          key={Math.round(clamped)}
-          initial={{ scale: 0.7, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4, type: 'spring', stiffness: 300 }}
-        >
-          {Math.round(clamped)}%
-        </motion.span>
-        <span className="text-[10px] text-[#8888a0] mt-1">covered</span>
-      </div>
-    </div>
-  );
-}
-
-// ─── Step Indicator ─────────────────────────────────────────
-function StepIndicator({ current, total }: { current: number; total: number }) {
-  return (
-    <div className="flex items-center justify-center gap-2">
-      {Array.from({ length: total }, (_, i) => {
-        const stepNum = i + 1;
-        const isActive = stepNum === current;
-        const isCompleted = stepNum < current;
-        return (
-          <div key={stepNum} className="flex items-center gap-2">
-            <motion.div
-              className={`
-                w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300
-                ${isActive ? 'bg-amber-400 text-[#0a0a0f] shadow-lg shadow-amber-400/30' :
-                  isCompleted ? 'bg-amber-400/20 text-amber-400 border border-amber-400/40' :
-                  'bg-white/[0.05] text-[#6666a0] border border-white/[0.08]'}
-              `}
-              animate={isActive ? { scale: [1, 1.1, 1] } : {}}
-              transition={{ duration: 0.4 }}
-            >
-              {isCompleted ? <Check className="w-3.5 h-3.5" /> : stepNum}
-            </motion.div>
-            {i < total - 1 && (
-              <div className={`w-8 h-0.5 rounded-full transition-all duration-300 ${isCompleted ? 'bg-amber-400/60' : 'bg-white/[0.08]'}`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ─── Motivational Message ───────────────────────────────────
-function getMotivationalMessage(pct: number): { text: string; emoji: string; color: string } {
-  if (pct >= 100) return { text: 'Emergency fund ready! 🎉', emoji: '🛡️', color: 'text-green-400' };
-  if (pct >= 75)  return { text: 'Bas thoda aur!', emoji: '💪', color: 'text-lime-400' };
-  if (pct >= 50)  return { text: 'Almost there!', emoji: '🔥', color: 'text-amber-400' };
-  if (pct >= 25)  return { text: 'Accha ja raha hai!', emoji: '👍', color: 'text-orange-400' };
-  return { text: 'Shuru karo!', emoji: '🚀', color: 'text-rose-400' };
-}
-
-// ─── Main Component ─────────────────────────────────────────
 export default function EmergencyFundCalculator({ open, onClose }: EmergencyFundCalculatorProps) {
-  // Step state
-  const [step, setStep] = useState(1);
+  const { addCoins, addBadge } = useAppStore();
+  const [expenses, setExpenses] = useState<Record<string, number>>(
+    Object.fromEntries(EXPENSE_ROWS.map((r) => [r.key, r.defaultValue])),
+  );
+  const [job, setJob] = useState<JobType>('student');
+  const [dependents, setDependents] = useState(0);
+  const [currentSavings, setCurrentSavings] = useState(0);
+  const [targetReached, setTargetReached] = useState(false);
 
-  // Step 1: Monthly expenses
-  const [expenses, setExpenses] = useState<Record<string, number>>(() => {
-    const init: Record<string, number> = {};
-    EXPENSE_CATEGORIES.forEach((c) => { init[c.key] = c.defaultValue; });
-    return init;
-  });
+  const monthlyExpense = useMemo(
+    () => Object.values(expenses).reduce((s, v) => s + v, 0),
+    [expenses],
+  );
 
-  // Step 2: Coverage months
-  const [months, setMonths] = useState(6);
+  /* Target: monthlyExpense × job months + dependents buffer (₹10k per dependent) */
+  const target = useMemo(() => {
+    const base = monthlyExpense * JOB_CONFIG[job].months;
+    const dependentBuffer = dependents * 10000;
+    return base + dependentBuffer;
+  }, [monthlyExpense, job, dependents]);
 
-  // Step 3: Already saved
-  const [alreadySaved, setAlreadySaved] = useState(0);
+  /* Recommended monthly saving plan: target ÷ 12 months */
+  const monthlySavingPlan = useMemo(() => Math.ceil(target / 12), [target]);
+  const monthsToReach = useMemo(
+    () => (monthlySavingPlan > 0 ? Math.ceil((target - currentSavings) / monthlySavingPlan) : 0),
+    [target, currentSavings, monthlySavingPlan],
+  );
 
-  // Copy state
-  const [copied, setCopied] = useState(false);
+  /* Protection % */
+  const protectionPct = target > 0 ? Math.min(100, (currentSavings / target) * 100) : 0;
 
-  // Computed
-  const totalMonthly = useMemo(() =>
-    Object.values(expenses).reduce((sum, v) => sum + v, 0), [expenses]);
+  /* Shield tier */
+  const tier = useMemo(() => {
+    if (protectionPct >= 75) return { key: 'full',     label: 'Fully Protected!',       emoji: '🛡️✨', color: '#f59e0b', desc: 'Tum super ho! Abhi sab safe hai.',          ring: 'rgba(245,158,11,0.6)' };
+    if (protectionPct >= 50) return { key: 'strong',   label: 'Strong Shield',          emoji: '🛡️',   color: '#10b981', desc: 'Ache ho! Almost there 💪',                   ring: 'rgba(16,185,129,0.5)' };
+    if (protectionPct >= 25) return { key: 'half',     label: 'Half Shield',            emoji: '⚠️',   color: '#f59e0b', desc: 'Thoda safe ho, par abhi aur chahiye.',       ring: 'rgba(245,158,11,0.4)' };
+    return                      { key: 'broken',  label: 'Broken Shield',          emoji: '🚨',   color: '#ef4444', desc: 'Bahut khatre mein ho! Shuru karo abhi.',     ring: 'rgba(239,68,68,0.4)' };
+  }, [protectionPct]);
 
-  const emergencyGoal = useMemo(() => totalMonthly * months, [totalMonthly, months]);
-
-  const progressPct = useMemo(() =>
-    emergencyGoal > 0 ? Math.min(100, (alreadySaved / emergencyGoal) * 100) : 0,
-    [alreadySaved, emergencyGoal]);
-
-  const remaining = useMemo(() =>
-    Math.max(0, emergencyGoal - alreadySaved), [emergencyGoal, alreadySaved]);
-
-  const motivation = useMemo(() => getMotivationalMessage(progressPct), [progressPct]);
-
-  // Adjust a single expense
-  const adjustExpense = useCallback((key: string, delta: number) => {
-    setExpenses((prev) => ({
-      ...prev,
-      [key]: Math.max(0, (prev[key] || 0) + delta),
-    }));
-  }, []);
-
-  const setExpense = useCallback((key: string, value: string) => {
-    const num = parseInt(value.replace(/[^0-9]/g, ''), 10);
-    setExpenses((prev) => ({
-      ...prev,
-      [key]: isNaN(num) ? 0 : num,
-    }));
-  }, []);
-
-  // Copy result
-  const handleCopy = useCallback(async () => {
-    const text = [
-      `🛡️ Emergency Fund Calculator - RUPAIYA 101`,
-      ``,
-      `📊 Monthly Expenses: ₹${totalMonthly.toLocaleString('en-IN')}`,
-      `📅 Coverage: ${months} months`,
-      `🎯 Emergency Fund Goal: ₹${emergencyGoal.toLocaleString('en-IN')}`,
-      `💰 Already Saved: ₹${alreadySaved.toLocaleString('en-IN')}`,
-      `📈 Progress: ${Math.round(progressPct)}%`,
-      `${motivation.emoji} ${motivation.text}`,
-      `💡 ${remaining > 0 ? `Aur ₹${remaining.toLocaleString('en-IN')} bachana hai!` : 'Target complete!'}`,
-    ].join('\n');
-
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // fallback: do nothing
+  useEffect(() => {
+    if (protectionPct >= 75 && !targetReached) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTargetReached(true);
+      addBadge('emergency-shielded');
+      addCoins(25);
+      toast({ title: 'Shield fully protected! +25 coins 🛡️✨' });
     }
-  }, [totalMonthly, months, emergencyGoal, alreadySaved, progressPct, motivation, remaining]);
+  }, [protectionPct, targetReached, addBadge, addCoins]);
 
-  // Reset on close - handled via onOpenChange
-  const resetForm = useCallback(() => {
-    setStep(1);
-    const init: Record<string, number> = {};
-    EXPENSE_CATEGORIES.forEach((c) => { init[c.key] = c.defaultValue; });
-    setExpenses(init);
-    setMonths(6);
-    setAlreadySaved(0);
-    setCopied(false);
-  }, []);
+  const updateExpense = (key: string, delta: number) => {
+    setExpenses((prev) => ({ ...prev, [key]: Math.max(0, prev[key] + delta) }));
+  };
 
-  const handleDialogChange = useCallback((v: boolean) => {
-    if (!v) {
-      resetForm();
-      onClose();
-    }
-  }, [resetForm, onClose]);
+  const setExpenseValue = (key: string, value: number) => {
+    setExpenses((prev) => ({ ...prev, [key]: Math.max(0, value) }));
+  };
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent
-        className="max-w-2xl max-h-[85vh] overflow-y-auto bg-[#0f0f1a] border border-white/[0.08] text-[#e8e8ed] premium-dialog-overlay"
-        showCloseButton={false}
-      >
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto p-0 border-white/[0.08] bg-[#0B1220] text-[#F8FAFC] premium-dialog-overlay">
         <VisuallyHidden>
           <DialogTitle>Emergency Fund Calculator</DialogTitle>
         </VisuallyHidden>
 
-        {/* Custom Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors z-10"
-          aria-label="Close"
-        >
-          <span className="text-lg leading-none">×</span>
-        </button>
-
-        {/* ── Header ── */}
-        <div className="px-6 pt-6 pb-3">
-          <div className="flex items-center gap-3 mb-4">
-            <motion.div
-              className="w-10 h-10 rounded-xl bg-amber-400/15 flex items-center justify-center"
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-              <Shield className="w-5 h-5 text-amber-400" />
-            </motion.div>
+        {/* Header */}
+        <div className="relative px-5 pt-6 pb-4 bg-gradient-to-b from-emerald-500/10 to-transparent">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-10 h-10 rounded-xl glass-card-premium grid place-items-center">
+              <Shield className="w-5 h-5 text-emerald-400" />
+            </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Emergency Fund Calculator</h2>
-              <p className="text-xs text-[#8888a0] leading-tight">
-                Bima hai bina policy waala — kitna chahiye calculate karo!
+              <h2 className="font-display text-xl font-bold heading-gradient">Protection Shield 🛡️</h2>
+              <p className="text-xs text-[#94A3B8]">Apna emergency fund banao</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 pb-6 space-y-4">
+          {/* Animated Shield */}
+          <div className="grid place-items-center py-4 relative">
+            <motion.div
+              key={tier.key}
+              initial={{ scale: 0.85 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+              className="relative"
+            >
+              {/* Glow ring */}
+              <motion.div
+                animate={{ boxShadow: `0 0 60px ${tier.ring}, 0 0 100px ${tier.ring}` }}
+                transition={{ duration: 0.6 }}
+                className="absolute inset-0 rounded-full"
+              />
+              <svg width="180" height="200" viewBox="0 0 180 200" className="relative">
+                {/* Shield outline */}
+                <defs>
+                  <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%"  stopColor={tier.color} stopOpacity="0.4" />
+                    <stop offset="100%" stopColor={tier.color} stopOpacity="0.1" />
+                  </linearGradient>
+                  <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%"  stopColor={tier.color} stopOpacity="0.9" />
+                    <stop offset="100%" stopColor={tier.color} stopOpacity="0.5" />
+                  </linearGradient>
+                </defs>
+
+                {/* Shield body */}
+                <path
+                  d="M90 15 L160 40 L160 110 Q160 160 90 185 Q20 160 20 110 L20 40 Z"
+                  fill="url(#shieldGrad)"
+                  stroke={tier.color}
+                  strokeWidth="3"
+                  opacity="0.4"
+                />
+                {/* Filled portion (bottom up based on protectionPct) */}
+                <motion.path
+                  d="M90 15 L160 40 L160 110 Q160 160 90 185 Q20 160 20 110 L20 40 Z"
+                  fill="url(#shieldFill)"
+                  opacity="0.7"
+                  style={{ clipPath: `inset(${100 - protectionPct}% 0% 0% 0%)` }}
+                  animate={{ clipPath: `inset(${100 - protectionPct}% 0% 0% 0%)` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                />
+                {/* Cracks for broken shield */}
+                {tier.key === 'broken' && (
+                  <>
+                    <path d="M90 60 L80 90 L100 120 L85 150" stroke="#ef4444" strokeWidth="1.5" fill="none" opacity="0.6" />
+                    <path d="M60 80 L75 100 L65 130" stroke="#ef4444" strokeWidth="1.2" fill="none" opacity="0.5" />
+                  </>
+                )}
+                {/* Center icon */}
+                <text x="90" y="105" fontSize="48" textAnchor="middle" className="font-display" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }}>
+                  {tier.key === 'broken' ? '🚨' : tier.key === 'full' ? '✨' : '🛡️'}
+                </text>
+                {/* Percentage */}
+                <text x="90" y="145" fontSize="20" textAnchor="middle" fontWeight="bold" fill="#F8FAFC" className="font-display">
+                  {Math.round(protectionPct)}%
+                </text>
+              </svg>
+            </motion.div>
+
+            {/* Tier label */}
+            <div className="text-center mt-2">
+              <motion.p
+                key={tier.label}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="font-display text-lg font-bold"
+                style={{ color: tier.color }}
+              >
+                {tier.label}
+              </motion.p>
+              <p className="text-xs text-[#94A3B8]">{tier.desc}</p>
+            </div>
+          </div>
+
+          {/* Stat banner */}
+          <div className="p-3 rounded-2xl glass-card border-amber-400/20 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+            <p className="text-xs text-amber-200/90">
+              <span className="font-bold">80% Indians ke paas emergency fund nahi hai.</span> Tum unn 20% mein aao! 💪
+            </p>
+          </div>
+
+          {/* Inputs */}
+          <div className="p-4 rounded-2xl glass-card space-y-3">
+            <h3 className="text-sm font-semibold text-[#F8FAFC]">Monthly Expenses 📝</h3>
+            {EXPENSE_ROWS.map((row) => (
+              <div key={row.key} className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.04] grid place-items-center text-base shrink-0">
+                  {row.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-[#94A3B8]">{row.label}</p>
+                </div>
+                <button
+                  onClick={() => updateExpense(row.key, -500)}
+                  className="w-7 h-7 rounded-lg glass-card grid place-items-center text-[#94A3B8] hover:text-[#F8FAFC]"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+                <div className="relative w-20">
+                  <IndianRupee className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-400" />
+                  <input
+                    type="number"
+                    value={expenses[row.key]}
+                    onChange={(e) => setExpenseValue(row.key, parseInt(e.target.value || '0', 10))}
+                    className="w-full pl-5 pr-1 py-1.5 rounded-lg glass-strong text-xs font-bold text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-emerald-400/40"
+                  />
+                </div>
+                <button
+                  onClick={() => updateExpense(row.key, 500)}
+                  className="w-7 h-7 rounded-lg glass-card grid place-items-center text-[#94A3B8] hover:text-[#F8FAFC]"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+            <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+              <span className="text-xs text-[#94A3B8]">Total Monthly</span>
+              <span className="text-sm font-bold text-emerald-300">₹{monthlyExpense.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+
+          {/* Job type */}
+          <div className="p-4 rounded-2xl glass-card space-y-2">
+            <h3 className="text-sm font-semibold text-[#F8FAFC]">Job Type 💼</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(JOB_CONFIG) as JobType[]).map((jt) => {
+                const c = JOB_CONFIG[jt];
+                const active = job === jt;
+                return (
+                  <button
+                    key={jt}
+                    onClick={() => setJob(jt)}
+                    className={cn(
+                      'p-2 rounded-xl text-center transition border',
+                      active
+                        ? 'bg-emerald-500/15 border-emerald-400/40'
+                        : 'border-white/[0.06] hover:border-white/[0.12]',
+                    )}
+                  >
+                    <div className="text-xl mb-0.5">{c.emoji}</div>
+                    <p className={cn('text-xs font-semibold', active ? 'text-emerald-300' : 'text-[#94A3B8]')}>{c.label}</p>
+                    <p className="text-[10px] text-[#94A3B8]">{c.months} months cover</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Dependents */}
+          <div className="p-4 rounded-2xl glass-card">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-[#F8FAFC]">Dependents 👨‍👩‍👧</h3>
+              <span className="text-xs text-[#94A3B8]">Parivaar jo tum pe depend karta hai</span>
+            </div>
+            <div className="flex gap-2">
+              {DEPENDENT_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setDependents(n)}
+                  className={cn(
+                    'flex-1 py-2 rounded-lg text-sm font-bold transition border',
+                    dependents === n
+                      ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300'
+                      : 'border-white/[0.06] text-[#94A3B8] hover:text-[#F8FAFC]',
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Current savings */}
+          <div className="p-4 rounded-2xl glass-card">
+            <label className="text-xs text-[#94A3B8] mb-2 block">Current Savings (emergency fund)</label>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                <input
+                  type="number"
+                  value={currentSavings}
+                  onChange={(e) => setCurrentSavings(Math.max(0, parseInt(e.target.value || '0', 10)))}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl glass-strong text-base font-bold text-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                />
+              </div>
+              <div className="flex gap-1">
+                {[1000, 5000, 10000].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => setCurrentSavings((s) => s + amt)}
+                    className="px-2 py-1.5 rounded-lg glass-card text-[10px] font-semibold text-[#94A3B8] hover:text-[#F8FAFC]"
+                  >
+                    +{amt / 1000}k
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Target & Plan */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-4 rounded-2xl glass-card-premium border-emerald-400/30">
+              <p className="text-xs text-[#94A3B8] mb-1">🎯 Target Amount</p>
+              <p className="text-xl font-bold text-emerald-300">₹{target.toLocaleString('en-IN')}</p>
+              <p className="text-[10px] text-[#94A3B8] mt-1">
+                {JOB_CONFIG[job].months} months × ₹{monthlyExpense.toLocaleString('en-IN')}
+                {dependents > 0 && ` + ${dependents}×₹10k`}
+              </p>
+            </div>
+            <div className="p-4 rounded-2xl glass-card-premium border-amber-400/30">
+              <p className="text-xs text-[#94A3B8] mb-1">📅 Monthly Plan</p>
+              <p className="text-xl font-bold text-amber-300">₹{monthlySavingPlan.toLocaleString('en-IN')}</p>
+              <p className="text-[10px] text-[#94A3B8] mt-1">
+                {monthsToReach > 0 ? `${monthsToReach} months mein goal!` : 'Goal done! 🎉'}
               </p>
             </div>
           </div>
 
-          {/* Step Indicator */}
-          <StepIndicator current={step} total={3} />
-        </div>
+          {/* AI tip */}
+          <div className="p-4 rounded-2xl glass-card-premium border border-violet-500/30 flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-violet-500/15 grid place-items-center shrink-0">
+              <Sparkles className="w-5 h-5 text-violet-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-violet-300 mb-0.5">Smart Tip 🤖</p>
+              <p className="text-xs text-[#94A3B8] leading-relaxed">
+                {tier.key === 'broken' && 'Chhota target rakho — pehle 1 month ka kharcha bhi bahut value hai. ₹500/week se start karo.'}
+                {tier.key === 'half' && 'Acche trajectory pe ho! Auto-debit laga do — salary aate hi emergency fund mein transfer ho jaye.'}
+                {tier.key === 'strong' && 'Mast! Sirf thoda aur — liquid fund ya savings account mein rakhna, FD nahi (lock-in problem).'}
+                {tier.key === 'full' && 'Shield fully charged! Ab next goal pe dhyaan do — SIP ya investments. Yeh fund intact rakhna.'}
+              </p>
+            </div>
+          </div>
 
-        {/* ── Content ── */}
-        <div className="px-6 pb-6">
-          <AnimatePresence mode="wait">
-            {/* ━━━ STEP 1: Monthly Expenses ━━━ */}
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-4"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-4 h-4 text-amber-400" />
-                  <span className="text-sm font-semibold text-white">Monthly Expenses</span>
-                </div>
-                <p className="text-xs text-[#8888a0]">Har mahine ka kharcha batao — kitna lagta hai?</p>
-
-                {/* Expense Inputs */}
-                <div className="space-y-3">
-                  {EXPENSE_CATEGORIES.map((cat) => (
-                    <motion.div
-                      key={cat.key}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.05 }}
-                      className="rounded-xl bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] p-3"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">{cat.emoji}</span>
-                          <div>
-                            <span className={`text-xs font-semibold ${cat.color}`}>{cat.label}</span>
-                            <span className="text-[10px] text-[#6666a0] ml-1.5">{cat.labelHi}</span>
-                          </div>
-                        </div>
-                        <div className="text-sm font-bold text-white tabular-nums">
-                          ₹{(expenses[cat.key] || 0).toLocaleString('en-IN')}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => adjustExpense(cat.key, -1000)}
-                          className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
-                          aria-label={`Decrease ${cat.label}`}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={(expenses[cat.key] || 0).toLocaleString('en-IN')}
-                          onChange={(e) => setExpense(cat.key, e.target.value)}
-                          className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-center text-sm font-medium text-white tabular-nums focus:outline-none focus:border-amber-400/40 focus:ring-1 focus:ring-amber-400/20 transition-all"
-                          aria-label={`${cat.label} amount`}
-                        />
-                        <button
-                          onClick={() => adjustExpense(cat.key, 1000)}
-                          className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
-                          aria-label={`Increase ${cat.label}`}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Total Monthly */}
-                <div className="rounded-xl bg-amber-400/10 border border-amber-500/15 p-4 text-center">
-                  <span className="text-xs text-amber-400/80 block mb-1">Total Monthly Expenses</span>
-                  <motion.span
-                    key={totalMonthly}
-                    initial={{ scale: 1.05 }}
-                    animate={{ scale: 1 }}
-                    className="text-2xl font-extrabold text-amber-400 tabular-nums"
-                  >
-                    ₹{totalMonthly.toLocaleString('en-IN')}
-                  </motion.span>
-                </div>
-
-                {/* Next button */}
-                <button
-                  onClick={() => setStep(2)}
-                  disabled={totalMonthly === 0}
-                  className="w-full py-3 rounded-xl bg-amber-400 text-[#0a0a0f] font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Aage badho <ChevronRight className="w-4 h-4" />
-                </button>
-              </motion.div>
-            )}
-
-            {/* ━━━ STEP 2: Coverage Months ━━━ */}
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-4"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400" />
-                  <span className="text-sm font-semibold text-white">Kitne mahine ka fund chahiye?</span>
-                </div>
-                <p className="text-xs text-[#8888a0]">Experts recommend 6 months — but tu decide kar!</p>
-
-                {/* Month Selector Cards */}
-                <div className="grid grid-cols-2 gap-3">
-                  {MONTH_OPTIONS.map((m) => {
-                    const isSelected = months === m;
-                    const goalForMonth = totalMonthly * m;
-                    return (
-                      <motion.button
-                        key={m}
-                        onClick={() => setMonths(m)}
-                        className={`
-                          relative rounded-xl border p-4 text-left transition-all duration-200
-                          ${isSelected
-                            ? 'bg-amber-400/10 border-amber-400/40 shadow-lg shadow-amber-400/10'
-                            : 'bg-white/[0.03] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.05]'}
-                        `}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {isSelected && (
-                          <motion.div
-                            layoutId="monthHighlight"
-                            className="absolute inset-0 rounded-xl border-2 border-amber-400/30"
-                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                          />
-                        )}
-                        <div className="text-2xl mb-1">
-                          {m === 3 ? '🌱' : m === 6 ? '🌿' : m === 9 ? '🌳' : '🏔️'}
-                        </div>
-                        <div className={`text-lg font-extrabold ${isSelected ? 'text-amber-400' : 'text-white'}`}>
-                          {m} Months
-                        </div>
-                        <div className="text-xs text-[#8888a0] mt-0.5">
-                          {m === 3 ? 'Basic safety' : m === 6 ? 'Recommended' : m === 9 ? 'Strong cover' : 'Full shield'}
-                        </div>
-                        <div className={`text-xs font-semibold mt-2 ${isSelected ? 'text-amber-400' : 'text-[#6666a0]'}`}>
-                          ₹{goalForMonth.toLocaleString('en-IN')}
-                        </div>
-                        {m === 6 && (
-                          <span className="absolute top-2 right-2 text-[9px] font-bold bg-amber-400/20 text-amber-400 px-1.5 py-0.5 rounded-full">
-                            BEST
-                          </span>
-                        )}
-                      </motion.button>
-                    );
-                  })}
-                </div>
-
-                {/* Emergency Goal Display */}
-                <div className="rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 border border-amber-500/15 p-4 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <Shield className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs text-amber-400/80 font-semibold">Your Emergency Fund Goal</span>
-                  </div>
-                  <motion.span
-                    key={emergencyGoal}
-                    initial={{ scale: 1.05 }}
-                    animate={{ scale: 1 }}
-                    className="text-2xl font-extrabold text-white tabular-nums"
-                  >
-                    ₹{emergencyGoal.toLocaleString('en-IN')}
-                  </motion.span>
-                  <div className="text-[10px] text-[#8888a0] mt-1">
-                    {months} × ₹{totalMonthly.toLocaleString('en-IN')} monthly
-                  </div>
-                </div>
-
-                {/* Navigation */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setStep(1)}
-                    className="flex-1 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-[#8888a0] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Pichla
-                  </button>
-                  <button
-                    onClick={() => setStep(3)}
-                    className="flex-1 py-3 rounded-xl bg-amber-400 text-[#0a0a0f] font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-300 transition-colors"
-                  >
-                    Aage badho <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ━━━ STEP 3: Already Saved + Results ━━━ */}
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-5"
-              >
-                {/* Already Saved Input */}
-                <div className="rounded-xl bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <PiggyBank className="w-4 h-4 text-amber-400" />
-                    <span className="text-sm font-semibold text-white">Kitna already save hai?</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setAlreadySaved((prev) => Math.max(0, prev - 5000))}
-                      className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
-                      aria-label="Decrease saved amount"
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={alreadySaved.toLocaleString('en-IN')}
-                      onChange={(e) => {
-                        const num = parseInt(e.target.value.replace(/[^0-9]/g, ''), 10);
-                        setAlreadySaved(isNaN(num) ? 0 : num);
-                      }}
-                      className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-4 py-2.5 text-center text-lg font-bold text-white tabular-nums focus:outline-none focus:border-amber-400/40 focus:ring-1 focus:ring-amber-400/20 transition-all"
-                      aria-label="Already saved amount"
-                    />
-                    <button
-                      onClick={() => setAlreadySaved((prev) => prev + 5000)}
-                      className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
-                      aria-label="Increase saved amount"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Progress Ring + Motivational Message */}
-                <div className="rounded-xl bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] p-5">
-                  <div className="flex flex-col items-center gap-4">
-                    <AnimatedProgressRing progress={progressPct} size={180} />
-
-                    {/* Motivational Message */}
-                    <motion.div
-                      key={motivation.text}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-center"
-                    >
-                      <span className={`text-lg font-bold ${motivation.color}`}>
-                        {motivation.text}
-                      </span>
-                    </motion.div>
-
-                    {/* Stats Row */}
-                    <div className="grid grid-cols-3 gap-3 w-full">
-                      <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3 text-center">
-                        <div className="text-[10px] text-[#8888a0] mb-1">Goal</div>
-                        <div className="text-sm font-bold text-amber-400 tabular-nums">
-                          ₹{formatIndianNumber(emergencyGoal)}
-                        </div>
-                      </div>
-                      <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3 text-center">
-                        <div className="text-[10px] text-[#8888a0] mb-1">Saved</div>
-                        <div className="text-sm font-bold text-emerald-400 tabular-nums">
-                          ₹{formatIndianNumber(alreadySaved)}
-                        </div>
-                      </div>
-                      <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-3 text-center">
-                        <div className="text-[10px] text-[#8888a0] mb-1">Remaining</div>
-                        <div className="text-sm font-bold text-rose-400 tabular-nums">
-                          ₹{formatIndianNumber(remaining)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Remaining message */}
-                    {remaining > 0 && (
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-xs text-[#8888a0] text-center"
-                      >
-                        Aur <span className="text-amber-400 font-semibold">₹{remaining.toLocaleString('en-IN')}</span> bachana hai — tu kar sakta hai! 💪
-                      </motion.p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Expense Breakdown Chart */}
-                <div className="rounded-xl bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Wallet className="w-4 h-4 text-amber-400" />
-                    <span className="text-sm font-semibold text-white">Expense Breakdown</span>
-                    <span className="text-[10px] text-[#8888a0] ml-auto">₹{totalMonthly.toLocaleString('en-IN')}/mo</span>
-                  </div>
-
-                  <div className="space-y-3">
-                    {EXPENSE_CATEGORIES.map((cat) => {
-                      const val = expenses[cat.key] || 0;
-                      const pct = totalMonthly > 0 ? (val / totalMonthly) * 100 : 0;
-                      return (
-                        <div key={cat.key}>
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs">{cat.emoji}</span>
-                              <span className="text-xs text-[#c0c0d0] font-medium">{cat.label}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs font-semibold ${cat.color} tabular-nums`}>
-                                ₹{val.toLocaleString('en-IN')}
-                              </span>
-                              <span className="text-[10px] text-[#6666a0] tabular-nums w-9 text-right">
-                                {Math.round(pct)}%
-                              </span>
-                            </div>
-                          </div>
-                          <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
-                            <motion.div
-                              className="h-full rounded-full"
-                              style={{ backgroundColor: cat.barColor }}
-                              initial={{ width: 0 }}
-                              animate={{ width: `${pct}%` }}
-                              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Tips Section */}
-                <div className="rounded-xl bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <AlertTriangle className="w-4 h-4 text-amber-400" />
-                    <span className="text-sm font-semibold text-white">Emergency Fund Tips</span>
-                  </div>
-                  <div className="space-y-2.5">
-                    {TIPS.map((tip, idx) => (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 + idx * 0.08 }}
-                        className="flex items-start gap-2.5"
-                      >
-                        <span className="text-sm shrink-0 mt-0.5">{tip.emoji}</span>
-                        <p className="text-xs text-[#c0c0d0] leading-relaxed">{tip.text}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setStep(2)}
-                    className="flex-1 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-[#8888a0] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Pichla
-                  </button>
-                  <button
-                    onClick={handleCopy}
-                    className="flex-1 py-3 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-400 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-amber-400/20 transition-colors"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4" /> Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" /> Share Result
-                      </>
-                    )}
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* CTA */}
+          <button
+            onClick={() => { addCoins(10); toast({ title: 'Plan saved! +10 coins 🎉' }); }}
+            className="w-full py-3 rounded-xl btn-3d bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold flex items-center justify-center gap-1.5"
+          >
+            <Check className="w-4 h-4" /> Save My Plan
+          </button>
         </div>
       </DialogContent>
     </Dialog>

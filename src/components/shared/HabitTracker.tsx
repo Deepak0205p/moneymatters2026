@@ -1,9 +1,13 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Check, Flame, Trophy, Star, Calendar,
+  Trophy,
+  Calendar,
+  Check,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import {
   Dialog,
@@ -12,605 +16,415 @@ import {
 } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useAppStore } from '@/lib/store/useAppStore';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-/* ------------------------------------------------------------------ */
-/*  Props                                                              */
-/* ------------------------------------------------------------------ */
+/* ============================================================
+   Habit Tracker — swipeable checklist, streak, heatmap
+   ============================================================ */
 
 interface HabitTrackerProps {
   open: boolean;
   onClose: () => void;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Habit Definitions                                                  */
-/* ------------------------------------------------------------------ */
-
-const HABITS = [
-  { id: 'budget', label: 'Budget banaya', emoji: '📋', description: 'Made a budget' },
-  { id: 'track', label: 'Kharcha track kiya', emoji: '📊', description: 'Tracked expenses' },
-  { id: 'save', label: 'Paise bachaye', emoji: '💰', description: 'Saved money' },
-  { id: 'study', label: 'Financial padhai ki', emoji: '📖', description: 'Studied finance' },
-  { id: 'sip', label: 'SIP kiya', emoji: '📈', description: 'Made SIP investment' },
-  { id: 'teach', label: 'Kisi ko sikhaya', emoji: '🎓', description: 'Taught someone about finance' },
-] as const;
-
-/* ------------------------------------------------------------------ */
-/*  Achievement Badges                                                 */
-/* ------------------------------------------------------------------ */
-
-const ACHIEVEMENT_BADGES = [
-  { days: 3, id: 'habit-shuruat', label: 'Shuruat', emoji: '🌱', description: '3-day streak' },
-  { days: 7, id: 'habit-consistent', label: 'Consistent', emoji: '🔥', description: '7-day streak' },
-  { days: 14, id: 'habit-adaat', label: 'Adaat', emoji: '💎', description: '14-day streak' },
-  { days: 30, id: 'habit-master', label: 'Master', emoji: '🏆', description: '30-day streak' },
-] as const;
-
-/* ------------------------------------------------------------------ */
-/*  Motivational Messages                                              */
-/* ------------------------------------------------------------------ */
-
-function getMotivationalMessage(completionRate: number): { text: string; emoji: string } {
-  if (completionRate >= 90) return { text: 'Waah! Tu toh financial rockstar hai! 🎸', emoji: '🌟' };
-  if (completionRate >= 70) return { text: 'Bahut accha ja raha hai! Keep it up! 💪', emoji: '🔥' };
-  if (completionRate >= 50) return { text: 'Aadha raasta cross kar liya! Thoda aur mehnat! 🏃', emoji: '⚡' };
-  if (completionRate >= 30) return { text: 'Shuruat toh ho gayi, ab consistency laa! 🎯', emoji: '🌱' };
-  if (completionRate > 0) return { text: 'Chhote kadam bhi kadam hain! Aage badh! 👣', emoji: '💫' };
-  return { text: 'Aaj se shuru kar, kal se nahi! 🚀', emoji: '🎯' };
+interface Habit {
+  id: string;
+  label: string;
+  emoji: string;
+  description: string;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+const HABITS: Habit[] = [
+  { id: 'track',      label: 'Aaj ka kharcha note kiya?',          emoji: '💰', description: 'Track all expenses today' },
+  { id: 'avoid',      label: 'Unnecessary kharcha avoid kiya?',     emoji: '☕', description: 'Skipped an avoidable expense' },
+  { id: 'learn',      label: 'Kuch naya financial concept padha?',  emoji: '📚', description: 'Learned something new about money' },
+  { id: 'save',       label: 'Savings account mein kuch daala?',    emoji: '💵', description: 'Added money to savings' },
+  { id: 'check',      label: 'UPI transactions check kiye?',        emoji: '📱', description: 'Reviewed UPI spends' },
+];
 
-function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+function formatDate(d: Date): string {
+  return d.toISOString().split('T')[0];
 }
 
-function getDayLabel(date: Date): string {
-  return date.toLocaleDateString('en-IN', { weekday: 'short' });
+function getStreakFromData(habitTracker: Record<string, string[]>, habitId: string): number {
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dateStr = formatDate(d);
+    const done = (habitTracker[dateStr] || []).includes(habitId);
+    if (done) {
+      streak++;
+    } else if (i > 0) {
+      // Allow today to be incomplete without breaking streak
+      break;
+    }
+  }
+  return streak;
 }
 
-function getDateLabel(date: Date): string {
-  return date.getDate().toString();
+function getPerfectDaysThisMonth(habitTracker: Record<string, string[]>): number {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let count = 0;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = formatDate(new Date(year, month, day));
+    const done = (habitTracker[dateStr] || []).length;
+    if (done === HABITS.length) count++;
+  }
+  return count;
 }
 
-function isToday(dateStr: string): boolean {
-  return dateStr === formatDate(new Date());
+function getWeeklyHeatmap(habitTracker: Record<string, string[]>): { date: Date; intensity: number; dateStr: string }[] {
+  const today = new Date();
+  const result: { date: Date; intensity: number; dateStr: string }[] = [];
+  // 4 weeks (28 days) — last 28 days
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dateStr = formatDate(d);
+    const done = (habitTracker[dateStr] || []).length;
+    const intensity = done === 0 ? 0 : Math.min(4, Math.ceil((done / HABITS.length) * 4));
+    result.push({ date: d, intensity, dateStr });
+  }
+  return result;
 }
 
-function isFuture(dateStr: string): boolean {
-  return dateStr > formatDate(new Date());
-}
+const FLAME_TIERS = [
+  { min: 30, emoji: '🏆', label: 'Master', color: '#f59e0b' },
+  { min: 14, emoji: '💎', label: 'Adaat',  color: '#8b5cf6' },
+  { min: 7,  emoji: '🔥', label: 'Streak', color: '#f97316' },
+  { min: 3,  emoji: '🌱', label: 'Shuruat',color: '#10b981' },
+  { min: 1,  emoji: '✨', label: 'Spark',  color: '#06b6d4' },
+  { min: 0,  emoji: '💤', label: 'Start',  color: '#64748b' },
+];
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+function getFlameTier(streak: number) {
+  return FLAME_TIERS.find((t) => streak >= t.min) || FLAME_TIERS[FLAME_TIERS.length - 1];
+}
 
 export default function HabitTracker({ open, onClose }: HabitTrackerProps) {
-  const { habitTracker, toggleHabit, badges, addBadge, addCoins } = useAppStore();
-  const [viewMonth, setViewMonth] = useState(() => {
-    const now = new Date();
-    return { year: now.getFullYear(), month: now.getMonth() };
-  });
+  const { habitTracker, toggleHabit, addCoins, badges, addBadge } = useAppStore();
+  const [perfectDayAwarded, setPerfectDayAwarded] = useState(false);
 
-  // ─── Last 7 days ──────────────────────────────────────────────
-  const last7Days = useMemo(() => {
-    const days: Date[] = [];
-    for (let i = 6; i >= 0; i--) {
-      days.push(new Date(Date.now() - i * 86400000));
+  const today = formatDate(new Date());
+  const todayDone = habitTracker[today] || [];
+
+  const allHabitsDone = todayDone.length === HABITS.length;
+
+  useEffect(() => {
+    if (allHabitsDone && !perfectDayAwarded) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPerfectDayAwarded(true);
+      addCoins(10);
+      if (!badges.includes('perfect-day')) addBadge('perfect-day');
+      toast({ title: 'Perfect Day! +10 coins 🌟' });
+    } else if (!allHabitsDone) {
+      setPerfectDayAwarded(false);
     }
-    return days;
-  }, []);
+  }, [allHabitsDone, perfectDayAwarded, addCoins, addBadge, badges]);
 
-  // ─── Streak Calculation ───────────────────────────────────────
-  const streakInfo = useMemo(() => {
-    let currentStreak = 0;
-    let longestStreak = 0;
-    let tempStreak = 0;
-    const today = formatDate(new Date());
-
-    // Count backwards from today to find current streak
-    for (let i = 0; i < 365; i++) {
-      const dateStr = formatDate(new Date(Date.now() - i * 86400000));
-      const completedHabits = habitTracker[dateStr] || [];
-      // A day "counts" if at least one habit was completed
-      if (completedHabits.length > 0) {
-        if (i === currentStreak) {
-          currentStreak++;
-        }
-        tempStreak++;
-        longestStreak = Math.max(longestStreak, tempStreak);
-      } else {
-        // Only break current streak if we're past the current streak count
-        if (i === currentStreak) break;
-        tempStreak = 0;
-      }
-    }
-
-    // Also scan forward from oldest data to find longest streak
-    const allDates = Object.keys(habitTracker).sort();
-    if (allDates.length > 0) {
-      tempStreak = 0;
-      const earliest = new Date(allDates[0]);
-      const latest = new Date(today);
-      for (let d = new Date(earliest); d <= latest; d.setDate(d.getDate() + 1)) {
-        const ds = formatDate(d);
-        if ((habitTracker[ds] || []).length > 0) {
-          tempStreak++;
-          longestStreak = Math.max(longestStreak, tempStreak);
-        } else {
-          tempStreak = 0;
-        }
-      }
-    }
-
-    return { current: currentStreak, longest: Math.max(longestStreak, currentStreak) };
+  /* Calculate best streak across all habits */
+  const bestStreak = useMemo(() => {
+    return Math.max(...HABITS.map((h) => getStreakFromData(habitTracker, h.id)), 0);
   }, [habitTracker]);
 
-  // ─── Completion Rate ──────────────────────────────────────────
-  const completionRate = useMemo(() => {
-    const today = formatDate(new Date());
-    // Calculate over last 30 days
-    let totalPossible = 0;
-    let totalCompleted = 0;
-    for (let i = 0; i < 30; i++) {
-      const dateStr = formatDate(new Date(Date.now() - i * 86400000));
-      if (dateStr > today) continue; // skip future
-      totalPossible += HABITS.length;
-      totalCompleted += (habitTracker[dateStr] || []).length;
-    }
-    return totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
-  }, [habitTracker]);
+  const streakTier = getFlameTier(bestStreak);
 
-  // ─── Month Calendar Data ──────────────────────────────────────
-  const monthCalendarData = useMemo(() => {
-    const { year, month } = viewMonth;
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startDow = firstDay.getDay(); // 0=Sun
+  const weeklyHeatmap = useMemo(() => getWeeklyHeatmap(habitTracker), [habitTracker]);
+  const perfectDays = useMemo(() => getPerfectDaysThisMonth(habitTracker), [habitTracker]);
 
-    const cells: { date: string; day: number; inMonth: boolean }[] = [];
+  const completionRate = Math.round((todayDone.length / HABITS.length) * 100);
 
-    // Fill in blank days before month starts
-    for (let i = 0; i < startDow; i++) {
-      cells.push({ date: '', day: 0, inMonth: false });
-    }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(year, month, d);
-      cells.push({ date: formatDate(date), day: d, inMonth: true });
-    }
-
-    return cells;
-  }, [viewMonth]);
-
-  // ─── Today's habits ───────────────────────────────────────────
-  const todayStr = formatDate(new Date());
-  const todayHabits = habitTracker[todayStr] || [];
-
-  // ─── Toggle handler ───────────────────────────────────────────
-  const handleToggleHabit = useCallback((dateStr: string, habitId: string) => {
-    toggleHabit(dateStr, habitId);
-
-    // Check for streak badges after toggling
-    // We need to compute the new streak based on the toggle
-    // Since toggleHabit already updated the store, we check badges here
-    setTimeout(() => {
-      const state = useAppStore.getState();
-      const ht = state.habitTracker;
-      const today = formatDate(new Date());
-
-      // Calculate current streak
-      let currentStreak = 0;
-      for (let i = 0; i < 365; i++) {
-        const ds = formatDate(new Date(Date.now() - i * 86400000));
-        if ((ht[ds] || []).length > 0) {
-          if (i === currentStreak) currentStreak++;
-          else break;
-        } else {
-          break;
-        }
-      }
-
-      // Calculate longest streak
-      let longestStreak = 0;
-      let tempStreak = 0;
-      const allDates = Object.keys(ht).sort();
-      if (allDates.length > 0) {
-        const earliest = new Date(allDates[0]);
-        const latest = new Date(today);
-        for (let d = new Date(earliest); d <= latest; d.setDate(d.getDate() + 1)) {
-          const ds = formatDate(d);
-          if ((ht[ds] || []).length > 0) {
-            tempStreak++;
-            longestStreak = Math.max(longestStreak, tempStreak);
-          } else {
-            tempStreak = 0;
-          }
-        }
-      }
-
-      const effectiveStreak = Math.max(currentStreak, longestStreak);
-
-      // Award badges
-      const newBadges = [...state.badges];
-      let earned = false;
-
-      for (const badge of ACHIEVEMENT_BADGES) {
-        if (effectiveStreak >= badge.days && !newBadges.includes(badge.id)) {
-          newBadges.push(badge.id);
-          earned = true;
-        }
-      }
-
-      if (earned) {
-        useAppStore.setState({ badges: newBadges, coins: state.coins + 5 });
-      }
-    }, 50);
-  }, [toggleHabit]);
-
-  // ─── Month navigation ─────────────────────────────────────────
-  const goToPrevMonth = useCallback(() => {
-    setViewMonth((prev) => {
-      const d = new Date(prev.year, prev.month - 1, 1);
-      return { year: d.getFullYear(), month: d.getMonth() };
-    });
-  }, []);
-
-  const goToNextMonth = useCallback(() => {
-    setViewMonth((prev) => {
-      const d = new Date(prev.year, prev.month + 1, 1);
-      return { year: d.getFullYear(), month: d.getMonth() };
-    });
-  }, []);
-
-  // ─── Motivational message ─────────────────────────────────────
-  const motivation = getMotivationalMessage(completionRate);
+  const handleToggle = (habitId: string) => {
+    toggleHabit(today, habitId);
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-[#0f0f1a] border border-white/[0.08] text-[#e8e8ed] premium-dialog-overlay">
+      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto p-0 border-white/[0.08] bg-[#0B1220] text-[#F8FAFC] premium-dialog-overlay">
         <VisuallyHidden>
           <DialogTitle>Habit Tracker</DialogTitle>
         </VisuallyHidden>
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-50 w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-white/60 hover:text-white transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        <div className="p-6 space-y-6">
-          {/* ── Header ──────────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Calendar className="w-6 h-6 text-amber-400" />
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
-                Financial Habit Tracker
-              </h2>
-            </div>
-            <p className="text-sm text-white/50">
-              Roz ki aadat banao, financial freedom pao!
-            </p>
-          </motion.div>
-
-          {/* ── Today's Check-in ────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-xl p-4"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">
-                Aaj ka Check-in
-              </h3>
-              <span className="text-xs text-white/40">
-                {todayHabits.length}/{HABITS.length} done
-              </span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {HABITS.map((habit) => {
-                const isDone = todayHabits.includes(habit.id);
-                return (
-                  <motion.button
-                    key={habit.id}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleToggleHabit(todayStr, habit.id)}
-                    className={cn(
-                      'flex items-center gap-2 p-3 rounded-lg border transition-all duration-200 text-left',
-                      isDone
-                        ? 'bg-green-500/[0.12] border-green-400/30 text-green-300'
-                        : 'bg-white/[0.02] border-white/[0.06] text-white/70 hover:bg-white/[0.05] hover:border-white/[0.12]'
-                    )}
-                  >
-                    <span className="text-lg emoji-pulse">{habit.emoji}</span>
-                    <span className="text-xs font-medium leading-tight">{habit.label}</span>
-                    {isDone && <Check className="w-3.5 h-3.5 ml-auto text-green-400 flex-shrink-0" />}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          {/* ── Streak Stats ────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="grid grid-cols-3 gap-3"
-          >
-            <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-xl p-4 text-center">
-              <Flame className="w-5 h-5 mx-auto mb-1 text-orange-400" />
-              <div className="text-2xl font-bold text-orange-400">{streakInfo.current}</div>
-              <div className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">Current Streak</div>
-            </div>
-            <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-xl p-4 text-center">
-              <Trophy className="w-5 h-5 mx-auto mb-1 text-amber-400" />
-              <div className="text-2xl font-bold text-amber-400">{streakInfo.longest}</div>
-              <div className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">Longest Streak</div>
-            </div>
-            <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-xl p-4 text-center">
-              <Star className="w-5 h-5 mx-auto mb-1 text-purple-400" />
-              <div className="text-2xl font-bold text-purple-400">{completionRate}%</div>
-              <div className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">Completion Rate</div>
-            </div>
-          </motion.div>
-
-          {/* ── Motivational Message ────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-amber-400/[0.06] border border-amber-400/[0.12] rounded-xl p-3 text-center"
-          >
-            <span className="text-lg mr-2">{motivation.emoji}</span>
-            <span className="text-sm text-amber-300/90">{motivation.text}</span>
-          </motion.div>
-
-          {/* ── 7-Day Calendar View ─────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-xl p-4"
-          >
-            <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-3">
-              7-Day Overview
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="text-left text-[10px] text-white/30 w-32 pb-2"></th>
-                    {last7Days.map((day) => {
-                      const ds = formatDate(day);
-                      const today = isToday(ds);
-                      return (
-                        <th key={ds} className="text-center pb-2 min-w-[40px]">
-                          <div className={cn(
-                            'text-[10px] uppercase tracking-wider',
-                            today ? 'text-amber-400' : 'text-white/40'
-                          )}>
-                            {getDayLabel(day)}
-                          </div>
-                          <div className={cn(
-                            'text-xs font-semibold',
-                            today ? 'text-amber-400' : 'text-white/50'
-                          )}>
-                            {getDateLabel(day)}
-                          </div>
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {HABITS.map((habit) => (
-                    <tr key={habit.id}>
-                      <td className="py-1.5 pr-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs">{habit.emoji}</span>
-                          <span className="text-[11px] text-white/60 truncate max-w-[80px]">{habit.label}</span>
-                        </div>
-                      </td>
-                      {last7Days.map((day) => {
-                        const ds = formatDate(day);
-                        const completed = (habitTracker[ds] || []).includes(habit.id);
-                        const today = isToday(ds);
-                        return (
-                          <td key={ds} className="text-center py-1.5">
-                            <motion.button
-                              whileTap={{ scale: 0.85 }}
-                              onClick={() => handleToggleHabit(ds, habit.id)}
-                              className={cn(
-                                'w-7 h-7 rounded-md mx-auto flex items-center justify-center transition-all duration-200',
-                                completed
-                                  ? 'bg-green-400/20 border border-green-400/40'
-                                  : today
-                                    ? 'bg-white/[0.04] border border-amber-400/20 hover:bg-white/[0.08]'
-                                    : 'bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05]'
-                              )}
-                            >
-                              {completed && <Check className="w-3.5 h-3.5 text-green-400" />}
-                            </motion.button>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-
-          {/* ── 30-Day Streak Calendar ──────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-xl p-4"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">
-                30-Day Streak Calendar
-              </h3>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={goToPrevMonth}
-                  className="w-6 h-6 rounded-md bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-white/50 hover:text-white transition-colors"
-                >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <span className="text-xs text-white/50 min-w-[90px] text-center">
-                  {new Date(viewMonth.year, viewMonth.month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
-                </span>
-                <button
-                  onClick={goToNextMonth}
-                  className="w-6 h-6 rounded-md bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center text-white/50 hover:text-white transition-colors"
-                >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+        {/* Header */}
+        <div className="relative px-5 pt-6 pb-4 bg-gradient-to-b from-violet-500/10 to-transparent">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl glass-card-premium grid place-items-center">
+                <Calendar className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl font-bold heading-gradient">Habit Tracker</h2>
+                <p className="text-xs text-[#94A3B8]">Roz ki adatein banao 🔥</p>
               </div>
             </div>
-
-            {/* Day labels */}
-            <div className="grid grid-cols-7 gap-1 mb-1">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-                <div key={d} className="text-[9px] text-white/25 text-center uppercase tracking-wider">
-                  {d}
-                </div>
-              ))}
+            <div className="text-right">
+              <p className="text-[10px] text-[#94A3B8]">Today</p>
+              <p className="text-xs font-bold text-[#F8FAFC]">{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
             </div>
+          </div>
 
-            {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1">
-              {monthCalendarData.map((cell, idx) => {
-                if (!cell.inMonth) {
-                  return <div key={`empty-${idx}`} className="w-3 h-3" />;
-                }
-                const completedCount = (habitTracker[cell.date] || []).length;
-                const isTodayCell = isToday(cell.date);
-                const isFutureCell = isFuture(cell.date);
-                const intensity = Math.min(completedCount / HABITS.length, 1);
+          {/* Streak + Perfect Days stats */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-2xl glass-card-premium border-amber-400/30 flex items-center gap-3">
+              <motion.div
+                key={streakTier.emoji}
+                initial={{ scale: 0.6, rotate: -10 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 14 }}
+                className="text-4xl"
+                style={{ filter: `drop-shadow(0 0 12px ${streakTier.color})` }}
+              >
+                {streakTier.emoji}
+              </motion.div>
+              <div>
+                <p className="text-2xl font-bold font-display" style={{ color: streakTier.color }}>
+                  {bestStreak}
+                </p>
+                <p className="text-[10px] text-[#94A3B8]">din streak · {streakTier.label}</p>
+              </div>
+            </div>
+            <div className="p-3 rounded-2xl glass-card flex items-center gap-3">
+              <div className="text-3xl">🌟</div>
+              <div>
+                <p className="text-2xl font-bold text-amber-300">{perfectDays}</p>
+                <p className="text-[10px] text-[#94A3B8]">perfect days this month</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
+        <div className="px-5 pb-6 space-y-4">
+          {/* Today's progress */}
+          <div className="p-4 rounded-2xl glass-card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-[#F8FAFC]">Aaj Ki Progress</span>
+              <span className="text-sm font-bold text-emerald-300">{todayDone.length}/{HABITS.length}</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+              <motion.div
+                className={cn('h-full rounded-full', allHabitsDone ? 'bg-amber-400' : 'bg-emerald-400')}
+                animate={{ width: `${completionRate}%` }}
+                transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+              />
+            </div>
+            <p className="text-[10px] text-[#94A3B8] mt-1.5">
+              {allHabitsDone ? '🎉 All done! Perfect day!' : `${HABITS.length - todayDone.length} aur baaki hain`}
+            </p>
+          </div>
+
+          {/* Swipeable habit cards */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-[#F8FAFC]">Today's Habits</h3>
+              <span className="text-[10px] text-[#94A3B8]">Tap right side to mark done →</span>
+            </div>
+            <div className="space-y-2">
+              {HABITS.map((habit) => {
+                const done = todayDone.includes(habit.id);
                 return (
                   <motion.div
-                    key={cell.date}
-                    whileHover={{ scale: 1.2 }}
+                    key={habit.id}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    whileTap={{ scale: 0.98 }}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.15}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x > 60 && !done) handleToggle(habit.id);
+                      else if (info.offset.x < -60 && done) handleToggle(habit.id);
+                    }}
                     className={cn(
-                      'w-3 h-3 rounded-[3px] transition-all duration-200 cursor-default',
-                      isFutureCell
-                        ? 'bg-white/[0.02]'
-                        : intensity >= 1
-                          ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.4)]'
-                          : intensity >= 0.66
-                            ? 'bg-amber-400/70'
-                            : intensity >= 0.33
-                              ? 'bg-amber-400/40'
-                              : intensity > 0
-                                ? 'bg-amber-400/15'
-                                : 'bg-white/[0.04]',
-                      isTodayCell && 'ring-1 ring-amber-400/60'
-                    )}
-                    title={`${cell.date}: ${completedCount}/${HABITS.length} habits`}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Legend */}
-            <div className="flex items-center justify-end gap-1 mt-2">
-              <span className="text-[9px] text-white/25">Less</span>
-              <div className="w-3 h-3 rounded-[3px] bg-white/[0.04]" />
-              <div className="w-3 h-3 rounded-[3px] bg-amber-400/15" />
-              <div className="w-3 h-3 rounded-[3px] bg-amber-400/40" />
-              <div className="w-3 h-3 rounded-[3px] bg-amber-400/70" />
-              <div className="w-3 h-3 rounded-[3px] bg-amber-400" />
-              <span className="text-[9px] text-white/25">More</span>
-            </div>
-          </motion.div>
-
-          {/* ── Achievement Badges ──────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-xl p-4"
-          >
-            <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-3">
-              Achievement Badges
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {ACHIEVEMENT_BADGES.map((badge) => {
-                const isEarned = badges.includes(badge.id);
-                const isClose = streakInfo.current >= badge.days - 2 && streakInfo.current < badge.days;
-                return (
-                  <motion.div
-                    key={badge.id}
-                    whileHover={{ scale: 1.03 }}
-                    className={cn(
-                      'relative p-3 rounded-xl border text-center transition-all duration-300',
-                      isEarned
-                        ? 'bg-amber-400/[0.08] border-amber-400/30 card-shine'
-                        : isClose
-                          ? 'bg-amber-400/[0.04] border-amber-400/15'
-                          : 'bg-white/[0.02] border-white/[0.04] opacity-50'
+                      'relative p-3 rounded-2xl border overflow-hidden cursor-grab active:cursor-grabbing',
+                      done
+                        ? 'glass-card-premium border-emerald-400/30'
+                        : 'glass-card border-white/[0.06]',
                     )}
                   >
+                    {/* Drag indicator */}
                     <div className={cn(
-                      'text-2xl mb-1',
-                      isEarned ? 'emoji-pulse' : 'grayscale'
+                      'absolute right-2 top-1/2 -translate-y-1/2 transition-opacity',
+                      done ? 'opacity-100' : 'opacity-40',
                     )}>
-                      {badge.emoji}
-                    </div>
-                    <div className={cn(
-                      'text-xs font-bold',
-                      isEarned ? 'text-amber-400' : 'text-white/30'
-                    )}>
-                      {badge.label}
-                    </div>
-                    <div className="text-[9px] text-white/30 mt-0.5">
-                      {badge.days}-day streak
-                    </div>
-                    {isEarned && (
-                      <div className="absolute -top-1 -right-1">
-                        <Check className="w-3.5 h-3.5 text-green-400 bg-[#0f0f1a] rounded-full" />
+                      <div className="flex items-center gap-1">
+                        <ChevronRight className="w-4 h-4 text-emerald-400" />
                       </div>
-                    )}
-                    {isClose && !isEarned && (
-                      <div className="text-[8px] text-amber-400/60 mt-1 animate-pulse">
-                        Almost there!
+                    </div>
+
+                    <div className="flex items-center gap-3 pr-6">
+                      <div className="w-10 h-10 rounded-xl bg-white/[0.04] grid place-items-center text-xl shrink-0">
+                        {habit.emoji}
                       </div>
-                    )}
+                      <div className="flex-1 min-w-0">
+                        <p className={cn('text-sm font-semibold', done ? 'text-emerald-300' : 'text-[#F8FAFC]')}>
+                          {habit.label}
+                        </p>
+                        <p className="text-[10px] text-[#94A3B8]">{habit.description}</p>
+                      </div>
+                      <button
+                        onClick={() => handleToggle(habit.id)}
+                        className={cn(
+                          'w-9 h-9 rounded-xl grid place-items-center shrink-0 transition',
+                          done
+                            ? 'bg-emerald-500 text-white'
+                            : 'glass-card text-[#94A3B8] hover:text-emerald-300',
+                        )}
+                      >
+                        <Check className={cn('w-5 h-5', done && 'scale-110')} />
+                      </button>
+                    </div>
+
+                    {/* Done overlay sweep */}
+                    <AnimatePresence>
+                      {done && (
+                        <motion.div
+                          initial={{ x: '-100%' }}
+                          animate={{ x: '0%' }}
+                          exit={{ x: '-100%' }}
+                          transition={{ duration: 0.4 }}
+                          className="absolute inset-0 bg-emerald-500/5 pointer-events-none"
+                        />
+                      )}
+                    </AnimatePresence>
                   </motion.div>
                 );
               })}
             </div>
-          </motion.div>
+          </div>
 
-          {/* ─── Habit Detail Legend ────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.35 }}
-            className="text-center text-[10px] text-white/20 pb-2"
-          >
-            Tap on any habit to check/uncheck • Consistency is the key to financial freedom! 🔑
-          </motion.div>
+          {/* Perfect Day celebration */}
+          <AnimatePresence>
+            {allHabitsDone && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="p-4 rounded-2xl glass-card-premium border-amber-400/40 text-center"
+              >
+                <motion.div
+                  animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 1.5 }}
+                  className="text-4xl mb-1 inline-block"
+                >
+                  🌟
+                </motion.div>
+                <p className="font-display text-lg font-bold text-amber-300">Perfect Day!</p>
+                <p className="text-xs text-[#94A3B8]">+10 coins mil gaye! Kal bhi aise hi rakho 💪</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Weekly Heatmap */}
+          <div className="p-4 rounded-2xl glass-card">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-[#F8FAFC]">Weekly Heatmap 📅</h3>
+              <span className="text-[10px] text-[#94A3B8]">Last 4 weeks</span>
+            </div>
+            {/* Day labels */}
+            <div className="grid grid-cols-7 gap-1 mb-1.5">
+              {WEEK_DAYS.map((d, i) => (
+                <div key={i} className="text-[9px] text-center text-[#94A3B8]">{d}</div>
+              ))}
+            </div>
+            {/* 4 weeks × 7 days */}
+            <div className="grid grid-cols-7 gap-1">
+              {weeklyHeatmap.map((day, i) => {
+                const bgColor = day.intensity === 0 ? 'bg-white/[0.04]'
+                              : day.intensity === 1 ? 'bg-emerald-500/30'
+                              : day.intensity === 2 ? 'bg-emerald-500/55'
+                              : day.intensity === 3 ? 'bg-emerald-500/80'
+                              : 'bg-emerald-400';
+                const isToday = day.dateStr === today;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: i * 0.015 }}
+                    whileHover={{ scale: 1.15 }}
+                    title={`${day.date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · ${day.intensity === 0 ? 'no activity' : `${day.intensity}/4 intensity`}`}
+                    className={cn(
+                      'aspect-square rounded-md grid place-items-center text-[8px] font-bold transition relative',
+                      bgColor,
+                      isToday && 'ring-2 ring-amber-400',
+                      day.intensity >= 3 ? 'text-white' : 'text-[#94A3B8]',
+                    )}
+                  >
+                    {day.date.getDate()}
+                  </motion.div>
+                );
+              })}
+            </div>
+            {/* Legend */}
+            <div className="flex items-center justify-between mt-3 text-[9px] text-[#94A3B8]">
+              <span>Less</span>
+              <div className="flex gap-0.5">
+                <div className="w-2 h-2 rounded-sm bg-white/[0.04]" />
+                <div className="w-2 h-2 rounded-sm bg-emerald-500/30" />
+                <div className="w-2 h-2 rounded-sm bg-emerald-500/55" />
+                <div className="w-2 h-2 rounded-sm bg-emerald-500/80" />
+                <div className="w-2 h-2 rounded-sm bg-emerald-400" />
+              </div>
+              <span>More</span>
+            </div>
+          </div>
+
+          {/* Motivational AI tip */}
+          <div className="p-4 rounded-2xl glass-card-premium border border-violet-500/30 flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-violet-500/15 grid place-items-center shrink-0">
+              <Sparkles className="w-5 h-5 text-violet-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-violet-300 mb-0.5">Reminder 🤖</p>
+              <p className="text-xs text-[#94A3B8] leading-relaxed">
+                {!allHabitsDone
+                  ? `Aaj ka checklist abhi tak incomplete hai! ⏰ Sirf ${HABITS.length - todayDone.length} aur baaki.`
+                  : bestStreak >= 7
+                  ? '7+ din streak! Tum next level pe ho. Kal bhi mat todo! 💪'
+                  : 'Perfect day! Aise hi roz karte raho — 7 din mein badge unlock! 🏆'}
+              </p>
+            </div>
+          </div>
+
+          {/* Badge section */}
+          <div className="p-4 rounded-2xl glass-card">
+            <div className="flex items-center gap-2 mb-2">
+              <Trophy className="w-4 h-4 text-amber-400" />
+              <h3 className="text-sm font-semibold text-[#F8FAFC]">Achievements</h3>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { id: 'habit-shuruat', days: 3,  emoji: '🌱', label: 'Shuruat' },
+                { id: 'habit-consistent', days: 7, emoji: '🔥', label: 'Streak' },
+                { id: 'habit-adaat', days: 14, emoji: '💎', label: 'Adaat' },
+                { id: 'habit-master', days: 30, emoji: '🏆', label: 'Master' },
+              ].map((b) => {
+                const earned = badges.includes(b.id);
+                return (
+                  <div
+                    key={b.id}
+                    className={cn(
+                      'aspect-square rounded-xl grid place-items-center p-1 border',
+                      earned ? 'glass-card-premium border-amber-400/30' : 'border-white/[0.04] opacity-40',
+                    )}
+                  >
+                    <div className={cn('text-2xl mb-0.5', !earned && 'grayscale')}>{earned ? b.emoji : '🔒'}</div>
+                    <p className="text-[8px] text-center text-[#94A3B8]">{b.label}</p>
+                    <p className="text-[8px] text-amber-300/70">{b.days}d</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,723 +1,515 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  Radar,
-  ResponsiveContainer,
-} from 'recharts';
-import { useAppStore } from '@/lib/store/useAppStore';
+  X, HeartPulse, CheckCircle2, ArrowRight, RotateCcw, Share2, Sparkles,
+} from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
+  Dialog, DialogContent, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { useAppStore, type HealthCheckupResult } from '@/lib/store/useAppStore';
 
-// ─── Props ──────────────────────────────────────────────────
+/* ──────────────────────────────────────────────────────────────
+   Props
+   ────────────────────────────────────────────────────────────── */
 interface HealthCheckupProps {
   open: boolean;
   onClose: () => void;
 }
 
-// ─── Types ──────────────────────────────────────────────────
-type GameState = 'idle' | 'playing' | 'results';
-
+/* ──────────────────────────────────────────────────────────────
+   Quiz questions — Hinglish, Instagram-story style
+   ────────────────────────────────────────────────────────────── */
 interface QuizOption {
   text: string;
   score: number;
   emoji: string;
 }
-
 interface QuizQuestion {
   id: string;
   question: string;
   subtitle: string;
+  heroEmoji: string;
   options: QuizOption[];
 }
 
-// ─── Questions Data ─────────────────────────────────────────
-const healthQuestions: QuizQuestion[] = [
+const QUESTIONS: QuizQuestion[] = [
   {
     id: 'emergency',
     question: 'Emergency fund kitna hai?',
     subtitle: '3-6 mahine ka kharcha cover karta hai?',
+    heroEmoji: '🛡️',
     options: [
-      { text: 'Koi emergency fund nahi', score: 1, emoji: '😰' },
-      { text: '1 mahine ka hai', score: 2, emoji: '😐' },
-      { text: '3 mahine ka hai', score: 3, emoji: '😊' },
-      { text: '6+ mahine ka hai', score: 4, emoji: '🤩' },
+      { text: 'Koi fund nahi', score: 0, emoji: '😰' },
+      { text: '1 mahine ka hai', score: 4, emoji: '😐' },
+      { text: '3 mahine ka hai', score: 8, emoji: '😊' },
+      { text: '6+ mahine ka hai', score: 12, emoji: '🤩' },
     ],
   },
   {
     id: 'budgeting',
-    question: 'Monthly budget follow karte ho?',
+    question: 'Monthly budget banate ho?',
     subtitle: 'Kharcha plan karke karte ho ya random?',
+    heroEmoji: '📝',
     options: [
-      { text: 'Budget? Kya hota hai!', score: 1, emoji: '🙈' },
-      { text: 'Dimag me hai, paper pe nahi', score: 2, emoji: '🤔' },
-      { text: 'Haan, basic budget banata hu', score: 3, emoji: '📝' },
-      { text: 'Detail me track karta hu', score: 4, emoji: '✅' },
+      { text: 'Budget? Kya hota hai!', score: 0, emoji: '🙈' },
+      { text: 'Dimag me hai, paper pe nahi', score: 4, emoji: '🤔' },
+      { text: 'Haan, basic budget banata hu', score: 8, emoji: '✅' },
+      { text: 'Detail me track karta hu', score: 12, emoji: '📊' },
     ],
   },
   {
     id: 'savings',
     question: 'Mahine me kitna bachate ho?',
     subtitle: 'Income ka kitna percent save hota hai?',
+    heroEmoji: '💰',
     options: [
-      { text: 'Kuch nahi bach paata', score: 1, emoji: '💸' },
-      { text: '10% se kam', score: 2, emoji: '🪙' },
-      { text: '10-20% bachata hu', score: 3, emoji: '💰' },
-      { text: '20% se zyada!', score: 4, emoji: '🏦' },
+      { text: 'Kuch nahi bach paata', score: 0, emoji: '💸' },
+      { text: '10% se kam', score: 4, emoji: '🪙' },
+      { text: '10-20% bachata hu', score: 8, emoji: '🏦' },
+      { text: '20% se zyada!', score: 12, emoji: '🚀' },
     ],
   },
   {
     id: 'debt',
-    question: 'Karza (debt) me kitne ho?',
-    subtitle: 'Personal loans, credit card bills, EMI?',
+    question: 'Credit card ka karna kaise hota hai?',
+    subtitle: 'Pura bill pay karte ho ya minimum?',
+    heroEmoji: '💳',
     options: [
-      { text: 'Bahut saara debt hai', score: 1, emoji: '😱' },
-      { text: 'Kuch hai, handle kar pa raha', score: 2, emoji: '😅' },
-      { text: 'Bas ek chhota loan', score: 3, emoji: '😌' },
-      { text: 'Koi debt nahi!', score: 4, emoji: '🎉' },
+      { text: 'Minimum pay karta hu', score: 0, emoji: '😱' },
+      { text: 'Kabhi full, kabhi partial', score: 4, emoji: '😬' },
+      { text: 'Hamesha full pay karta hu', score: 12, emoji: '💪' },
+      { text: 'Credit card use nahi karta', score: 8, emoji: '🚫' },
     ],
   },
   {
-    id: 'investing',
-    question: 'Investment karte ho?',
+    id: 'investment',
+    question: 'Investment kiya hai kahin?',
     subtitle: 'SIP, FD, mutual fund, stocks?',
+    heroEmoji: '📈',
     options: [
-      { text: 'Investment? Nahi samajhta', score: 1, emoji: '🤷' },
-      { text: 'Bas FD/Saving account', score: 2, emoji: '🏧' },
-      { text: 'Haan, SIP chalata hu', score: 3, emoji: '📈' },
-      { text: 'Diversified portfolio hai!', score: 4, emoji: '🚀' },
+      { text: 'Nahi, abhi tak nahi', score: 0, emoji: '😴' },
+      { text: 'FD/Savings account me hai', score: 4, emoji: '🏦' },
+      { text: 'Haan, mutual fund/SIP', score: 12, emoji: '🎯' },
+      { text: 'Stocks + MF + PPF — mixed!', score: 10, emoji: '🌟' },
     ],
   },
   {
     id: 'insurance',
-    question: 'Insurance coverage hai?',
-    subtitle: 'Health insurance, term plan?',
+    question: 'Insurance hai tumhara?',
+    subtitle: 'Health aur life insurance dono?',
+    heroEmoji: '🛡️',
     options: [
-      { text: 'Koi insurance nahi', score: 1, emoji: '⚠️' },
-      { text: 'Bas health insurance', score: 2, emoji: '🏥' },
-      { text: 'Health + Life dono', score: 3, emoji: '🛡️' },
-      { text: 'Complete coverage + riders', score: 4, emoji: '🦸' },
+      { text: 'Koi insurance nahi', score: 0, emoji: '🚨' },
+      { text: 'Bas company ka hai', score: 4, emoji: '🤷' },
+      { text: 'Health insurance hai', score: 8, emoji: '👍' },
+      { text: 'Health + Life dono hai', score: 12, emoji: '✅' },
     ],
   },
   {
-    id: 'goals',
-    question: 'Financial goals set hain?',
-    subtitle: 'Short-term aur long-term plans?',
+    id: 'learning',
+    question: 'Finance ke baare me kitna seekhte ho?',
+    subtitle: 'Videos, articles, books padhte ho?',
+    heroEmoji: '📚',
     options: [
-      { text: 'Koi plan nahi, jo ho so ho', score: 1, emoji: '🌀' },
-      { text: 'Kuch socha hai, likha nahi', score: 2, emoji: '💭' },
-      { text: 'Haan, clear goals hain', score: 3, emoji: '🎯' },
-      { text: 'Goals + timeline + tracking', score: 4, emoji: '🏆' },
-    ],
-  },
-  {
-    id: 'knowledge',
-    question: 'Financial knowledge kaisi hai?',
-    subtitle: 'Tax, inflation, compounding samajhte ho?',
-    options: [
-      { text: 'Sab confusion hai', score: 1, emoji: '😵' },
-      { text: 'Basic samajhta hu', score: 2, emoji: '📚' },
-      { text: 'Kaafi ache se jaanta hu', score: 3, emoji: '🧠' },
-      { text: 'Expert level! Padhai karta rehta', score: 4, emoji: '🎓' },
+      { text: 'Kabhi nahi padha', score: 0, emoji: '🙈' },
+      { text: 'Kabhi-kabhi YouTube dekhta', score: 4, emoji: '📺' },
+      { text: 'Regular content follow karta', score: 8, emoji: '📖' },
+      { text: 'Padhta + apply karta hu', score: 12, emoji: '🎓' },
     ],
   },
 ];
 
-// ─── Category Icons ─────────────────────────────────────────
-const categoryIcons: Record<string, string> = {
-  emergency: '🛡️',
-  budgeting: '📋',
-  savings: '💰',
-  debt: '🚪',
-  investing: '📈',
-  insurance: '🏥',
-  goals: '🎯',
-  knowledge: '📚',
-};
+const MAX_SCORE = QUESTIONS.length * 12;
 
-// ─── Recommendations Map ────────────────────────────────────
-interface Recommendation {
-  icon: string;
-  title: string;
-  desc: string;
-  strategy: number;
+/* ──────────────────────────────────────────────────────────────
+   Get grade based on percentage
+   ────────────────────────────────────────────────────────────── */
+function getGrade(pct: number) {
+  if (pct >= 75) return { label: 'Fit', emoji: '💪', color: '#10B981', tip: 'Tum financial ninja ho! Keep it up!' };
+  if (pct >= 50) return { label: 'Average', emoji: '🤔', color: '#F59E0B', tip: 'Theek ho, par sudhar zaroori hai!' };
+  return { label: 'ICU mein hai', emoji: '🏥', color: '#EF4444', tip: 'Tension mat lo, abhi shuru karo!' };
 }
 
-const recommendationsMap: Record<string, Recommendation> = {
-  emergency: {
-    icon: '🛡️',
-    title: 'Emergency Fund Banao',
-    desc: 'Pehle 3 mahine ka kharcha bachao, phir 6 mahine ka target rakho',
-    strategy: 4,
-  },
-  budgeting: {
-    icon: '📋',
-    title: 'Budgeting Seekho',
-    desc: '50/30/20 rule follow karo — needs, wants, savings',
-    strategy: 5,
-  },
-  savings: {
-    icon: '🐷',
-    title: 'Bachat Badhao',
-    desc: 'Income ka kam se kam 20% bachao, SIP start karo',
-    strategy: 8,
-  },
-  debt: {
-    icon: '🚪',
-    title: 'Debt Se Chutkara',
-    desc: 'High-interest debt pehle chukao, credit card bill time pe bharo',
-    strategy: 7,
-  },
-  investing: {
-    icon: '📈',
-    title: 'Investing Shuru Karo',
-    desc: 'SIP se start karo, compounding ka fayda uthao',
-    strategy: 8,
-  },
-  insurance: {
-    icon: '🏥',
-    title: 'Insurance Lelo',
-    desc: 'Health insurance zaroori hai, term plan bhi socho',
-    strategy: 9,
-  },
-  goals: {
-    icon: '🎯',
-    title: 'Goals Set Karo',
-    desc: 'Bina goal ke financial journey kahin nahi jati',
-    strategy: 2,
-  },
-  knowledge: {
-    icon: '📚',
-    title: 'Seekhte Raho',
-    desc: 'Rupaiya 101 ke saare modules complete karo!',
-    strategy: 10,
-  },
-};
-
-// ─── Score Category ─────────────────────────────────────────
-function getScoreCategory(score: number): { label: string; color: string } {
-  if (score <= 25) return { label: 'Critical! 🚨', color: 'text-red-400' };
-  if (score <= 50) return { label: 'Needs Work 🔧', color: 'text-orange-400' };
-  if (score <= 75) return { label: 'Getting Better 💪', color: 'text-amber-400' };
-  return { label: 'Financial Rockstar! 🌟', color: 'text-green-400' };
+function getRecommendations(answers: Record<string, number>): string[] {
+  const tips: string[] = [];
+  if ((answers.emergency ?? 0) < 8) tips.push('🛡️ Pehle emergency fund banao — 3 mahine ka kharcha band karo.');
+  if ((answers.budgeting ?? 0) < 8) tips.push('📝 Har mahine budget banao — 50-30-20 rule follow karo.');
+  if ((answers.savings ?? 0) < 8) tips.push('💰 Income ka kam se kam 20% bachao — automate karo!');
+  if ((answers.debt ?? 0) < 8) tips.push('💳 Credit card ka hamesha full pay karo — minimum = trap!');
+  if ((answers.investment ?? 0) < 8) tips.push('📈 SIP start karo — ₹500/month se bhi compounding ka jadoo chalega!');
+  if ((answers.insurance ?? 0) < 8) tips.push('🏥 Health insurance zaroori hai — medical emergency savings kha jaata hai!');
+  if ((answers.learning ?? 0) < 8) tips.push('📚 Financial literacy badhao — har hafte 1 video/article padho!');
+  if (tips.length === 0) tips.push('🌟 Tum already on track ho! Naye goals set karo aur grow karo!');
+  return tips.slice(0, 3);
 }
 
-// ─── Radar Chart Labels ─────────────────────────────────────
-const radarLabels: Record<string, string> = {
-  emergency: 'Emergency',
-  budgeting: 'Budget',
-  savings: 'Savings',
-  debt: 'Debt',
-  investing: 'Investing',
-  insurance: 'Insurance',
-  goals: 'Goals',
-  knowledge: 'Knowledge',
-};
+/* ──────────────────────────────────────────────────────────────
+   Progress dots — Instagram story style
+   ────────────────────────────────────────────────────────────── */
+function ProgressDots({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex gap-1.5">
+      {Array.from({ length: total }, (_, i) => (
+        <div key={i} className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: i < current ? '100%' : i === current ? '100%' : '0%' }}
+            transition={{ duration: 0.4 }}
+            className="h-full rounded-full bg-gradient-to-r from-emerald to-ai"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
 
-// ─── Component ──────────────────────────────────────────────
+/* ──────────────────────────────────────────────────────────────
+   Speedometer-style health meter reveal
+   ────────────────────────────────────────────────────────────── */
+function HealthMeter({ score }: { score: number }) {
+  const radius = 90;
+  const circumference = Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const grade = getGrade(score);
+
+  return (
+    <div className="relative flex flex-col items-center justify-center">
+      <svg width="240" height="140" viewBox="0 0 240 140" className="overflow-visible">
+        <defs>
+          <linearGradient id="meterGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#EF4444" />
+            <stop offset="50%" stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#10B981" />
+          </linearGradient>
+          <filter id="meterGlow">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        {/* Background arc */}
+        <path
+          d={`M 30 130 A ${radius} ${radius} 0 0 1 210 130`}
+          fill="none"
+          stroke="rgba(255,255,255,0.08)"
+          strokeWidth="16"
+          strokeLinecap="round"
+        />
+        {/* Color zone ticks */}
+        {[0, 25, 50, 75, 100].map((t) => {
+          const angle = Math.PI - (t / 100) * Math.PI;
+          const x = 120 + Math.cos(angle) * (radius + 16);
+          const y = 130 - Math.sin(angle) * (radius + 16);
+          return <text key={t} x={x} y={y} fill="rgba(255,255,255,0.4)" fontSize="10" fontWeight="700" textAnchor="middle" dominantBaseline="middle">{t}</text>;
+        })}
+        {/* Score arc */}
+        <motion.path
+          d={`M 30 130 A ${radius} ${radius} 0 0 1 210 130`}
+          fill="none"
+          stroke="url(#meterGrad)"
+          strokeWidth="16"
+          strokeLinecap="round"
+          filter="url(#meterGlow)"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.8, ease: 'easeOut', delay: 0.3 }}
+        />
+        {/* Needle */}
+        <motion.g
+          initial={{ rotate: -90 }}
+          animate={{ rotate: -90 + (score / 100) * 180 }}
+          transition={{ duration: 1.8, ease: 'easeOut', delay: 0.3 }}
+          style={{ transformOrigin: '120px 130px' }}
+        >
+          <line x1="120" y1="130" x2="120" y2="60" stroke={grade.color} strokeWidth="3" strokeLinecap="round" />
+          <circle cx="120" cy="130" r="8" fill={grade.color} />
+        </motion.g>
+      </svg>
+      <div className="absolute top-12 flex flex-col items-center">
+        <motion.span
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 1.2, type: 'spring' }}
+          className="font-display text-5xl font-extrabold"
+          style={{ color: grade.color, textShadow: `0 0 30px ${grade.color}80` }}
+        >
+          {score}
+        </motion.span>
+        <span className="text-[10px] font-bold text-ink-muted uppercase tracking-widest">/ 100</span>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Main Component
+   ────────────────────────────────────────────────────────────── */
 export default function HealthCheckup({ open, onClose }: HealthCheckupProps) {
-  const { healthCheckup, setHealthCheckup, coins } = useAppStore();
-
-  // ── State ────────────────────────────────────────────────
-  const [gameState, setGameState] = useState<GameState>('idle');
+  const { healthCheckup, setHealthCheckup } = useAppStore();
+  const [step, setStep] = useState<'intro' | 'quiz' | 'results'>(
+    healthCheckup ? 'results' : 'intro'
+  );
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [displayScore, setDisplayScore] = useState(0);
-  const [finalScore, setFinalScore] = useState(0);
-  const [showCoinReward, setShowCoinReward] = useState(false);
-  const [direction, setDirection] = useState(1);
+  const [selected, setSelected] = useState<number | null>(null);
 
-  const scoreAnimRef = useRef<ReturnType<typeof requestAnimationFrame> | null>(null);
+  const totalScore = useMemo(() => Object.values(answers).reduce((a, b) => a + b, 0), [answers]);
+  const pct = Math.round((totalScore / MAX_SCORE) * 100);
+  const grade = getGrade(pct);
 
-  // ── Reset on close ───────────────────────────────────────
-  const resetAndClose = useCallback(() => {
-    setGameState('idle');
-    setCurrentQ(0);
-    setAnswers({});
-    setSelectedOption(null);
-    setDisplayScore(0);
-    setFinalScore(0);
-    setShowCoinReward(false);
-    if (scoreAnimRef.current) {
-      cancelAnimationFrame(scoreAnimRef.current);
-    }
-    onClose();
-  }, [onClose]);
-
-  // ── Handle open change ───────────────────────────────────
-  const handleOpenChange = useCallback(
-    (isOpen: boolean) => {
-      if (!isOpen) {
-        resetAndClose();
-      }
-    },
-    [resetAndClose]
-  );
-
-  // ── Start quiz ───────────────────────────────────────────
-  const startQuiz = useCallback(() => {
-    setGameState('playing');
-    setCurrentQ(0);
-    setAnswers({});
-    setSelectedOption(null);
-  }, []);
-
-  // ── Handle answer ────────────────────────────────────────
-  const handleAnswer = useCallback(
-    (questionId: string, optionScore: number, optionIndex: number) => {
-      if (selectedOption !== null) return;
-      setSelectedOption(optionIndex);
-
-      const newAnswers = { ...answers, [questionId]: optionScore };
-      setAnswers(newAnswers);
-
-      // Auto-advance after 300ms
-      setTimeout(() => {
-        if (currentQ < healthQuestions.length - 1) {
-          setDirection(1);
-          setCurrentQ((prev) => prev + 1);
-          setSelectedOption(null);
-        } else {
-          // Calculate final score
-          const totalScore = Object.values(newAnswers).reduce((sum, s) => sum + s, 0);
-          const maxScore = healthQuestions.length * 4;
-          const percentage = Math.round((totalScore / maxScore) * 100);
-
-          const category = getScoreCategory(percentage).label;
-
-          // Generate recommendations for lowest 3 categories
-          const sortedCategories = Object.entries(newAnswers).sort(
-            ([, a], [, b]) => a - b
-          );
-          const lowestThree = sortedCategories.slice(0, 3);
-          const recommendations = lowestThree.map(
-            ([id]) => recommendationsMap[id]?.title || 'Improve your finances'
-          );
-
-          const result = {
-            score: percentage,
-            category,
-            answers: newAnswers,
-            completedAt: new Date().toISOString(),
-            recommendations,
-          };
-
-          setFinalScore(percentage);
-          setHealthCheckup(result);
-          setGameState('results');
-        }
-      }, 300);
-    },
-    [selectedOption, answers, currentQ, setHealthCheckup]
-  );
-
-  // ── Score counting animation ─────────────────────────────
-  useEffect(() => {
-    if (gameState !== 'results') return;
-
-    let start = 0;
-    const duration = 1500;
-    const startTime = performance.now();
-
-    const animate = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(eased * finalScore);
-      setDisplayScore(current);
-
-      if (progress < 1) {
-        scoreAnimRef.current = requestAnimationFrame(animate);
+  const handleSelect = useCallback((qIndex: number, optIndex: number) => {
+    if (selected !== null) return;
+    setSelected(optIndex);
+    const q = QUESTIONS[qIndex];
+    const newAnswers = { ...answers, [q.id]: q.options[optIndex].score };
+    setAnswers(newAnswers);
+    setTimeout(() => {
+      setSelected(null);
+      if (qIndex + 1 < QUESTIONS.length) {
+        setCurrentQ(qIndex + 1);
       } else {
-        setShowCoinReward(true);
+        const finalScore = Math.round((Object.values(newAnswers).reduce((a, b) => a + b, 0) / MAX_SCORE) * 100);
+        const result: HealthCheckupResult = {
+          score: finalScore,
+          category: getGrade(finalScore).label,
+          answers: newAnswers,
+          completedAt: new Date().toISOString().split('T')[0],
+          recommendations: getRecommendations(newAnswers),
+        };
+        setHealthCheckup(result);
+        setStep('results');
       }
-    };
+    }, 350);
+  }, [selected, answers, setHealthCheckup]);
 
-    scoreAnimRef.current = requestAnimationFrame(animate);
+  const reset = () => {
+    setStep('intro');
+    setCurrentQ(0);
+    setAnswers({});
+    setSelected(null);
+  };
 
-    return () => {
-      if (scoreAnimRef.current) {
-        cancelAnimationFrame(scoreAnimRef.current);
-      }
-    };
-  }, [gameState, finalScore]);
+  const handleClose = () => {
+    onClose();
+    setTimeout(reset, 300);
+  };
 
-  // ── Radar chart data ─────────────────────────────────────
-  const radarData = healthQuestions.map((q) => ({
-    subject: radarLabels[q.id],
-    value: gameState === 'results' ? (answers[q.id] || 0) * 25 : 0,
-    fullMark: 100,
-  }));
-
-  // ── Get recommendations for results ──────────────────────
-  const topRecommendations = (() => {
-    if (gameState !== 'results') return [];
-    const sorted = Object.entries(answers).sort(([, a], [, b]) => a - b);
-    return sorted.slice(0, 3).map(([id]) => recommendationsMap[id]);
-  })();
-
-  // ── Score category for display ───────────────────────────
-  const scoreInfo = getScoreCategory(displayScore);
-
-  // ──────────────────────────────────────────────────────────
-  // RENDER
-  // ──────────────────────────────────────────────────────────
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        showCloseButton={gameState === 'idle'}
-        className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-[#0a0a0f] border-white/[0.06] text-[#e8e8ed] p-0"
-      >
-        <DialogTitle className="sr-only">Financial Health Checkup</DialogTitle>
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent className="bg-midnight border-white/10 max-w-2xl p-0 overflow-hidden">
+        {/* Header */}
+        <div className="relative p-5 border-b border-white/10 glass-card-premium">
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-ink-muted"
+            aria-label="Close"
+          >
+            <X size={16} />
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #EC4899, #F43F5E)', boxShadow: '0 0 20px rgba(236,72,153,0.3)' }}>
+              <HeartPulse size={20} className="text-white" />
+            </div>
+            <div>
+              <h2 className="font-display text-xl font-extrabold text-white">Financial Checkup 🩺</h2>
+              <p className="text-xs text-ink-muted mt-0.5">Apni financial health ka quick checkup! 2 min me ho jayega</p>
+            </div>
+          </div>
+        </div>
 
-        <div className="p-6">
+        {/* Body */}
+        <div className="p-5 sm:p-6 max-h-[70vh] overflow-y-auto">
           <AnimatePresence mode="wait">
-            {/* ═══════════ IDLE SCREEN ═══════════ */}
-            {gameState === 'idle' && (
+            {/* INTRO */}
+            {step === 'intro' && (
               <motion.div
-                key="idle"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="flex flex-col items-center text-center gap-6"
+                key="intro"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="text-center py-6"
               >
-                {/* Title */}
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
-                    🏥 Financial Health Checkup
-                  </h2>
-                  <p className="text-[#a0a0b8] text-sm sm:text-base">
-                    Apni financial health ka checkup karo — 8 sawaal, 2 minute!
-                  </p>
+                <motion.div
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring' }}
+                  className="text-7xl mb-4"
+                >
+                  🩺
+                </motion.div>
+                <h3 className="font-display text-2xl font-extrabold heading-gradient mb-2">
+                  Financial Checkup Time!
+                </h3>
+                <p className="text-sm text-ink-muted max-w-md mx-auto mb-6">
+                  {QUESTIONS.length} simple sawaal — honestly jawab do aur apni financial health ka score pao! 😎
+                </p>
+
+                <div className="grid grid-cols-3 gap-2 mb-6 max-w-md mx-auto">
+                  <div className="rounded-xl bg-emerald/5 border border-emerald/20 p-3">
+                    <div className="text-2xl mb-1">💪</div>
+                    <p className="text-[10px] font-bold text-emerald-soft">Fit</p>
+                  </div>
+                  <div className="rounded-xl bg-gold/5 border border-gold/20 p-3">
+                    <div className="text-2xl mb-1">🤔</div>
+                    <p className="text-[10px] font-bold text-gold-soft">Average</p>
+                  </div>
+                  <div className="rounded-xl bg-red-500/5 border border-red-500/20 p-3">
+                    <div className="text-2xl mb-1">🏥</div>
+                    <p className="text-[10px] font-bold text-red-400">ICU</p>
+                  </div>
                 </div>
 
-                {/* Previous result */}
-                {healthCheckup && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="w-full bg-[#1a1a2e] rounded-xl p-4 border border-white/[0.06]"
-                  >
-                    <p className="text-[#a0a0b8] text-xs mb-1">Pichla Score</p>
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl font-bold text-amber-400">
-                        {healthCheckup.score}
-                      </span>
-                      <div className="text-left">
-                        <p className={cn('text-sm font-medium', getScoreCategory(healthCheckup.score).color)}>
-                          {healthCheckup.category}
-                        </p>
-                        <p className="text-[#a0a0b8] text-xs">
-                          {new Date(healthCheckup.completedAt).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setStep('quiz')}
+                  className="btn-3d rounded-2xl px-8 py-3.5 font-bold text-midnight inline-flex items-center gap-2"
+                  style={{ background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)' }}
+                >
+                  Shuru Karein <ArrowRight size={18} />
+                </motion.button>
+              </motion.div>
+            )}
 
-                {/* Category icons preview */}
-                <div className="flex flex-wrap justify-center gap-2">
-                  {healthQuestions.map((q, i) => (
+            {/* QUIZ */}
+            {step === 'quiz' && (
+              <motion.div
+                key={`quiz-${currentQ}`}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+              >
+                <ProgressDots current={currentQ} total={QUESTIONS.length} />
+                <div className="text-center mt-6 mb-5">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 0.1 }}
+                    className="text-7xl mb-3"
+                  >
+                    {QUESTIONS[currentQ].heroEmoji}
+                  </motion.div>
+                  <p className="text-[10px] font-bold text-emerald-soft uppercase tracking-widest mb-1">
+                    Sawaal {currentQ + 1} of {QUESTIONS.length}
+                  </p>
+                  <h3 className="font-display text-xl font-extrabold text-white mb-1">
+                    {QUESTIONS[currentQ].question}
+                  </h3>
+                  <p className="text-xs text-ink-muted">{QUESTIONS[currentQ].subtitle}</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {QUESTIONS[currentQ].options.map((opt, i) => {
+                    const isSelected = selected === i;
+                    return (
+                      <motion.button
+                        key={i}
+                        whileHover={{ y: -3, scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => handleSelect(currentQ, i)}
+                        className={`relative card-3d rounded-2xl p-4 text-left border transition-all overflow-hidden ${
+                          isSelected
+                            ? 'border-emerald bg-emerald/15'
+                            : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.07]'
+                        }`}
+                      >
+                        {isSelected && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute top-3 right-3"
+                          >
+                            <CheckCircle2 size={18} className="text-emerald-soft" />
+                          </motion.div>
+                        )}
+                        <div className="text-3xl mb-2">{opt.emoji}</div>
+                        <p className="text-sm font-bold text-white leading-tight">{opt.text}</p>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* RESULTS */}
+            {step === 'results' && healthCheckup && (
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-2"
+              >
+                <motion.div
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4"
+                  style={{ backgroundColor: `${grade.color}20`, border: `1px solid ${grade.color}40` }}
+                >
+                  <Sparkles size={14} style={{ color: grade.color }} />
+                  <span className="text-xs font-bold" style={{ color: grade.color }}>
+                    Tumhara Result Ready Hai!
+                  </span>
+                </motion.div>
+
+                <HealthMeter score={healthCheckup.score} />
+
+                <motion.div
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 1.4, type: 'spring' }}
+                  className="mt-2"
+                >
+                  <h3 className="font-display text-3xl font-extrabold" style={{ color: grade.color }}>
+                    {grade.label} {grade.emoji}
+                  </h3>
+                  <p className="text-sm text-ink-muted mt-1">{grade.tip}</p>
+                </motion.div>
+
+                {/* Recommendations */}
+                <div className="text-left mt-6 space-y-2">
+                  <p className="text-xs font-bold text-white uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <Sparkles size={12} className="text-ai" /> Tumhare Liye Tips
+                  </p>
+                  {healthCheckup.recommendations.map((tip, i) => (
                     <motion.div
-                      key={q.id}
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.1 * i, type: 'spring', stiffness: 200 }}
-                      className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-[#1a1a2e] border border-white/[0.06] flex items-center justify-center text-lg"
-                      title={radarLabels[q.id]}
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1.6 + i * 0.1 }}
+                      className="rounded-xl bg-white/[0.04] border border-white/10 p-3 text-sm text-white/90"
                     >
-                      {categoryIcons[q.id]}
+                      {tip}
                     </motion.div>
                   ))}
                 </div>
 
-                {/* Start button */}
-                <motion.div
-                  animate={{
-                    scale: [1, 1.03, 1],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                >
-                  <Button
-                    onClick={startQuiz}
-                    className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-bold text-base px-8 py-6 rounded-xl shadow-lg shadow-amber-500/20 h-auto"
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-2 mt-6">
+                  <button
+                    onClick={reset}
+                    className="flex-1 rounded-xl py-3 text-sm font-bold text-white bg-white/5 hover:bg-white/10 flex items-center justify-center gap-2"
                   >
-                    {healthCheckup ? 'Phir se Checkup Karo' : 'Shuru Karo 🚀'}
-                  </Button>
-                </motion.div>
-
-                <p className="text-[#a0a0b8] text-xs">
-                  Complete karo aur +20 coins paao! 🪙
-                </p>
-              </motion.div>
-            )}
-
-            {/* ═══════════ PLAYING SCREEN ═══════════ */}
-            {gameState === 'playing' && (
-              <motion.div
-                key="playing"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col gap-5"
-              >
-                {/* Progress bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-[#a0a0b8]">
-                      Sawaal {currentQ + 1}/{healthQuestions.length}
-                    </span>
-                    <span className="text-amber-400 font-medium">
-                      {Math.round(((currentQ + 1) / healthQuestions.length) * 100)}%
-                    </span>
-                  </div>
-                  <Progress
-                    value={((currentQ + 1) / healthQuestions.length) * 100}
-                    className="h-2 bg-[#1a1a2e]"
-                  />
-                </div>
-
-                {/* Question */}
-                <AnimatePresence mode="wait" custom={direction}>
-                  <motion.div
-                    key={currentQ}
-                    custom={direction}
-                    initial={{ opacity: 0, x: direction * 60 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: direction * -60 }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="space-y-4"
-                  >
-                    <div className="text-center space-y-2">
-                      <h3 className="text-xl sm:text-2xl font-bold text-[#e8e8ed]">
-                        {healthQuestions[currentQ].question}
-                      </h3>
-                      <p className="text-[#a0a0b8] text-sm">
-                        {healthQuestions[currentQ].subtitle}
-                      </p>
-                    </div>
-
-                    {/* Options in 2x2 grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {healthQuestions[currentQ].options.map((option, idx) => (
-                        <motion.button
-                          key={idx}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.08, duration: 0.3 }}
-                          onClick={() =>
-                            handleAnswer(healthQuestions[currentQ].id, option.score, idx)
-                          }
-                          disabled={selectedOption !== null}
-                          className={cn(
-                            'relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 text-left',
-                            'bg-[#1a1a2e] border-white/[0.06] hover:border-amber-400/40 hover:scale-[1.02]',
-                            'disabled:pointer-events-none',
-                            selectedOption === idx
-                              ? 'border-amber-400 bg-amber-400/10 scale-[1.02]'
-                              : selectedOption !== null
-                              ? 'opacity-50'
-                              : ''
-                          )}
-                        >
-                          <span className="text-2xl shrink-0">{option.emoji}</span>
-                          <span className="text-sm font-medium text-[#e8e8ed] leading-snug">
-                            {option.text}
-                          </span>
-                          {selectedOption === idx && (
-                            <motion.span
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="absolute top-2 right-2 w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center"
-                            >
-                              <svg
-                                className="w-3 h-3 text-black"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={3}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            </motion.span>
-                          )}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-              </motion.div>
-            )}
-
-            {/* ═══════════ RESULTS SCREEN ═══════════ */}
-            {gameState === 'results' && (
-              <motion.div
-                key="results"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
-                className="flex flex-col gap-6"
-              >
-                {/* Score display */}
-                <div className="text-center space-y-2">
-                  <motion.div
-                    className="text-6xl sm:text-7xl font-extrabold text-amber-400"
-                    layout
-                  >
-                    {displayScore}
-                  </motion.div>
-                  <p className={cn('text-lg font-semibold', scoreInfo.color)}>
-                    {scoreInfo.label}
-                  </p>
-                  <p className="text-[#a0a0b8] text-sm">/100</p>
-                </div>
-
-                {/* Coin reward */}
-                <AnimatePresence>
-                  {showCoinReward && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.8 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                      className="text-center"
-                    >
-                      <span className="inline-flex items-center gap-1.5 bg-amber-400/10 border border-amber-400/20 rounded-full px-4 py-1.5 text-amber-400 text-sm font-medium">
-                        🪙 +20 Coins earned!
-                      </span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Radar chart */}
-                <div className="bg-[#1a1a2e] rounded-xl p-4 border border-white/[0.06]">
-                  <h4 className="text-sm font-medium text-[#a0a0b8] mb-2 text-center">
-                    Financial Health Radar
-                  </h4>
-                  <div className="w-full h-[260px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                        <PolarGrid
-                          stroke="rgba(255,255,255,0.06)"
-                          strokeDasharray="3 3"
-                        />
-                        <PolarAngleAxis
-                          dataKey="subject"
-                          tick={{
-                            fill: '#a0a0b8',
-                            fontSize: 11,
-                            fontWeight: 500,
-                          }}
-                        />
-                        <Radar
-                          name="Score"
-                          dataKey="value"
-                          stroke="#f59e0b"
-                          fill="#f59e0b"
-                          fillOpacity={0.2}
-                          strokeWidth={2}
-                          animationDuration={1200}
-                          animationEasing="ease-out"
-                        />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Recommendations */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-[#e8e8ed]">
-                    Tumhare Liye Recommendations 🎯
-                  </h4>
-                  <div className="space-y-3">
-                    {topRecommendations.map((rec, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 + i * 0.15, duration: 0.4 }}
-                        className="bg-[#1a1a2e] rounded-xl p-4 border border-white/[0.06] flex gap-3"
-                      >
-                        <span className="text-2xl shrink-0">{rec.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <h5 className="text-sm font-semibold text-[#e8e8ed]">
-                            {rec.title}
-                          </h5>
-                          <p className="text-xs text-[#a0a0b8] mt-0.5 leading-relaxed">
-                            {rec.desc}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="shrink-0 text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 h-auto px-2 py-1 text-xs"
-                          onClick={() => {
-                            resetAndClose();
-                          }}
-                        >
-                          Learn →
-                        </Button>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
+                    <RotateCcw size={14} /> Phir Se Try Karo
+                  </button>
+                  <button
                     onClick={() => {
-                      const shareText = `🏥 Mera Financial Health Score: ${finalScore}/100\n${getScoreCategory(finalScore).label}\n\nRupaiya 101 se apna checkup karo!`;
-                      if (navigator.share) {
-                        navigator.share({ text: shareText }).catch(() => {});
-                      } else {
-                        navigator.clipboard.writeText(shareText).catch(() => {});
+                      if (typeof navigator !== 'undefined' && navigator.share) {
+                        navigator.share({
+                          title: 'Capital Mastery — Financial Health',
+                          text: `Meri Financial Health: ${healthCheckup.score}/100 (${grade.label} ${grade.emoji})! Tum bhi check karo!`,
+                        }).catch(() => {});
                       }
                     }}
-                    variant="outline"
-                    className="flex-1 border-amber-400/30 text-amber-400 hover:bg-amber-400/10 hover:text-amber-300"
+                    className="flex-1 btn-3d rounded-xl py-3 text-sm font-bold text-midnight flex items-center justify-center gap-2"
+                    style={{ background: 'linear-gradient(135deg, #34D399, #10B981)' }}
                   >
-                    📤 Apna Score Share Karo
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setGameState('idle');
-                      setCurrentQ(0);
-                      setAnswers({});
-                      setSelectedOption(null);
-                      setDisplayScore(0);
-                      setFinalScore(0);
-                      setShowCoinReward(false);
-                    }}
-                    className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-bold"
-                  >
-                    🔄 Phir se Checkup
-                  </Button>
+                    <Share2 size={14} /> Share Score
+                  </button>
                 </div>
               </motion.div>
             )}

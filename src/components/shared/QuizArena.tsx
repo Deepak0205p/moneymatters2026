@@ -1,1188 +1,509 @@
-'use client';
+"use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Zap, Clock, Shield, Timer, Flame, Trophy, Share2,
-  RotateCcw, ChevronRight, CheckCircle2, XCircle, Star,
-  BookOpen, Skull, Gauge, ArrowRight, Copy, Check,
+  X, Zap, Clock, Flame, Trophy, RotateCcw, ChevronRight, CheckCircle2, XCircle,
+  Share2, Sparkles,
 } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogTitle,
+} from '@/components/ui/dialog';
 import { useAppStore } from '@/lib/store/useAppStore';
 import { quizQuestions } from '@/lib/data/quiz-data';
-import { modules } from '@/lib/data/modules';
-import type { QuizQuestion } from '@/lib/types';
+import type { QuizQuestion as QType } from '@/lib/types';
 
-/* ================================================================== */
-/*  Types                                                              */
-/* ================================================================== */
-
-type QuizMode = 'quickfire' | 'mastery' | 'survival' | 'speedrun';
-
-interface QuizModeInfo {
-  id: QuizMode;
-  title: string;
-  titleEn: string;
-  description: string;
-  icon: typeof Zap;
-  color: string;
-  bgGradient: string;
-  timerSeconds: number;
-  questionCount: string;
-}
-
-interface AnswerRecord {
-  questionId: string;
-  correct: boolean;
-  timeTaken: number;
-  pointsEarned: number;
-}
-
-/* ================================================================== */
-/*  Constants                                                          */
-/* ================================================================== */
-
-const QUIZ_MODES: QuizModeInfo[] = [
-  {
-    id: 'quickfire',
-    title: 'Quick Fire',
-    titleEn: 'Timed Challenge',
-    description: '10 random sawaal, 15 second har sawaal — tezi dikhao!',
-    icon: Zap,
-    color: '#f59e0b',
-    bgGradient: 'from-amber-500/20 via-amber-400/10 to-orange-500/20',
-    timerSeconds: 15,
-    questionCount: '10',
-  },
-  {
-    id: 'mastery',
-    title: 'Module Mastery',
-    titleEn: 'Deep Learning',
-    description: 'Ek module ke saare sawaal — koi timer nahi, apni speed pe seekho!',
-    icon: BookOpen,
-    color: '#22c55e',
-    bgGradient: 'from-green-500/20 via-emerald-400/10 to-green-500/20',
-    timerSeconds: 0,
-    questionCount: '4',
-  },
-  {
-    id: 'survival',
-    title: 'Survival Mode',
-    titleEn: 'Last Man Standing',
-    description: 'Ek galat jawaab aur game over — kitne sawaal tak bachoge?',
-    icon: Skull,
-    color: '#ef4444',
-    bgGradient: 'from-red-500/20 via-red-400/10 to-orange-500/20',
-    timerSeconds: 20,
-    questionCount: '∞',
-  },
-  {
-    id: 'speedrun',
-    title: 'Speed Run',
-    titleEn: 'Race the Clock',
-    description: 'Saare 44 sawaal jaldi se jaldi solve karo — time pe race!',
-    icon: Gauge,
-    color: '#a855f7',
-    bgGradient: 'from-purple-500/20 via-purple-400/10 to-fuchsia-500/20',
-    timerSeconds: 0,
-    questionCount: '44',
-  },
-];
-
-const STREAK_MULTIPLIERS = [
-  { min: 0, multiplier: 1, label: '1x' },
-  { min: 2, multiplier: 2, label: '2x' },
-  { min: 3, multiplier: 3, label: '3x' },
-  { min: 5, multiplier: 5, label: '5x' },
-];
-
-const CONFETTI_MILESTONES = [5, 10, 15, 20, 25, 30, 35, 40];
-
-const DIFFICULTY_CONFIG = {
-  easy: { label: 'Easy', color: '#22c55e', bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/25' },
-  medium: { label: 'Medium', color: '#f59e0b', bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/25' },
-  hard: { label: 'Hard', color: '#ef4444', bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/25' },
-};
-
-function getMultiplier(streak: number): { multiplier: number; label: string } {
-  let result = STREAK_MULTIPLIERS[0];
-  for (const m of STREAK_MULTIPLIERS) {
-    if (streak >= m.min) result = m;
-  }
-  return result;
-}
-
-function getGrade(accuracy: number): { grade: string; color: string; glow: string } {
-  if (accuracy >= 95) return { grade: 'S', color: '#f59e0b', glow: '0 0 30px rgba(245,158,11,0.5)' };
-  if (accuracy >= 80) return { grade: 'A', color: '#22c55e', glow: '0 0 20px rgba(34,197,94,0.4)' };
-  if (accuracy >= 60) return { grade: 'B', color: '#3b82f6', glow: '0 0 15px rgba(59,130,246,0.3)' };
-  if (accuracy >= 40) return { grade: 'C', color: '#f97316', glow: '0 0 10px rgba(249,115,22,0.3)' };
-  return { grade: 'D', color: '#ef4444', glow: '0 0 10px rgba(239,68,68,0.3)' };
-}
-
-function shuffleArray<T>(arr: T[]): T[] {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
-/* ================================================================== */
-/*  Confetti Component                                                 */
-/* ================================================================== */
-
-function ConfettiBurst({ active }: { active: boolean }) {
-  if (!active) return null;
-  const particles = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    delay: Math.random() * 0.3,
-    color: ['#f59e0b', '#fbbf24', '#22c55e', '#ef4444', '#a855f7', '#3b82f6'][Math.floor(Math.random() * 6)],
-    size: 4 + Math.random() * 6,
-    duration: 0.8 + Math.random() * 0.5,
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-full"
-          style={{
-            left: `${p.x}%`,
-            bottom: '40%',
-            width: p.size,
-            height: p.size,
-            backgroundColor: p.color,
-          }}
-          initial={{ y: 0, opacity: 1, scale: 1 }}
-          animate={{ y: -150 - Math.random() * 200, opacity: 0, scale: 0.3, x: (Math.random() - 0.5) * 150 }}
-          transition={{ duration: p.duration, delay: p.delay, ease: 'easeOut' }}
-        />
-      ))}
-    </div>
-  );
-}
-
-/* ================================================================== */
-/*  Timer Bar Component                                                */
-/* ================================================================== */
-
-function TimerBar({ timeLeft, maxTime }: { timeLeft: number; maxTime: number }) {
-  const pct = maxTime > 0 ? (timeLeft / maxTime) * 100 : 100;
-  const isUrgent = pct < 25;
-
-  return (
-    <div className="w-full h-2 rounded-full bg-[#1a1a2e] overflow-hidden">
-      <motion.div
-        className={`h-full rounded-full ${isUrgent ? 'bg-gradient-to-r from-red-500 to-red-400' : 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500'}`}
-        initial={{ width: '100%' }}
-        animate={{ width: `${pct}%` }}
-        transition={{ duration: 0.3, ease: 'linear' }}
-        style={{
-          boxShadow: isUrgent
-            ? '0 0 10px rgba(239,68,68,0.5)'
-            : '0 0 10px rgba(245,158,11,0.4)',
-        }}
-      />
-    </div>
-  );
-}
-
-/* ================================================================== */
-/*  Streak Flame Component                                             */
-/* ================================================================== */
-
-function StreakFlame({ streak }: { streak: number }) {
-  const { label } = getMultiplier(streak);
-  const flameSize = Math.min(20 + streak * 2, 40);
-
-  return (
-    <motion.div
-      key={`streak-${streak}`}
-      className="flex items-center gap-1.5"
-      initial={{ scale: 0.5, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-    >
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, -5, 5, 0],
-        }}
-        transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 1 }}
-      >
-        <Flame
-          width={flameSize}
-          height={flameSize}
-          className={streak >= 5 ? 'text-amber-400' : streak >= 3 ? 'text-orange-400' : 'text-orange-500/70'}
-          style={{
-            filter: streak >= 5
-              ? 'drop-shadow(0 0 8px rgba(245,158,11,0.6))'
-              : streak >= 3
-                ? 'drop-shadow(0 0 5px rgba(249,115,22,0.4))'
-                : 'none',
-          }}
-        />
-      </motion.div>
-      <div className="flex flex-col items-start leading-none">
-        <span className="text-xs text-[#8888a0]">Streak</span>
-        <motion.span
-          key={`mult-${label}`}
-          initial={{ scale: 1.5, color: '#f59e0b' }}
-          animate={{ scale: 1, color: streak >= 5 ? '#f59e0b' : '#e8e8ed' }}
-          className="text-sm font-extrabold number-highlight"
-        >
-          {streak} · {label}
-        </motion.span>
-      </div>
-    </motion.div>
-  );
-}
-
-/* ================================================================== */
-/*  Results Screen                                                     */
-/* ================================================================== */
-
-function ResultsScreen({
-  mode,
-  answers,
-  totalPoints,
-  bestStreak,
-  timeTaken,
-  onPlayAgain,
-  onContinue,
-}: {
-  mode: QuizMode;
-  answers: AnswerRecord[];
-  totalPoints: number;
-  bestStreak: number;
-  timeTaken: number;
-  onPlayAgain: () => void;
-  onContinue: () => void;
-}) {
-  const { addCoins, setQuizArenaHighScore, setQuizArenaBestStreak, addBadge, quizArenaHighScores } = useAppStore();
-  const [copied, setCopied] = useState(false);
-  const [animCoins, setAnimCoins] = useState(0);
-  const constCompleted = useMemo(() => answers, [answers]);
-
-  const correctCount = constCompleted.filter((a) => a.correct).length;
-  const totalCount = constCompleted.length;
-  const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-  const grade = getGrade(accuracy);
-  const coinReward = Math.floor(totalPoints / 5);
-  const isHighScore = totalPoints > (quizArenaHighScores[mode] || 0);
-
-  // Coin counting animation
-  useEffect(() => {
-    let current = 0;
-    const step = Math.max(1, Math.floor(coinReward / 30));
-    const timer = setInterval(() => {
-      current = Math.min(current + step, coinReward);
-      setAnimCoins(current);
-      if (current >= coinReward) clearInterval(timer);
-    }, 30);
-    return () => clearInterval(timer);
-  }, [coinReward]);
-
-  // Award coins, badges, and update high scores on mount
-  useEffect(() => {
-    addCoins(coinReward);
-    setQuizArenaHighScore(mode, totalPoints);
-    setQuizArenaBestStreak(bestStreak);
-    if (mode === 'quickfire' && accuracy >= 90 && !useAppStore.getState().badges.includes('quiz-ace')) {
-      addBadge('quiz-ace');
-    }
-  }, []);
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return m > 0 ? `${m}m ${s}s` : `${s}s`;
-  };
-
-  const shareText = `🎯 RUPAIYA 101 Quiz Arena!\n\n🔥 Mode: ${QUIZ_MODES.find((m) => m.id === mode)?.title}\n⭐ Score: ${totalPoints} points\n✅ Accuracy: ${accuracy}% (${correctCount}/${totalCount})\n🔥 Best Streak: ${bestStreak}\n⏱️ Time: ${formatTime(timeTaken)}\n🎓 Grade: ${grade.grade}\n\nBhi tu financial literacy test le! 🇮🇳💰`;
-
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4 }}
-      className="flex flex-col items-center px-4 py-6 space-y-6 text-center"
-    >
-      {/* Confetti on good grade */}
-      <ConfettiBurst active={accuracy >= 80} />
-
-      {/* Grade Badge */}
-      <motion.div
-        initial={{ scale: 0, rotate: -180 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.2 }}
-        className="relative"
-      >
-        <div
-          className="w-24 h-24 rounded-full flex items-center justify-center border-4"
-          style={{
-            borderColor: grade.color,
-            boxShadow: grade.glow,
-            background: `radial-gradient(circle, ${grade.color}20, transparent)`,
-          }}
-        >
-          <span
-            className="text-5xl font-black"
-            style={{ color: grade.color, textShadow: `0 0 20px ${grade.color}60` }}
-          >
-            {grade.grade}
-          </span>
-        </div>
-        {isHighScore && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.5, type: 'spring' }}
-            className="absolute -top-2 -right-2 bg-amber-500 rounded-full px-2 py-0.5 text-[9px] font-bold text-[#0a0a0f]"
-          >
-            NEW BEST!
-          </motion.div>
-        )}
-      </motion.div>
-
-      {/* Title */}
-      <div>
-        <h3 className="text-xl font-bold text-white">
-          {accuracy >= 80 ? ' Wah! Kamaal kar diya! 🔥' : accuracy >= 50 ? ' Accha gaya! Aur practice karo! 💪' : ' Koshish acchi thi! Phir se try karo! 🙌'}
-        </h3>
-        <p className="text-sm text-[#8888a0] mt-1">
-          {QUIZ_MODES.find((m) => m.id === mode)?.title} complete!
-        </p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-        {[
-          { label: 'Total Points', value: totalPoints.toString(), icon: Trophy, color: '#f59e0b' },
-          { label: 'Accuracy', value: `${accuracy}%`, icon: CheckCircle2, color: accuracy >= 60 ? '#22c55e' : '#ef4444' },
-          { label: 'Best Streak', value: bestStreak.toString(), icon: Flame, color: '#f97316' },
-          { label: 'Time Taken', value: formatTime(timeTaken), icon: Clock, color: '#a855f7' },
-        ].map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 + i * 0.1 }}
-            className="glass-card-glow p-3 flex items-center gap-2.5"
-          >
-            <stat.icon className="w-4 h-4 shrink-0" style={{ color: stat.color }} />
-            <div className="text-left">
-              <div className="text-[10px] text-[#8888a0]">{stat.label}</div>
-              <div className="text-sm font-bold text-white number-highlight">{stat.value}</div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Correct/Wrong breakdown */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.7 }}
-        className="flex items-center gap-4 text-sm"
-      >
-        <span className="flex items-center gap-1.5 text-green-400">
-          <CheckCircle2 className="w-4 h-4" /> {correctCount} Sahi
-        </span>
-        <span className="flex items-center gap-1.5 text-red-400">
-          <XCircle className="w-4 h-4" /> {totalCount - correctCount} Galat
-        </span>
-      </motion.div>
-
-      {/* Coin reward */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.8, type: 'spring' }}
-        className="rounded-xl bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-amber-500/15 border border-amber-500/20 px-6 py-4"
-      >
-        <div className="text-xs text-[#8888a0] mb-1">Coin Reward</div>
-        <div className="text-3xl font-black text-amber-400 number-highlight">
-          +{animCoins} 🪙
-        </div>
-      </motion.div>
-
-      {/* Action Buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        className="flex flex-col gap-3 w-full max-w-sm"
-      >
-        <motion.button
-          onClick={onPlayAgain}
-          className="btn-gold flex items-center justify-center gap-2 w-full py-3 text-sm rounded-xl"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <RotateCcw className="w-4 h-4" />
-          Phir se khelo
-        </motion.button>
-
-        <motion.button
-          onClick={onContinue}
-          className="btn-ghost-gold flex items-center justify-center gap-2 w-full py-3 text-sm rounded-xl"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          Aage badho
-          <ArrowRight className="w-4 h-4" />
-        </motion.button>
-
-        <motion.button
-          onClick={handleShare}
-          className="flex items-center justify-center gap-2 w-full py-2.5 text-xs text-[#8888a0] hover:text-amber-400 transition-colors"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
-          {copied ? 'Copied!' : 'Score share karo'}
-        </motion.button>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-/* ================================================================== */
-/*  Main QuizArena Component                                           */
-/* ================================================================== */
-
+/* ──────────────────────────────────────────────────────────────
+   Props
+   ────────────────────────────────────────────────────────────── */
 interface QuizArenaProps {
   open: boolean;
   onClose: () => void;
 }
 
-type Phase = 'mode-select' | 'module-select' | 'playing' | 'result';
+/* ──────────────────────────────────────────────────────────────
+   Categories as hexagonal tiles
+   ────────────────────────────────────────────────────────────── */
+interface Category {
+  id: string;
+  label: string;
+  emoji: string;
+  color: string;
+  moduleIds: number[];
+}
 
+const CATEGORIES: Category[] = [
+  { id: 'banking', label: 'Banking', emoji: '🏦', color: '#10B981', moduleIds: [3] },
+  { id: 'tax', label: 'Tax', emoji: '📋', color: '#F59E0B', moduleIds: [10] },
+  { id: 'investment', label: 'Investment', emoji: '📈', color: '#8B5CF6', moduleIds: [7] },
+  { id: 'budgeting', label: 'Budgeting', emoji: '💰', color: '#EC4899', moduleIds: [1, 2] },
+  { id: 'insurance', label: 'Insurance', emoji: '🛡️', color: '#06B6D4', moduleIds: [9] },
+  { id: 'random', label: 'Random Mix', emoji: '🎲', color: '#EF4444', moduleIds: [] },
+];
+
+const QUESTION_TIME = 15;
+
+/* ──────────────────────────────────────────────────────────────
+   Hexagonal tile
+   ────────────────────────────────────────────────────────────── */
+function HexTile({ category, onClick }: { category: Category; onClick: () => void }) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.06, y: -4 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      className="relative group"
+    >
+      <div
+        className="relative w-24 h-28 sm:w-28 sm:h-32 flex items-center justify-center"
+        style={{
+          clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+          background: `linear-gradient(135deg, ${category.color}40, ${category.color}10)`,
+          border: `1px solid ${category.color}40`,
+        }}
+      >
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity" style={{ background: `radial-gradient(circle at center, ${category.color}, transparent 70%)` }} />
+        <div className="relative flex flex-col items-center gap-1">
+          <span className="text-3xl">{category.emoji}</span>
+          <span className="text-[10px] font-bold text-white">{category.label}</span>
+        </div>
+      </div>
+    </motion.button>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Toast for correct/wrong
+   ────────────────────────────────────────────────────────────── */
+interface Toast {
+  type: 'correct' | 'wrong';
+  message: string;
+  coins?: number;
+}
+
+function QuizToast({ toast }: { toast: Toast }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.8 }}
+      className={`fixed top-4 left-1/2 -translate-x-1/2 z-[60] rounded-2xl px-5 py-3 border-2 ${
+        toast.type === 'correct'
+          ? 'bg-emerald/15 border-emerald/50 text-emerald-soft'
+          : 'bg-red-500/15 border-red-500/50 text-red-300'
+      }`}
+      style={{ boxShadow: toast.type === 'correct' ? '0 0 24px rgba(16,185,129,0.3)' : '0 0 24px rgba(239,68,68,0.3)' }}
+    >
+      <div className="flex items-center gap-2">
+        {toast.type === 'correct' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+        <span className="font-bold text-sm">{toast.message}</span>
+        {toast.coins && <span className="text-xs font-bold">+{toast.coins} 🪙</span>}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Main Component
+   ────────────────────────────────────────────────────────────── */
 export function QuizArena({ open, onClose }: QuizArenaProps) {
-  const { quizArenaHighScores, quizArenaBestStreak } = useAppStore();
-
-  // Phase management
-  const [phase, setPhase] = useState<Phase>('mode-select');
-  const [selectedMode, setSelectedMode] = useState<QuizMode>('quickfire');
-  const [selectedModuleId, setSelectedModuleId] = useState<number>(1);
-
-  // Game state
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
-  const [totalPoints, setTotalPoints] = useState(0);
-  const [answers, setAnswers] = useState<AnswerRecord[]>([]);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [startTime, setStartTime] = useState(0);
-  const [questionStartTime, setQuestionStartTime] = useState(0);
-  const [totalTime, setTotalTime] = useState(0);
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [survivalEnded, setSurvivalEnded] = useState(false);
-
+  const { addCoins, recordQuizScore, setQuizArenaBestStreak, quizArenaBestStreak, setQuizArenaHighScore } = useAppStore();
+  const [stage, setStage] = useState<'categories' | 'playing' | 'results'>('categories');
+  const [category, setCategory] = useState<Category | null>(null);
+  const [questions, setQuestions] = useState<QType[]>([]);
+  const [qIndex, setQIndex] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [score, setScore] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [bestCombo, setBestCombo] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
+  const [toast, setToast] = useState<Toast | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Current question
-  const currentQuestion = questions[currentIndex] || null;
+  const currentQ = questions[qIndex];
+  const isLastQ = qIndex >= questions.length - 1;
 
-  // Mode info
-  const modeInfo = QUIZ_MODES.find((m) => m.id === selectedMode)!;
+  // ── Start quiz for a category ──
+  const startQuiz = useCallback((cat: Category) => {
+    let pool: QType[];
+    if (cat.id === 'random') {
+      pool = [...quizQuestions].sort(() => Math.random() - 0.5);
+    } else {
+      pool = quizQuestions.filter((q) => cat.moduleIds.includes(q.moduleId));
+      if (pool.length < 5) pool = [...pool, ...quizQuestions.filter((q) => !cat.moduleIds.includes(q.moduleId))].slice(0, 10);
+    }
+    const picked = pool.slice(0, 10).sort(() => Math.random() - 0.5);
+    setCategory(cat);
+    setQuestions(picked);
+    setQIndex(0);
+    setSelected(null);
+    setShowExplanation(false);
+    setScore(0);
+    setCombo(0);
+    setBestCombo(0);
+    setTimeLeft(QUESTION_TIME);
+    setStage('playing');
+  }, []);
 
-  // Helper: reset all game state
-  function resetGameState() {
-    setQuestions([]);
-    setCurrentIndex(0);
-    setStreak(0);
-    setBestStreak(0);
-    setTotalPoints(0);
-    setAnswers([]);
-    setTimeLeft(0);
-    setStartTime(0);
-    setQuestionStartTime(0);
-    setTotalTime(0);
-    setIsAnswered(false);
-    setSelectedOption(null);
-    setShowConfetti(false);
-    setSurvivalEnded(false);
+  // ── Handle answer ──
+  const handleAnswer = useCallback((optIdx: number) => {
+    if (selected !== null || showExplanation) return;
     if (timerRef.current) clearInterval(timerRef.current);
-  }
+    setSelected(optIdx);
+    setShowExplanation(true);
 
-  // Advance to next question (defined early so handleTimeUp can reference it)
-  const advanceQuestion = useCallback(() => {
-    const nextIndex = currentIndex + 1;
-
-    // Check if quiz is complete
-    if (selectedMode === 'quickfire' && nextIndex >= 10) {
-      setTotalTime((Date.now() - startTime) / 1000);
-      setPhase('result');
-      return;
+    const correct = optIdx === currentQ.correctIndex;
+    if (correct) {
+      const newCombo = combo + 1;
+      setCombo(newCombo);
+      setBestCombo((b) => Math.max(b, newCombo));
+      const bonus = Math.min(5, Math.floor(newCombo / 2));
+      const coins = 10 + bonus * 2;
+      setScore((s) => s + coins);
+      addCoins(coins);
+      setToast({ type: 'correct', message: newCombo > 1 ? `${newCombo}x Streak! 🔥` : 'Sahi Jawab!', coins });
+    } else {
+      setCombo(0);
+      setToast({
+        type: 'wrong',
+        message: optIdx === -1 ? '⏰ Time up!' : 'Galat Jawab!',
+      });
     }
-    if (selectedMode === 'mastery' && nextIndex >= questions.length) {
-      setTotalTime((Date.now() - startTime) / 1000);
-      setPhase('result');
-      return;
-    }
-    if (selectedMode === 'speedrun' && nextIndex >= questions.length) {
-      setTotalTime((Date.now() - startTime) / 1000);
-      setPhase('result');
-      return;
-    }
-    if (selectedMode === 'survival') {
-      if (survivalEnded) return;
-      if (nextIndex >= questions.length) {
-        setQuestions((prev) => [...prev, ...shuffleArray(quizQuestions)]);
-      }
-    }
+    setTimeout(() => setToast(null), 1500);
+  }, [selected, showExplanation, currentQ, combo, addCoins]);
 
-    setCurrentIndex(nextIndex);
-    setIsAnswered(false);
-    setSelectedOption(null);
-    setTimeLeft(modeInfo.timerSeconds);
-    setQuestionStartTime(Date.now());
-  }, [currentIndex, selectedMode, questions.length, startTime, survivalEnded, modeInfo.timerSeconds]);
+  // ── Timer logic — resets when question or stage changes ──
+  // Use a ref to always have the latest answer handler without re-running the effect
+  const handleAnswerRef = useRef(handleAnswer);
+  handleAnswerRef.current = handleAnswer;
 
-  // Handle time running out
-  const handleTimeUp = useCallback(() => {
-    if (isAnswered) return;
-    setIsAnswered(true);
-    setSelectedOption(-1);
-
-    const record: AnswerRecord = {
-      questionId: currentQuestion?.id || '',
-      correct: false,
-      timeTaken: modeInfo.timerSeconds,
-      pointsEarned: 0,
-    };
-
-    setStreak(0);
-    setAnswers((prev) => [...prev, record]);
-
-    // Survival mode: game over on wrong
-    if (selectedMode === 'survival') {
-      setSurvivalEnded(true);
-      setTimeout(() => setPhase('result'), 2500);
-      return;
-    }
-
-    // Show correct answer for 3 seconds, then move on
-    setTimeout(() => {
-      advanceQuestion();
-    }, 3000);
-  }, [isAnswered, currentQuestion, modeInfo.timerSeconds, selectedMode, advanceQuestion]);
-
-  // Timer logic
   useEffect(() => {
-    if (phase !== 'playing' || isAnswered || !currentQuestion) return;
-    if (modeInfo.timerSeconds === 0) return; // No timer mode
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          handleTimeUp();
+    if (stage !== 'playing' || showExplanation) return;
+    setTimeLeft(QUESTION_TIME);
+    const interval = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(interval);
+          // Defer to next tick to avoid setState-in-render
+          setTimeout(() => handleAnswerRef.current(-1), 0);
           return 0;
         }
-        return prev - 1;
+        return t - 1;
       });
     }, 1000);
+    return () => clearInterval(interval);
+  }, [stage, qIndex, showExplanation]);
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [phase, currentIndex, isAnswered, handleTimeUp, currentQuestion, modeInfo.timerSeconds]);
-
-  // Total time tracker for speed run
-  useEffect(() => {
-    if (phase === 'playing' && modeInfo.timerSeconds === 0) {
-      const interval = setInterval(() => {
-        setTotalTime((Date.now() - startTime) / 1000);
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [phase, startTime, modeInfo.timerSeconds]);
-
-  // Prevent body scroll
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
+  // ── Next question ──
+  const handleNext = useCallback(() => {
+    if (isLastQ) {
+      // Save high score
+      if (category) {
+        setQuizArenaHighScore(category.id, score);
+        recordQuizScore(`arena-${category.id}`, score);
+        setQuizArenaBestStreak(bestCombo);
+      }
+      setStage('results');
     } else {
-      document.body.style.overflow = '';
+      setQIndex((i) => i + 1);
+      setSelected(null);
+      setShowExplanation(false);
+      setTimeLeft(QUESTION_TIME);
     }
-    return () => { document.body.style.overflow = ''; };
-  }, [open]);
+  }, [isLastQ, category, score, bestCombo, setQuizArenaHighScore, recordQuizScore, setQuizArenaBestStreak]);
 
-  // Reset when dialog closes
-  useEffect(() => {
-    if (!open) {
-      setPhase('mode-select');
-      resetGameState();
-    }
-  }, [open]);
-
-  function startQuiz(mode: QuizMode, moduleId?: number) {
-    resetGameState();
-    setSelectedMode(mode);
-    let qs: QuizQuestion[] = [];
-
-    switch (mode) {
-      case 'quickfire': {
-        qs = shuffleArray(quizQuestions).slice(0, 10);
-        break;
-      }
-      case 'mastery': {
-        qs = quizQuestions.filter((q) => q.moduleId === (moduleId ?? 1));
-        break;
-      }
-      case 'survival': {
-        qs = shuffleArray(quizQuestions);
-        break;
-      }
-      case 'speedrun': {
-        qs = shuffleArray(quizQuestions);
-        break;
-      }
-    }
-
-    setQuestions(qs);
-    setCurrentIndex(0);
-    setTimeLeft(QUIZ_MODES.find((m) => m.id === mode)!.timerSeconds);
-    setStartTime(Date.now());
-    setQuestionStartTime(Date.now());
-    setPhase('playing');
-  }
-
-  function handleAnswer(optionIndex: number) {
-    if (isAnswered || !currentQuestion) return;
-    setIsAnswered(true);
-    setSelectedOption(optionIndex);
+  // ── Reset on close ──
+  const handleClose = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-
-    const isCorrect = optionIndex === currentQuestion.correctIndex;
-    const timeTaken = (Date.now() - questionStartTime) / 1000;
-    const { multiplier } = getMultiplier(streak);
-
-    // Points calculation
-    let points = 0;
-    if (isCorrect) {
-      points = 10; // base
-      if (modeInfo.timerSeconds > 0 && timeTaken < modeInfo.timerSeconds * 0.5) {
-        points += 5; // speed bonus
-      }
-      points *= multiplier;
-    }
-
-    const newStreak = isCorrect ? streak + 1 : 0;
-    const newBestStreak = Math.max(bestStreak, newStreak);
-    setStreak(newStreak);
-    setBestStreak(newBestStreak);
-    setTotalPoints((prev) => prev + points);
-
-    const record: AnswerRecord = {
-      questionId: currentQuestion.id,
-      correct: isCorrect,
-      timeTaken,
-      pointsEarned: points,
-    };
-    setAnswers((prev) => [...prev, record]);
-
-    // Confetti on milestones
-    if (isCorrect && CONFETTI_MILESTONES.includes(newStreak)) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 1200);
-    }
-
-    // Survival mode: game over on wrong
-    if (selectedMode === 'survival' && !isCorrect) {
-      setSurvivalEnded(true);
-      setTimeout(() => setPhase('result'), 2500);
-      return;
-    }
-
-    // Show correct/wrong feedback, then advance
-    const delay = isCorrect ? 1200 : 3000;
+    onClose();
     setTimeout(() => {
-      advanceQuestion();
-    }, delay);
-  }
+      setStage('categories');
+      setCategory(null);
+      setQuestions([]);
+      setQIndex(0);
+      setSelected(null);
+      setShowExplanation(false);
+      setScore(0);
+      setCombo(0);
+      setBestCombo(0);
+    }, 300);
+  };
 
-  // Progress calculation
-  const progressPct = useMemo(() => {
-    if (selectedMode === 'survival') return 0; // No end
-    const total = selectedMode === 'quickfire' ? 10 : selectedMode === 'speedrun' ? questions.length : questions.length;
-    return total > 0 ? ((currentIndex + (isAnswered ? 1 : 0)) / total) * 100 : 0;
-  }, [selectedMode, currentIndex, isAnswered, questions.length]);
-
-  // ====== RENDER ======
+  const pct = questions.length > 0 ? Math.round((score / (questions.length * 15)) * 100) : 0;
+  const highScore = category ? useAppStore.getState().quizArenaHighScores[category.id] || 0 : 0;
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
-            onClick={onClose}
-          />
-
-          {/* Panel */}
-          <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed inset-x-3 top-[3vh] bottom-[3vh] z-50 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-lg bg-[#0a0a0f] border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden"
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent className="bg-midnight border-white/10 max-w-2xl p-0 overflow-hidden">
+        {/* Header */}
+        <div className="relative p-5 border-b border-white/10 glass-card-premium">
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-ink-muted"
           >
-            {/* ── Header ── */}
-            <div className="shrink-0 px-4 py-3 border-b border-white/[0.06] bg-gradient-to-r from-amber-500/10 via-transparent to-amber-500/10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-400/15 flex items-center justify-center">
-                    <Zap className="w-4 h-4 text-amber-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-white">Quiz Arena</h2>
-                    <p className="text-[10px] text-[#8888a0]">Apni financial knowledge test karo!</p>
-                  </div>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-lg text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
-                  aria-label="Close Quiz Arena"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+            <X size={16} />
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F59E0B, #FCD34D)', boxShadow: '0 0 20px rgba(245,158,11,0.3)' }}>
+              <Zap size={20} className="text-midnight" />
             </div>
+            <div>
+              <h2 className="font-display text-xl font-extrabold text-white">Quiz Arena 🧠</h2>
+              <p className="text-xs text-ink-muted mt-0.5">Apni financial knowledge test karo aur coins jeeto!</p>
+            </div>
+          </div>
+        </div>
 
-            {/* ── Content ── */}
-            <div className="flex-1 overflow-y-auto">
-              <AnimatePresence mode="wait">
-                {/* ====== MODE SELECT ====== */}
-                {phase === 'mode-select' && (
+        {/* Body */}
+        <div className="p-5 max-h-[72vh] overflow-y-auto">
+          <AnimatePresence mode="wait">
+            {/* CATEGORIES */}
+            {stage === 'categories' && (
+              <motion.div
+                key="categories"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="text-center mb-6">
                   <motion.div
-                    key="mode-select"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.25 }}
-                    className="p-4 space-y-4"
+                    initial={{ scale: 0.5 }}
+                    animate={{ scale: 1 }}
+                    className="text-5xl mb-2"
                   >
-                    <div className="text-center mb-2">
-                      <h3 className="text-lg font-bold text-gradient-gold">Mode Chuno!</h3>
-                      <p className="text-xs text-[#8888a0]">Har mode ka apna mazaa hai</p>
-                    </div>
-
-                    {QUIZ_MODES.map((mode, idx) => {
-                      const Icon = mode.icon;
-                      const highScore = quizArenaHighScores[mode.id] || 0;
-
-                      return (
-                        <motion.button
-                          key={mode.id}
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.08 }}
-                          onClick={() => {
-                            if (mode.id === 'mastery') {
-                              setSelectedMode(mode.id);
-                              setPhase('module-select');
-                            } else {
-                              startQuiz(mode.id);
-                            }
-                          }}
-                          className={`w-full glass-card-glow p-4 text-left hover:border-amber-500/25 transition-all group`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div
-                              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                              style={{ backgroundColor: `${mode.color}15` }}
-                            >
-                              <Icon className="w-5 h-5" style={{ color: mode.color }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">
-                                  {mode.title}
-                                </h4>
-                                <div className="flex items-center gap-1.5">
-                                  {mode.timerSeconds > 0 && (
-                                    <Timer className="w-3 h-3 text-[#8888a0]" />
-                                  )}
-                                  <span className="text-[10px] text-[#8888a0]">{mode.questionCount} sawaal</span>
-                                </div>
-                              </div>
-                              <p className="text-[11px] text-[#8888a0] mt-0.5 leading-relaxed">
-                                {mode.description}
-                              </p>
-                              {highScore > 0 && (
-                                <div className="flex items-center gap-1 mt-1.5">
-                                  <Trophy className="w-3 h-3 text-amber-400" />
-                                  <span className="text-[10px] text-amber-400 font-medium">Best: {highScore} pts</span>
-                                </div>
-                              )}
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-[#8888a0] group-hover:text-amber-400 transition-colors shrink-0 mt-1" />
-                          </div>
-                        </motion.button>
-                      );
-                    })}
-
-                    {/* All-time best streak */}
-                    {quizArenaBestStreak > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className="text-center pt-2"
-                      >
-                        <span className="text-[10px] text-[#8888a0]">
-                          🔥 All-time Best Streak: <span className="text-amber-400 font-bold">{quizArenaBestStreak}</span>
-                        </span>
-                      </motion.div>
-                    )}
+                    🧠
                   </motion.div>
-                )}
+                  <h3 className="font-display text-xl font-extrabold heading-gradient mb-1">
+                    Category Choose Karo
+                  </h3>
+                  <p className="text-xs text-ink-muted">10 sawaal, har sawaal pe 15 second. Combo banao aur bonus pao!</p>
+                </div>
 
-                {/* ====== MODULE SELECT ====== */}
-                {phase === 'module-select' && (
-                  <motion.div
-                    key="module-select"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.25 }}
-                    className="p-4 space-y-3"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <button
-                        onClick={() => setPhase('mode-select')}
-                        className="p-1.5 rounded-lg text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
-                      >
-                        ←
-                      </button>
-                      <h3 className="text-base font-bold text-white">Module Chuno</h3>
-                    </div>
-                    <p className="text-xs text-[#8888a0] -mt-1 ml-9">Kis module pe mastery test karni hai?</p>
-
-                    <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
-                      {modules.map((mod, idx) => {
-                        const questionCount = quizQuestions.filter((q) => q.moduleId === mod.id).length;
-                        return (
-                          <motion.button
-                            key={mod.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.04 }}
-                            onClick={() => startQuiz('mastery', mod.id)}
-                            className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                              selectedModuleId === mod.id
-                                ? 'bg-amber-400/10 border-amber-500/20'
-                                : 'bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.04] hover:border-white/[0.08]'
-                            }`}
-                          >
-                            <div
-                              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                              style={{ backgroundColor: `${mod.color}15` }}
-                            >
-                              <span className="text-xs font-bold" style={{ color: mod.color }}>{mod.id}</span>
-                            </div>
-                            <div className="flex-1 min-w-0 text-left">
-                              <div className="text-xs font-semibold text-white truncate">{mod.title}</div>
-                              <div className="text-[10px] text-[#8888a0]">{mod.titleEn}</div>
-                            </div>
-                            <span className="text-[10px] text-[#8888a0]">{questionCount} Q</span>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* ====== PLAYING ====== */}
-                {phase === 'playing' && currentQuestion && (
-                  <motion.div
-                    key={`playing-${currentIndex}`}
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -30 }}
-                    transition={{ duration: 0.25 }}
-                    className="p-4 space-y-4 relative"
-                  >
-                    <ConfettiBurst active={showConfetti} />
-
-                    {/* Top bar: Progress + Streak + Score */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-[#8888a0]">
-                            {selectedMode === 'survival'
-                              ? `Sawaal ${currentIndex + 1}`
-                              : `${currentIndex + (isAnswered ? 1 : 0) + 1}/${selectedMode === 'quickfire' ? 10 : questions.length}`}
-                          </span>
-                          {/* Difficulty badge */}
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${DIFFICULTY_CONFIG[currentQuestion.difficulty].bg} ${DIFFICULTY_CONFIG[currentQuestion.difficulty].text} ${DIFFICULTY_CONFIG[currentQuestion.difficulty].border} border`}>
-                            {DIFFICULTY_CONFIG[currentQuestion.difficulty].label}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {streak > 0 && <StreakFlame streak={streak} />}
-                          <div className="text-right">
-                            <span className="text-[10px] text-[#8888a0] block">Score</span>
-                            <span className="text-sm font-bold text-amber-400 number-highlight">{totalPoints}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Progress bar */}
-                      {selectedMode !== 'survival' && (
-                        <div className="w-full h-1.5 rounded-full bg-[#1a1a2e] overflow-hidden">
-                          <motion.div
-                            className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500"
-                            animate={{ width: `${progressPct}%` }}
-                            transition={{ duration: 0.4 }}
-                            style={{ boxShadow: '0 0 8px rgba(245,158,11,0.3)' }}
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Timer */}
-                    {modeInfo.timerSeconds > 0 && !isAnswered && (
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <Clock className="w-3 h-3 text-amber-400" />
-                            <span className={`text-xs font-bold ${timeLeft <= 5 ? 'text-red-400' : 'text-amber-400'}`}>
-                              {timeLeft}s
-                            </span>
-                          </div>
-                        </div>
-                        <TimerBar timeLeft={timeLeft} maxTime={modeInfo.timerSeconds} />
-                      </div>
-                    )}
-
-                    {/* Speed Run: Total time display */}
-                    {selectedMode === 'speedrun' && (
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-3 h-3 text-purple-400" />
-                        <span className="text-xs font-bold text-purple-400 number-highlight">
-                          {totalTime.toFixed(1)}s
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Question Card */}
+                <div className="grid grid-cols-3 gap-4 justify-items-center max-w-md mx-auto">
+                  {CATEGORIES.map((cat, i) => (
                     <motion.div
-                      className="glass-card-glow p-5 relative overflow-hidden"
-                      style={{ perspective: '1000px' }}
+                      key={cat.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.06 }}
                     >
-                      <AnimatePresence mode="wait">
-                        <motion.div
-                          key={`q-${currentQuestion.id}`}
-                          initial={{ rotateY: 90, opacity: 0 }}
-                          animate={{ rotateY: 0, opacity: 1 }}
-                          transition={{ duration: 0.4, ease: 'easeOut' }}
-                        >
-                          {/* Module tag */}
-                          <div className="flex items-center gap-1.5 mb-3">
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.05] text-[#8888a0]">
-                              Module {currentQuestion.moduleId}
-                            </span>
-                          </div>
-
-                          {/* Question text */}
-                          <h3 className="text-sm sm:text-base font-semibold text-white leading-relaxed">
-                            {currentQuestion.question}
-                          </h3>
-                        </motion.div>
-                      </AnimatePresence>
+                      <HexTile category={cat} onClick={() => startQuiz(cat)} />
                     </motion.div>
+                  ))}
+                </div>
 
-                    {/* Answer Options */}
-                    <div className="space-y-2.5">
-                      {currentQuestion.options.map((option, idx) => {
-                        const isCorrect = idx === currentQuestion.correctIndex;
-                        const isSelected = selectedOption === idx;
-                        let optionStyle = 'bg-[#1a1a2e] border-white/[0.06] hover:border-amber-500/25 hover:bg-[#1e1e30]';
-                        let iconEl: React.ReactNode = null;
-
-                        if (isAnswered) {
-                          if (isCorrect) {
-                            optionStyle = 'bg-green-500/10 border-green-500/30';
-                            iconEl = <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />;
-                          } else if (isSelected && !isCorrect) {
-                            optionStyle = 'bg-red-500/10 border-red-500/30';
-                            iconEl = <XCircle className="w-4 h-4 text-red-400 shrink-0" />;
-                          } else {
-                            optionStyle = 'bg-[#1a1a2e]/50 border-white/[0.04] opacity-50';
-                          }
-                        }
-
-                        return (
-                          <motion.button
-                            key={idx}
-                            onClick={() => handleAnswer(idx)}
-                            disabled={isAnswered}
-                            className={`w-full flex items-center gap-3 p-3.5 rounded-xl border transition-all text-left ${optionStyle} ${!isAnswered ? 'hover:-translate-y-0.5 active:translate-y-0' : ''}`}
-                            whileHover={!isAnswered ? { scale: 1.01 } : {}}
-                            whileTap={!isAnswered ? { scale: 0.99 } : {}}
-                          >
-                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                              isAnswered && isCorrect
-                                ? 'bg-green-500/20 text-green-400'
-                                : isAnswered && isSelected && !isCorrect
-                                  ? 'bg-red-500/20 text-red-400'
-                                  : 'bg-white/[0.06] text-[#8888a0]'
-                            }`}>
-                              {isAnswered && isCorrect ? '✓' : isAnswered && isSelected && !isCorrect ? '✗' : String.fromCharCode(65 + idx)}
-                            </span>
-                            <span className={`text-xs sm:text-sm flex-1 ${
-                              isAnswered && isCorrect
-                                ? 'text-green-300'
-                                : isAnswered && isSelected && !isCorrect
-                                  ? 'text-red-300'
-                                  : 'text-[#c0c0d0]'
-                            }`}>
-                              {option}
-                            </span>
-                            {iconEl}
-                          </motion.button>
-                        );
-                      })}
+                {quizArenaBestStreak > 0 && (
+                  <div className="mt-6 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/30">
+                      <Flame size={14} className="text-gold-soft" />
+                      <span className="text-xs font-bold text-gold-soft">Best Combo Streak: {quizArenaBestStreak}x</span>
                     </div>
-
-                    {/* Explanation (after answering) */}
-                    <AnimatePresence>
-                      {isAnswered && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <div className={`rounded-xl p-4 border ${
-                            selectedOption === currentQuestion.correctIndex
-                              ? 'bg-green-500/5 border-green-500/15'
-                              : 'bg-amber-500/5 border-amber-500/15'
-                          }`}>
-                            <div className="flex items-start gap-2.5">
-                              {selectedOption === currentQuestion.correctIndex ? (
-                                <Star className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
-                              ) : (
-                                <BookOpen className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                              )}
-                              <div>
-                                <span className={`text-[10px] font-semibold uppercase tracking-wider ${
-                                  selectedOption === currentQuestion.correctIndex ? 'text-green-400' : 'text-amber-400'
-                                }`}>
-                                  {selectedOption === currentQuestion.correctIndex ? 'Sahi jawaab! 🎉' : 'Sahi jawaab yeh hai:'}
-                                </span>
-                                <p className="text-[11px] text-[#c0c0d0] leading-relaxed mt-1">
-                                  {currentQuestion.explanation}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Points earned */}
-                          {answers.length > 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.2 }}
-                              className="mt-2 flex items-center justify-center gap-2"
-                            >
-                              {answers[answers.length - 1].pointsEarned > 0 ? (
-                                <span className="text-xs font-bold text-amber-400 number-highlight">
-                                  +{answers[answers.length - 1].pointsEarned} pts
-                                  {getMultiplier(streak).multiplier > 1 && (
-                                    <span className="text-[10px] text-[#8888a0] ml-1">
-                                      ({getMultiplier(streak).label} combo)
-                                    </span>
-                                  )}
-                                </span>
-                              ) : (
-                                <span className="text-xs text-red-400">Streak reset! 😢</span>
-                              )}
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Survival: Game Over overlay */}
-                    {survivalEnded && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="absolute inset-0 bg-[#0a0a0f]/90 backdrop-blur-sm flex flex-col items-center justify-center z-10 rounded-2xl"
-                      >
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: 'spring', stiffness: 300 }}
-                        >
-                          <Skull className="w-16 h-16 text-red-500" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.5))' }} />
-                        </motion.div>
-                        <h3 className="text-2xl font-black text-red-400 mt-4">Game Over!</h3>
-                        <p className="text-sm text-[#8888a0] mt-1">
-                          {answers.filter((a) => a.correct).length} sawaal tak bache
-                        </p>
-                      </motion.div>
-                    )}
-                  </motion.div>
+                  </div>
                 )}
+              </motion.div>
+            )}
 
-                {/* ====== RESULTS ====== */}
-                {phase === 'result' && (
-                  <motion.div
-                    key="result"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    <ResultsScreen
-                      mode={selectedMode}
-                      answers={answers}
-                      totalPoints={totalPoints}
-                      bestStreak={bestStreak}
-                      timeTaken={totalTime || (Date.now() - startTime) / 1000}
-                      onPlayAgain={() => startQuiz(selectedMode, selectedModuleId)}
-                      onContinue={() => {
-                        setPhase('mode-select');
-                        resetGameState();
+            {/* PLAYING */}
+            {stage === 'playing' && currentQ && (
+              <motion.div
+                key={`playing-${qIndex}`}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+              >
+                {/* Timer bar */}
+                <div className="flex items-center gap-3 mb-4">
+                  <Clock size={14} className="text-gold-soft" />
+                  <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
+                    <motion.div
+                      animate={{ width: `${(timeLeft / QUESTION_TIME) * 100}%` }}
+                      transition={{ duration: 0.5, ease: 'linear' }}
+                      className="h-full rounded-full"
+                      style={{
+                        background: timeLeft > 7 ? 'linear-gradient(90deg, #F59E0B, #FCD34D)' : timeLeft > 3 ? '#F59E0B' : '#EF4444',
                       }}
                     />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+                  </div>
+                  <span className={`text-xs font-bold ${timeLeft > 3 ? 'text-gold-soft' : 'text-red-400'}`}>{timeLeft}s</span>
+                </div>
+
+                {/* Question counter + combo */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-ink-muted uppercase tracking-widest">
+                    Q {qIndex + 1} / {questions.length}
+                  </span>
+                  <AnimatePresence>
+                    {combo > 1 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-500/15 border border-red-500/30"
+                      >
+                        <Flame size={12} className="text-red-400" />
+                        <span className="text-xs font-bold text-red-300">{combo}x Streak! 🔥</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Question */}
+                <div className="rounded-2xl border border-white/10 glass-card p-5 mb-4">
+                  <p className="font-display text-base sm:text-lg font-bold text-white leading-relaxed">
+                    {currentQ.question}
+                  </p>
+                </div>
+
+                {/* Options 2x2 */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {currentQ.options.map((opt, i) => {
+                    const isSelected = selected === i;
+                    const isCorrect = i === currentQ.correctIndex;
+                    const showResult = showExplanation;
+                    return (
+                      <motion.button
+                        key={i}
+                        whileHover={!showResult ? { scale: 1.02, y: -2 } : {}}
+                        whileTap={!showResult ? { scale: 0.97 } : {}}
+                        animate={showResult && isCorrect ? { scale: [1, 1.05, 1] } : showResult && isSelected && !isCorrect ? { x: [0, -8, 8, -8, 0] } : {}}
+                        transition={{ duration: 0.4 }}
+                        onClick={() => handleAnswer(i)}
+                        disabled={showResult}
+                        className={`relative rounded-2xl p-4 text-left border-2 transition-all ${
+                          showResult && isCorrect
+                            ? 'border-emerald bg-emerald/15'
+                            : showResult && isSelected && !isCorrect
+                            ? 'border-red-500 bg-red-500/15'
+                            : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.07]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                            showResult && isCorrect ? 'bg-emerald text-midnight'
+                            : showResult && isSelected && !isCorrect ? 'bg-red-500 text-white'
+                            : 'bg-white/5 text-ink-muted'
+                          }`}>
+                            {showResult && isCorrect ? <CheckCircle2 size={16} /> : showResult && isSelected && !isCorrect ? <XCircle size={16} /> : ['A', 'B', 'C', 'D'][i]}
+                          </div>
+                          <span className="text-sm font-bold text-white">{opt}</span>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Explanation */}
+                <AnimatePresence>
+                  {showExplanation && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-4 rounded-xl border border-ai/30 bg-ai/5 p-4"
+                    >
+                      <div className="flex items-start gap-2">
+                        <Sparkles size={14} className="text-ai mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-[10px] font-bold text-ai uppercase tracking-widest mb-1">Explanation</p>
+                          <p className="text-xs text-white/90 leading-relaxed">{currentQ.explanation}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleNext}
+                        className="btn-3d mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-midnight flex items-center justify-center gap-2"
+                        style={{ background: 'linear-gradient(135deg, #34D399, #10B981)' }}
+                      >
+                        {isLastQ ? 'Result Dekho 🎉' : 'Agl Sawaal'} <ChevronRight size={14} />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+
+            {/* RESULTS */}
+            {stage === 'results' && category && (
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-4"
+              >
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', delay: 0.2 }}
+                  className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4"
+                  style={{ background: `linear-gradient(135deg, ${category.color}, #34D399)`, boxShadow: `0 0 40px ${category.color}60` }}
+                >
+                  <Trophy size={36} className="text-midnight" />
+                </motion.div>
+
+                <h3 className="font-display text-2xl font-extrabold heading-gradient mb-1">Quiz Complete! 🎉</h3>
+                <p className="text-sm text-ink-muted mb-4">{category.emoji} {category.label} mastery done!</p>
+
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: 'spring' }}
+                  className="font-display text-6xl font-extrabold text-white mb-1"
+                  style={{ textShadow: `0 0 40px ${category.color}80` }}
+                >
+                  {score}
+                </motion.div>
+                <p className="text-xs text-ink-muted uppercase tracking-widest">Total Points</p>
+
+                {/* Stats grid */}
+                <div className="grid grid-cols-3 gap-2 mt-6 max-w-sm mx-auto">
+                  <div className="rounded-xl bg-white/[0.04] border border-white/10 p-3">
+                    <Trophy size={14} className="text-gold-soft mx-auto mb-1" />
+                    <p className="font-display text-lg font-extrabold text-white">{pct}%</p>
+                    <p className="text-[9px] text-ink-muted uppercase">Accuracy</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] border border-white/10 p-3">
+                    <Flame size={14} className="text-red-400 mx-auto mb-1" />
+                    <p className="font-display text-lg font-extrabold text-white">{bestCombo}x</p>
+                    <p className="text-[9px] text-ink-muted uppercase">Best Combo</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.04] border border-white/10 p-3">
+                    <Sparkles size={14} className="text-ai mx-auto mb-1" />
+                    <p className="font-display text-lg font-extrabold text-white">{highScore}</p>
+                    <p className="text-[9px] text-ink-muted uppercase">High Score</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2 mt-6">
+                  <button
+                    onClick={() => setStage('categories')}
+                    className="flex-1 rounded-xl py-3 text-sm font-bold text-white bg-white/5 hover:bg-white/10 flex items-center justify-center gap-2"
+                  >
+                    <RotateCcw size={14} /> Phir Khelo
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined' && navigator.share) {
+                        navigator.share({
+                          title: 'Capital Mastery — Quiz Arena',
+                          text: `Mera score: ${score} points (${pct}% accuracy, ${bestCombo}x best combo)! Tum bhi try karo!`,
+                        }).catch(() => {});
+                      }
+                    }}
+                    className="flex-1 btn-3d rounded-xl py-3 text-sm font-bold text-midnight flex items-center justify-center gap-2"
+                    style={{ background: 'linear-gradient(135deg, #34D399, #10B981)' }}
+                  >
+                    <Share2 size={14} /> Share Score
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <AnimatePresence>
+          {toast && <QuizToast toast={toast} />}
+        </AnimatePresence>
+      </DialogContent>
+    </Dialog>
   );
 }

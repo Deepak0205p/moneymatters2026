@@ -1,0 +1,982 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  Type,
+     7→  Timer,
+     8→  Lightbulb,
+     9→  SkipForward,
+    10→  RotateCcw,
+    11→  Trophy,
+    12→  Sparkles,
+    13→  X,
+    14→  Flame,
+    15→  Star,
+    16→  Coins,
+    17→} from 'lucide-react';
+    18→import { useAppStore } from '@/lib/store/useAppStore';
+    19→import {
+    20→  Dialog,
+    21→  DialogContent,
+    22→  DialogTitle,
+    23→} from '@/components/ui/dialog';
+    24→
+    25→// ─── Types ──────────────────────────────────────────────────
+    26→interface WordScrambleProps {
+    27→  open: boolean;
+    28→  onClose: () => void;
+    29→}
+    30→
+    31→type Difficulty = 'easy' | 'medium' | 'hard';
+    32→
+    33→interface WordItem {
+    34→  word: string;
+    35→  hint: string;
+    36→  difficulty: Difficulty;
+    37→}
+    38→
+    39→interface GameResult {
+    40→  score: number;
+    41→  wordsSolved: number;
+    42→  totalWords: number;
+    43→  bestStreak: number;
+    44→  coinsEarned: number;
+    45→  grade: 'S' | 'A' | 'B' | 'C' | 'D';
+    46→  mode: Difficulty;
+    47→}
+    48→
+    49→// ─── Word List ──────────────────────────────────────────────
+    50→const WORDS: WordItem[] = [
+    51→  // Easy (3-5 letters)
+    52→  { word: 'SIP', hint: 'Monthly investment plan', difficulty: 'easy' },
+    53→  { word: 'EMI', hint: 'Monthly loan payment', difficulty: 'easy' },
+    54→  { word: 'ATM', hint: 'Cash withdraw machine', difficulty: 'easy' },
+    55→  { word: 'FD', hint: 'Fixed deposit in bank', difficulty: 'easy' },
+    56→  { word: 'KYC', hint: 'Identity verification', difficulty: 'easy' },
+    57→  { word: 'PPF', hint: '15-year savings scheme', difficulty: 'easy' },
+    58→  { word: 'NRI', hint: 'Indian living abroad', difficulty: 'easy' },
+    59→  { word: 'PAN', hint: 'Tax identification card', difficulty: 'easy' },
+    60→  { word: 'ELSS', hint: 'Tax-saving mutual fund', difficulty: 'easy' },
+    61→  { word: 'RBI', hint: 'Central bank of India', difficulty: 'easy' },
+    62→  // Medium (6-8 letters)
+    63→  { word: 'MUTUAL', hint: '___ fund - pooled investment', difficulty: 'medium' },
+    64→  { word: 'INVEST', hint: 'Put money to grow', difficulty: 'medium' },
+    65→  { word: 'BUDGET', hint: 'Income vs expense plan', difficulty: 'medium' },
+    66→  { word: 'SAVINGS', hint: 'Money kept for future', difficulty: 'medium' },
+    67→  { word: 'CREDIT', hint: '___ score - borrowing trust', difficulty: 'medium' },
+    68→  { word: 'TAXATION', hint: 'Government revenue system', difficulty: 'medium' },
+    69→  { word: 'RETURNS', hint: 'Profit from investment', difficulty: 'medium' },
+    70→  { word: 'EQUITY', hint: 'Stock market investment', difficulty: 'medium' },
+    71→  { word: 'DEPOSIT', hint: 'Money kept in bank', difficulty: 'medium' },
+    72→  { word: 'PENSION', hint: 'Retirement income fund', difficulty: 'medium' },
+    73→  // Hard (9+ letters)
+    74→  { word: 'COMPOUNDING', hint: 'Interest on interest magic', difficulty: 'hard' },
+    75→  { word: 'DIVERSIFY', hint: 'Spread risk across assets', difficulty: 'hard' },
+    76→  { word: 'INFLATION', hint: 'Prices rising over time', difficulty: 'hard' },
+    77→  { word: 'AMORTIZATION', hint: 'Loan repayment schedule', difficulty: 'hard' },
+    78→  { word: 'DEPRECIATION', hint: 'Asset value decreases', difficulty: 'hard' },
+    79→  { word: 'CAPITALIZATION', hint: 'Market value calculation', difficulty: 'hard' },
+    80→  { word: 'REINVESTMENT', hint: 'Invest profits again', difficulty: 'hard' },
+    81→  { word: 'MORTGAGE', hint: 'Home loan with property', difficulty: 'hard' },
+    82→  { word: 'INSURANCE', hint: 'Financial protection cover', difficulty: 'hard' },
+    83→  { word: 'SPECULATION', hint: 'High-risk trading bets', difficulty: 'hard' },
+    84→];
+    85→
+    86→// ─── Mode Config ────────────────────────────────────────────
+    87→const MODE_CONFIG: Record<Difficulty, { timer: number; label: string; description: string; coinsPerWord: number }> = {
+    88→  easy: { timer: 60, label: 'Easy', description: '3-5 letter words • 60s per word', coinsPerWord: 10 },
+    89→  medium: { timer: 45, label: 'Medium', description: '6-8 letter words • 45s per word', coinsPerWord: 20 },
+    90→  hard: { timer: 30, label: 'Hard', description: '9+ letter words • 30s per word', coinsPerWord: 30 },
+    91→};
+    92→
+    93→const WORDS_PER_GAME = 10;
+    94→
+    95→// ─── Shuffle utility ────────────────────────────────────────
+    96→function shuffleArray<T>(array: T[]): T[] {
+    97→  const arr = [...array];
+    98→  for (let i = arr.length - 1; i > 0; i--) {
+    99→    const j = Math.floor(Math.random() * (i + 1));
+   100→    [arr[i], arr[j]] = [arr[j], arr[i]];
+   101→  }
+   102→  return arr;
+   103→}
+   104→
+   105→function scrambleWord(word: string): string {
+   106→  const letters = word.split('');
+   107→  let scrambled = shuffleArray(letters);
+   108→  let attempts = 0;
+   109→  while (scrambled.join('') === word && attempts < 50) {
+   110→    scrambled = shuffleArray(letters);
+   111→    attempts++;
+   112→  }
+   113→  return scrambled.join('');
+   114→}
+   115→
+   116→// ─── Grade Calculation ──────────────────────────────────────
+   117→function calculateGrade(accuracy: number, avgTime: number): 'S' | 'A' | 'B' | 'C' | 'D' {
+   118→  if (accuracy >= 90 && avgTime < 10) return 'S';
+   119→  if (accuracy >= 80 && avgTime < 15) return 'A';
+   120→  if (accuracy >= 60) return 'B';
+   121→  if (accuracy >= 40) return 'C';
+   122→  return 'D';
+   123→}
+   124→
+   125→function getGradeColor(grade: string): string {
+   126→  switch (grade) {
+   127→    case 'S': return 'text-amber-400';
+   128→    case 'A': return 'text-emerald-400';
+   129→    case 'B': return 'text-sky-400';
+   130→    case 'C': return 'text-orange-400';
+   131→    default: return 'text-red-400';
+   132→  }
+   133→}
+   134→
+   135→function getGradeEmoji(grade: string): string {
+   136→  switch (grade) {
+   137→    case 'S': return '👑';
+   138→    case 'A': return '🌟';
+   139→    case 'B': return '👍';
+   140→    case 'C': return '🤔';
+   141→    default: return '😅';
+   142→  }
+   143→}
+   144→
+   145→// ─── Particle Effect Component ──────────────────────────────
+   146→function ConfettiParticle({ delay, x, color }: { delay: number; x: number; color: string }) {
+   147→  return (
+   148→    <motion.div
+   149→      className="absolute w-2 h-2 rounded-full"
+   150→      style={{ backgroundColor: color, left: `${x}%`, top: '50%' }}
+   151→      initial={{ opacity: 1, scale: 0, y: 0 }}
+   152→      animate={{
+   153→        opacity: [1, 1, 0],
+   154→        scale: [0, 1.5, 0.5],
+   155→        y: [0, -80 - Math.random() * 60],
+   156→        x: [(Math.random() - 0.5) * 100],
+   157→      }}
+   158→      transition={{ duration: 0.8, delay, ease: 'easeOut' }}
+   159→    />
+   160→  );
+   161→}
+   162→
+   163→// ─── Main Component ─────────────────────────────────────────
+   164→export default function WordScramble({ open, onClose }: WordScrambleProps) {
+   165→  const { addCoins, spendCoins, coins, wordScrambleHighScore, setWordScrambleHighScore } = useAppStore();
+   166→
+   167→  // Game state
+   168→  const [gamePhase, setGamePhase] = useState<'menu' | 'playing' | 'result'>('menu');
+   169→  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
+   170→  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+   171→  const [scrambledLetters, setScrambledLetters] = useState<string[]>([]);
+   172→  const [selectedLetters, setSelectedLetters] = useState<(string | null)[]>([]);
+   173→  const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
+   174→  const [score, setScore] = useState(0);
+   175→  const [streak, setStreak] = useState(0);
+   176→  const [bestStreak, setBestStreak] = useState(0);
+   177→  const [wordsSolved, setWordsSolved] = useState(0);
+   178→  const [timeLeft, setTimeLeft] = useState(0);
+   179→  const [hintUsed, setHintUsed] = useState(false);
+   180→  const [showCorrect, setShowCorrect] = useState(false);
+   181→  const [showWrong, setShowWrong] = useState(false);
+   182→  const [showConfetti, setShowConfetti] = useState(false);
+   183→  const [gameWords, setGameWords] = useState<WordItem[]>([]);
+   184→
+   185→  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+   186→  const startTimeRef = useRef<number>(0);
+   187→  const wordTimesRef = useRef<number[]>([]);
+   188→
+   189→  // Use refs for mutable game state that callbacks need
+   190→  const gamePhaseRef = useRef(gamePhase);
+   191→  const currentWordIndexRef = useRef(currentWordIndex);
+   192→  const gameWordsRef = useRef(gameWords);
+   193→  const streakRef = useRef(streak);
+   194→  const bestStreakRef = useRef(bestStreak);
+   195→  const difficultyRef = useRef(difficulty);
+   196→  const scoreRef = useRef(score);
+   197→  const usedIndicesRef = useRef(usedIndices);
+   198→  const selectedLettersRef = useRef(selectedLetters);
+   199→  const scrambledLettersRef = useRef(scrambledLetters);
+   200→  const showCorrectRef = useRef(showCorrect);
+   201→  const hintUsedRef = useRef(hintUsed);
+   202→
+   203→  // Sync refs
+   204→  useEffect(() => { gamePhaseRef.current = gamePhase; }, [gamePhase]);
+   205→  useEffect(() => { currentWordIndexRef.current = currentWordIndex; }, [currentWordIndex]);
+   206→  useEffect(() => { gameWordsRef.current = gameWords; }, [gameWords]);
+   207→  useEffect(() => { streakRef.current = streak; }, [streak]);
+   208→  useEffect(() => { bestStreakRef.current = bestStreak; }, [bestStreak]);
+   209→  useEffect(() => { difficultyRef.current = difficulty; }, [difficulty]);
+   210→  useEffect(() => { scoreRef.current = score; }, [score]);
+   211→  useEffect(() => { usedIndicesRef.current = usedIndices; }, [usedIndices]);
+   212→  useEffect(() => { selectedLettersRef.current = selectedLetters; }, [selectedLetters]);
+   213→  useEffect(() => { scrambledLettersRef.current = scrambledLetters; }, [scrambledLetters]);
+   214→  useEffect(() => { showCorrectRef.current = showCorrect; }, [showCorrect]);
+   215→  useEffect(() => { hintUsedRef.current = hintUsed; }, [hintUsed]);
+   216→
+   217→  // Get current word
+   218→  const currentWord = useMemo(() => gameWords[currentWordIndex], [gameWords, currentWordIndex]);
+   219→
+   220→  // End game function
+   221→  const endGame = useCallback(() => {
+   222→    if (timerRef.current) clearInterval(timerRef.current);
+   223→    setGamePhase('result');
+   224→  }, []);
+   225→
+   226→  // Move to next word
+   227→  const moveToNextWord = useCallback(() => {
+   228→    const idx = currentWordIndexRef.current;
+   229→    const words = gameWordsRef.current;
+   230→
+   231→    if (idx >= words.length - 1) {
+   232→      endGame();
+   233→      return;
+   234→    }
+   235→
+   236→    const nextIndex = idx + 1;
+   237→    const nextWord = words[nextIndex];
+   238→    if (nextWord) {
+   239→      setCurrentWordIndex(nextIndex);
+   240→      setScrambledLetters(scrambleWord(nextWord.word).split(''));
+   241→      setSelectedLetters(Array(nextWord.word.length).fill(null));
+   242→      setUsedIndices(new Set());
+   243→      setTimeLeft(MODE_CONFIG[nextWord.difficulty].timer);
+   244→      setHintUsed(false);
+   245→      setShowCorrect(false);
+   246→      setShowWrong(false);
+   247→      startTimeRef.current = Date.now();
+   248→    }
+   249→  }, [endGame]);
+   250→
+   251→  // Handle time up
+   252→  const handleTimeUp = useCallback(() => {
+   253→    if (timerRef.current) clearInterval(timerRef.current);
+   254→    setStreak(0);
+   255→    setTimeout(() => {
+   256→      moveToNextWord();
+   257→    }, 1000);
+   258→  }, [moveToNextWord]);
+   259→
+   260→  // Timer logic
+   261→  useEffect(() => {
+   262→    if (gamePhase !== 'playing' || timeLeft <= 0) return;
+   263→
+   264→    timerRef.current = setInterval(() => {
+   265→      setTimeLeft((prev) => {
+   266→        if (prev <= 1) {
+   267→          handleTimeUp();
+   268→          return 0;
+   269→        }
+   270→        return prev - 1;
+   271→      });
+   272→    }, 1000);
+   273→
+   274→    return () => {
+   275→      if (timerRef.current) clearInterval(timerRef.current);
+   276→    };
+   277→  }, [gamePhase, currentWordIndex, handleTimeUp]);
+   278→
+   279→  // Handle correct word
+   280→  const handleCorrectWord = useCallback(() => {
+   281→    if (timerRef.current) clearInterval(timerRef.current);
+   282→
+   283→    const timeTaken = (Date.now() - startTimeRef.current) / 1000;
+   284→    wordTimesRef.current.push(timeTaken);
+   285→
+   286→    setShowCorrect(true);
+   287→    setShowConfetti(true);
+   288→    setTimeout(() => setShowConfetti(false), 1200);
+   289→
+   290→    const currentStreak = streakRef.current;
+   291→    const newStreak = currentStreak + 1;
+   292→    setStreak(newStreak);
+   293→    if (newStreak > bestStreakRef.current) setBestStreak(newStreak);
+   294→
+   295→    // Calculate coins
+   296→    const currentDiff = difficultyRef.current;
+   297→    const modeConfig = MODE_CONFIG[currentDiff];
+   298→    let coinsEarned = modeConfig.coinsPerWord;
+   299→
+   300→    // Streak bonus
+   301→    if (newStreak >= 5) coinsEarned *= 3;
+   302→    else if (newStreak >= 3) coinsEarned *= 2;
+   303→
+   304→    // Time bonus: solved in under half the time
+   305→    if (timeTaken < modeConfig.timer / 2) coinsEarned += 5;
+   306→
+   307→    setScore((prev) => prev + coinsEarned);
+   308→    setWordsSolved((prev) => prev + 1);
+   309→    addCoins(coinsEarned);
+   310→
+   311→    // Move to next word after delay
+   312→    setTimeout(() => {
+   313→      moveToNextWord();
+   314→    }, 1200);
+   315→  }, [addCoins, moveToNextWord]);
+   316→
+   317→  // Handle wrong word
+   318→  const handleWrongWord = useCallback((currentSelected: (string | null)[]) => {
+   319→    setShowWrong(true);
+   320→    setTimeout(() => {
+   321→      setShowWrong(false);
+   322→      setSelectedLetters(Array(currentSelected.length).fill(null));
+   323→      setUsedIndices(new Set());
+   324→    }, 600);
+   325→  }, []);
+   326→
+   327→  // Handle letter click from scrambled pool
+   328→  const handleLetterClick = useCallback((index: number) => {
+   329→    const currentUsedIndices = usedIndicesRef.current;
+   330→    const currentScrambled = scrambledLettersRef.current;
+   331→    const currentSelected = selectedLettersRef.current;
+   332→    const isCorrectShowing = showCorrectRef.current;
+   333→
+   334→    if (currentUsedIndices.has(index) || isCorrectShowing) return;
+   335→
+   336→    const newUsedIndices = new Set(currentUsedIndices);
+   337→    newUsedIndices.add(index);
+   338→
+   339→    const letter = currentScrambled[index];
+   340→    if (!letter) return;
+   341→
+   342→    const newSelected = [...currentSelected];
+   343→    const emptySlot = newSelected.findIndex((s) => s === null);
+   344→    if (emptySlot === -1) return;
+   345→
+   346→    newSelected[emptySlot] = letter;
+   347→    setUsedIndices(newUsedIndices);
+   348→    setSelectedLetters(newSelected);
+   349→
+   350→    // Check if word is complete
+   351→    const currentWordObj = gameWordsRef.current[currentWordIndexRef.current];
+   352→    if (!currentWordObj) return;
+   353→
+   354→    const isComplete = newSelected.every((s) => s !== null);
+   355→    if (isComplete) {
+   356→      const playerWord = newSelected.join('');
+   357→      if (playerWord === currentWordObj.word) {
+   358→        handleCorrectWord();
+   359→      } else {
+   360→        handleWrongWord(newSelected);
+   361→      }
+   362→    }
+   363→  }, [handleCorrectWord, handleWrongWord]);
+   364→
+   365→  // Handle clicking a placed letter to remove it
+   366→  const handlePlacedLetterClick = useCallback((slotIndex: number) => {
+   367→    if (showCorrectRef.current) return;
+   368→
+   369→    const currentSelected = selectedLettersRef.current;
+   370→    const letter = currentSelected[slotIndex];
+   371→    if (letter === null) return;
+   372→
+   373→    const newSelected = [...currentSelected];
+   374→    newSelected[slotIndex] = null;
+   375→
+   376→    // Rebuild usedIndices from remaining selected letters
+   377→    const currentScrambled = scrambledLettersRef.current;
+   378→    const rebuiltUsed = new Set<number>();
+   379→
+   380→    for (const sel of newSelected) {
+   381→      if (sel !== null) {
+   382→        const idx = currentScrambled.findIndex(
+   383→          (l, i) => l === sel && !rebuiltUsed.has(i)
+   384→        );
+   385→        if (idx !== -1) rebuiltUsed.add(idx);
+   386→      }
+   387→    }
+   388→
+   389→    setSelectedLetters(newSelected);
+   390→    setUsedIndices(rebuiltUsed);
+   391→  }, []);
+   392→
+   393→  // Hint
+   394→  const handleHint = useCallback(() => {
+   395→    const isHintUsed = hintUsedRef.current;
+   396→    const currentWordObj = gameWordsRef.current[currentWordIndexRef.current];
+   397→
+   398→    if (isHintUsed || !currentWordObj) return;
+   399→    if (coins < 5) return;
+   400→
+   401→    spendCoins(5);
+   402→    setHintUsed(true);
+   403→
+   404→    const firstLetter = currentWordObj.word[0];
+   405→    const currentSelected = selectedLettersRef.current;
+   406→    const newSelected = [...currentSelected];
+   407→
+   408→    if (newSelected[0] === null) {
+   409→      newSelected[0] = firstLetter;
+   410→      const currentScrambled = scrambledLettersRef.current;
+   411→      const currentUsed = usedIndicesRef.current;
+   412→      const scrambledIdx = currentScrambled.findIndex(
+   413→        (l, idx) => l === firstLetter && !currentUsed.has(idx)
+   414→      );
+   415→      if (scrambledIdx !== -1) {
+   416→        const newUsedIndices = new Set(currentUsed);
+   417→        newUsedIndices.add(scrambledIdx);
+   418→        setUsedIndices(newUsedIndices);
+   419→      }
+   420→    }
+   421→
+   422→    setSelectedLetters(newSelected);
+   423→  }, [coins, spendCoins]);
+   424→
+   425→  // Skip
+   426→  const handleSkip = useCallback(() => {
+   427→    if (timerRef.current) clearInterval(timerRef.current);
+   428→    setStreak(0);
+   429→    moveToNextWord();
+   430→  }, [moveToNextWord]);
+   431→
+   432→  // Start game
+   433→  const startGame = useCallback((mode: Difficulty) => {
+   434→    setDifficulty(mode);
+   435→    const filteredWords = WORDS.filter((w) => w.difficulty === mode);
+   436→    const selected = shuffleArray(filteredWords).slice(0, WORDS_PER_GAME);
+   437→    setGameWords(selected);
+   438→    setCurrentWordIndex(0);
+   439→    setScore(0);
+   440→    setStreak(0);
+   441→    setBestStreak(0);
+   442→    setWordsSolved(0);
+   443→    wordTimesRef.current = [];
+   444→
+   445→    const firstWord = selected[0];
+   446→    if (firstWord) {
+   447→      setScrambledLetters(scrambleWord(firstWord.word).split(''));
+   448→      setSelectedLetters(Array(firstWord.word.length).fill(null));
+   449→      setUsedIndices(new Set());
+   450→      setTimeLeft(MODE_CONFIG[mode].timer);
+   451→      setHintUsed(false);
+   452→      setShowCorrect(false);
+   453→      setShowWrong(false);
+   454→      startTimeRef.current = Date.now();
+   455→    }
+   456→
+   457→    setGamePhase('playing');
+   458→  }, []);
+   459→
+   460→  // Reset game
+   461→  const resetGame = useCallback(() => {
+   462→    if (timerRef.current) clearInterval(timerRef.current);
+   463→    setGamePhase('menu');
+   464→    setCurrentWordIndex(0);
+   465→    setScore(0);
+   466→    setStreak(0);
+   467→    setBestStreak(0);
+   468→    setWordsSolved(0);
+   469→    setHintUsed(false);
+   470→    setShowCorrect(false);
+   471→    setShowWrong(false);
+   472→    setShowConfetti(false);
+   473→    setGameWords([]);
+   474→  }, []);
+   475→
+   476→  // Compute game result
+   477→  const gameResult = useMemo((): GameResult | null => {
+   478→    if (gamePhase !== 'result') return null;
+   479→
+   480→    const avgTime = wordTimesRef.current.length > 0
+   481→      ? wordTimesRef.current.reduce((a, b) => a + b, 0) / wordTimesRef.current.length
+   482→      : MODE_CONFIG[difficulty].timer;
+   483→
+   484→    const accuracy = gameWords.length > 0 ? (wordsSolved / gameWords.length) * 100 : 0;
+   485→    const grade = calculateGrade(accuracy, avgTime);
+   486→
+   487→    return {
+   488→      score,
+   489→      wordsSolved,
+   490→      totalWords: gameWords.length,
+   491→      bestStreak,
+   492→      coinsEarned: score,
+   493→      grade,
+   494→      mode: difficulty,
+   495→    };
+   496→  }, [gamePhase, score, wordsSolved, gameWords.length, bestStreak, difficulty]);
+   497→
+   498→  // Update high score when game ends
+   499→  useEffect(() => {
+   500→    if (gamePhase === 'result' && score > 0) {
+   501→      setWordScrambleHighScore(difficulty, score);
+   502→    }
+   503→  }, [gamePhase, score, difficulty, setWordScrambleHighScore]);
+   504→
+   505→  // Timer bar color
+   506→  const timerConfig = MODE_CONFIG[difficulty];
+   507→  const timerProgress = timeLeft / timerConfig.timer;
+   508→  const timerColor = useMemo(() => {
+   509→    if (timerProgress > 0.5) return 'from-amber-400 to-amber-500';
+   510→    if (timerProgress > 0.25) return 'from-orange-400 to-orange-500';
+   511→    return 'from-red-500 to-red-600';
+   512→  }, [timerProgress]);
+   513→
+   514→  // Confetti colors
+   515→  const confettiColors = ['#f59e0b', '#fbbf24', '#d97706', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
+   516→
+   517→  // ─── Render: Menu ─────────────────────────────────────────
+   518→  if (gamePhase === 'menu') {
+   519→    return (
+   520→      <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
+   521→        <DialogContent className="bg-[#0a0a0f] border-white/[0.06] text-[#e8e8ed] max-w-lg p-0 overflow-hidden">
+   522→          <DialogTitle className="sr-only">Word Scramble Game</DialogTitle>
+   523→
+   524→          {/* Header */}
+   525→          <div className="bg-gradient-to-r from-amber-500/20 via-amber-400/15 to-amber-500/20 px-6 py-5 border-b border-white/[0.06]">
+   526→            <div className="flex items-center justify-between">
+   527→              <div className="flex items-center gap-3">
+   528→                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+   529→                  <Type className="w-5 h-5 text-amber-400" />
+   530→                </div>
+   531→                <div>
+   532→                  <h2 className="text-lg font-bold text-amber-400">Word Scramble</h2>
+   533→                  <p className="text-xs text-[#8888a0]">Financial terms ko unscramble karo! 🔤</p>
+   534→                </div>
+   535→              </div>
+   536→              <button
+   537→                onClick={onClose}
+   538→                className="p-2 rounded-lg text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
+   539→                aria-label="Close"
+   540→              >
+   541→                <X className="w-4 h-4" />
+   542→              </button>
+   543→            </div>
+   544→          </div>
+   545→
+   546→          {/* Difficulty selection */}
+   547→          <div className="p-6 space-y-3">
+   548→            {(Object.entries(MODE_CONFIG) as [Difficulty, typeof MODE_CONFIG.easy][]).map(([mode, config]) => {
+   549→              const highScore = wordScrambleHighScore[mode] || 0;
+   550→              const wordCount = WORDS.filter((w) => w.difficulty === mode).length;
+   551→
+   552→              return (
+   553→                <motion.button
+   554→                  key={mode}
+   555→                  onClick={() => startGame(mode)}
+   556→                  className="w-full p-4 rounded-xl bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] hover:border-amber-500/30 hover:bg-amber-400/[0.04] transition-all text-left group"
+   557→                  whileHover={{ scale: 1.01 }}
+   558→                  whileTap={{ scale: 0.98 }}
+   559→                >
+   560→                  <div className="flex items-center justify-between">
+   561→                    <div>
+   562→                      <div className="flex items-center gap-2">
+   563→                        <span className="font-bold text-amber-400">{config.label}</span>
+   564→                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-[#8888a0]">
+   565→                          {wordCount} words
+   566→                        </span>
+   567→                      </div>
+   568→                      <p className="text-xs text-[#8888a0] mt-1">{config.description}</p>
+   569→                      <p className="text-xs text-[#8888a0] mt-0.5">🪙 {config.coinsPerWord} coins per word</p>
+   570→                    </div>
+   571→                    <div className="text-right">
+   572→                      {highScore > 0 && (
+   573→                        <div className="flex items-center gap-1 text-amber-400">
+   574→                          <Trophy className="w-3 h-3" />
+   575→                          <span className="text-xs font-bold">{highScore}</span>
+   576→                        </div>
+   577→                      )}
+   578→                      <span className="text-[10px] text-[#8888a0]">Best</span>
+   579→                    </div>
+   580→                  </div>
+   581→                </motion.button>
+   582→              );
+   583→            })}
+   584→
+   585→            {/* How to play */}
+   586→            <div className="mt-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+   587→              <h3 className="text-sm font-semibold text-amber-400 mb-2">📖 Kaise khelein?</h3>
+   588→              <ul className="space-y-1.5 text-xs text-[#8888a0]">
+   589→                <li>• Scrambled letters ko correct order mein click karo</li>
+   590→                <li>• Galat letter click karke hata sakte ho</li>
+   591→                <li>• Hint se pehla letter pata chalega (5 coins)</li>
+   592→                <li>• Skip kar sakte ho bina coins ke</li>
+   593→                <li>• 3+ streak = 2x coins, 5+ streak = 3x coins! 🔥</li>
+   594→                <li>• Aadhe time se pehle solve = +5 bonus coins ⚡</li>
+   595→              </ul>
+   596→            </div>
+   597→          </div>
+   598→        </DialogContent>
+   599→      </Dialog>
+   600→    );
+   601→  }
+   602→
+   603→  // ─── Render: Result ───────────────────────────────────────
+   604→  if (gamePhase === 'result' && gameResult) {
+   605→    return (
+   606→      <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) { resetGame(); onClose(); } }}>
+   607→        <DialogContent className="bg-[#0a0a0f] border-white/[0.06] text-[#e8e8ed] max-w-lg p-0 overflow-hidden">
+   608→          <DialogTitle className="sr-only">Word Scramble Results</DialogTitle>
+   609→
+   610→          {/* Header with grade */}
+   611→          <div className="bg-gradient-to-r from-amber-500/20 via-amber-400/15 to-amber-500/20 px-6 py-6 border-b border-white/[0.06] text-center relative overflow-hidden">
+   612→            <motion.div
+   613→              initial={{ scale: 0, rotate: -180 }}
+   614→              animate={{ scale: 1, rotate: 0 }}
+   615→              transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+   616→            >
+   617→              <div className={`text-6xl font-black ${getGradeColor(gameResult.grade)}`}>
+   618→                {gameResult.grade}
+   619→              </div>
+   620→            </motion.div>
+   621→            <motion.div
+   622→              initial={{ opacity: 0, y: 10 }}
+   623→              animate={{ opacity: 1, y: 0 }}
+   624→              transition={{ delay: 0.4 }}
+   625→              className="text-2xl mt-2"
+   626→            >
+   627→              {getGradeEmoji(gameResult.grade)}
+   628→            </motion.div>
+   629→            <motion.div
+   630→              initial={{ opacity: 0, y: 10 }}
+   631→              animate={{ opacity: 1, y: 0 }}
+   632→              transition={{ delay: 0.6 }}
+   633→            >
+   634→              <p className="text-sm text-[#8888a0] mt-2">
+   635→                {gameResult.grade === 'S' ? 'Shaandaar performance!' :
+   636→                 gameResult.grade === 'A' ? 'Bahut badhiya!' :
+   637→                 gameResult.grade === 'B' ? 'Accha kaam kiya!' :
+   638→                 gameResult.grade === 'C' ? 'Aur practice karo!' :
+   639→                 'Koshish acchi thi!'}
+   640→              </p>
+   641→            </motion.div>
+   642→
+   643→            {/* Decorative particles for S grade */}
+   644→            {gameResult.grade === 'S' && (
+   645→              <div className="absolute inset-0 pointer-events-none">
+   646→                {[...Array(12)].map((_, i) => (
+   647→                  <motion.div
+   648→                    key={i}
+   649→                    className="absolute w-1.5 h-1.5 rounded-full bg-amber-400"
+   650→                    style={{ left: `${10 + Math.random() * 80}%`, top: `${20 + Math.random() * 60}%` }}
+   651→                    initial={{ opacity: 0, scale: 0 }}
+   652→                    animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0] }}
+   653→                    transition={{ duration: 1.5, delay: 0.8 + i * 0.1, repeat: Infinity, repeatDelay: 2 }}
+   654→                  />
+   655→                ))}
+   656→              </div>
+   657→            )}
+   658→          </div>
+   659→
+   660→          {/* Stats */}
+   661→          <div className="p-6 space-y-4">
+   662→            {/* Score */}
+   663→            <motion.div
+   664→              initial={{ opacity: 0, y: 15 }}
+   665→              animate={{ opacity: 1, y: 0 }}
+   666→              transition={{ delay: 0.3 }}
+   667→              className="flex items-center justify-between p-4 rounded-xl bg-amber-400/[0.06] border border-amber-500/10"
+   668→            >
+   669→              <div className="flex items-center gap-3">
+   670→                <Coins className="w-5 h-5 text-amber-400" />
+   671→                <span className="text-sm text-[#8888a0]">Total Coins Earned</span>
+   672→              </div>
+   673→              <motion.span
+   674→                className="text-2xl font-black text-amber-400"
+   675→                initial={{ scale: 0 }}
+   676→                animate={{ scale: 1 }}
+   677→                transition={{ type: 'spring', stiffness: 300, delay: 0.5 }}
+   678→              >
+   679→                {gameResult.coinsEarned}
+   680→              </motion.span>
+   681→            </motion.div>
+   682→
+   683→            {/* Other stats */}
+   684→            <div className="grid grid-cols-2 gap-3">
+   685→              <motion.div
+   686→                initial={{ opacity: 0, y: 10 }}
+   687→                animate={{ opacity: 1, y: 0 }}
+   688→                transition={{ delay: 0.4 }}
+   689→                className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center"
+   690→              >
+   691→                <p className="text-xs text-[#8888a0]">Words Solved</p>
+   692→                <p className="text-xl font-bold text-[#e8e8ed] mt-1">
+   693→                  {gameResult.wordsSolved}/{gameResult.totalWords}
+   694→                </p>
+   695→              </motion.div>
+   696→              <motion.div
+   697→                initial={{ opacity: 0, y: 10 }}
+   698→                animate={{ opacity: 1, y: 0 }}
+   699→                transition={{ delay: 0.5 }}
+   700→                className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center"
+   701→              >
+   702→                <p className="text-xs text-[#8888a0]">Best Streak</p>
+   703→                <p className="text-xl font-bold text-[#e8e8ed] mt-1">
+   704→                  🔥 {gameResult.bestStreak}
+   705→                </p>
+   706→              </motion.div>
+   707→            </div>
+   708→
+   709→            {/* High score badge */}
+   710→            {wordScrambleHighScore[difficulty] === gameResult.score && gameResult.score > 0 && (
+   711→              <motion.div
+   712→                initial={{ opacity: 0, scale: 0.9 }}
+   713→                animate={{ opacity: 1, scale: 1 }}
+   714→                transition={{ delay: 0.7 }}
+   715→                className="flex items-center gap-2 p-3 rounded-xl bg-amber-400/10 border border-amber-500/20"
+   716→              >
+   717→                <Star className="w-4 h-4 text-amber-400" />
+   718→                <span className="text-sm font-semibold text-amber-400">New High Score! 🎉</span>
+   719→              </motion.div>
+   720→            )}
+   721→
+   722→            {/* Buttons */}
+   723→            <div className="flex gap-3 pt-2">
+   724→              <motion.button
+   725→                onClick={resetGame}
+   726→                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/[0.03] border border-white/[0.06] text-[#8888a0] hover:text-[#e8e8ed] hover:bg-white/[0.06] transition-all"
+   727→                whileHover={{ scale: 1.02 }}
+   728→                whileTap={{ scale: 0.97 }}
+   729→              >
+   730→                <RotateCcw className="w-4 h-4" />
+   731→                <span className="text-sm font-medium">Menu</span>
+   732→              </motion.button>
+   733→              <motion.button
+   734→                onClick={() => startGame(difficulty)}
+   735→                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all"
+   736→                whileHover={{ scale: 1.02 }}
+   737→                whileTap={{ scale: 0.97 }}
+   738→              >
+   739→                <Sparkles className="w-4 h-4" />
+   740→                <span className="text-sm font-bold">Play Again</span>
+   741→              </motion.button>
+   742→            </div>
+   743→          </div>
+   744→        </DialogContent>
+   745→      </Dialog>
+   746→    );
+   747→  }
+   748→
+   749→  // ─── Render: Playing ──────────────────────────────────────
+   750→  return (
+   751→    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) { resetGame(); onClose(); } }}>
+   752→      <DialogContent className="bg-[#0a0a0f] border-white/[0.06] text-[#e8e8ed] max-w-lg p-0 overflow-hidden">
+   753→        <DialogTitle className="sr-only">Word Scramble - Playing</DialogTitle>
+   754→
+   755→        {/* Timer bar */}
+   756→        <div className="h-1.5 bg-white/[0.04]">
+   757→          <motion.div
+   758→            className={`h-full bg-gradient-to-r ${timerColor} rounded-r-full`}
+   759→            initial={{ width: '100%' }}
+   760→            animate={{ width: `${timerProgress * 100}%` }}
+   761→            transition={{ duration: 0.5, ease: 'linear' }}
+   762→          />
+   763→        </div>
+   764→
+   765→        {/* Header */}
+   766→        <div className="px-4 py-3 flex items-center justify-between border-b border-white/[0.06]">
+   767→          <div className="flex items-center gap-2">
+   768→            <Type className="w-4 h-4 text-amber-400" />
+   769→            <span className="text-xs font-medium text-[#8888a0]">
+   770→              {MODE_CONFIG[difficulty].label} • {currentWordIndex + 1}/{gameWords.length}
+   771→            </span>
+   772→          </div>
+   773→
+   774→          <div className="flex items-center gap-3">
+   775→            {/* Streak */}
+   776→            <motion.div
+   777→              key={`streak-${streak}`}
+   778→              initial={{ scale: 1 }}
+   779→              animate={streak >= 3 ? { scale: [1, 1.2, 1] } : {}}
+   780→              transition={{ duration: 0.3 }}
+   781→              className="flex items-center gap-1"
+   782→            >
+   783→              <Flame className={`w-4 h-4 ${streak >= 3 ? 'text-orange-400' : streak >= 1 ? 'text-amber-400' : 'text-[#8888a0]'}`} />
+   784→              <span className={`text-xs font-bold ${streak >= 3 ? 'text-orange-400' : 'text-[#8888a0]'}`}>
+   785→                {streak}
+   786→              </span>
+   787→              {streak >= 3 && (
+   788→                <motion.span
+   789→                  initial={{ opacity: 0, x: -5 }}
+   790→                  animate={{ opacity: 1, x: 0 }}
+   791→                  className="text-[10px] font-bold text-orange-400"
+   792→                >
+   793→                  {streak >= 5 ? '3x' : '2x'}
+   794→                </motion.span>
+   795→              )}
+   796→            </motion.div>
+   797→
+   798→            {/* Score */}
+   799→            <div className="flex items-center gap-1">
+   800→              <Coins className="w-4 h-4 text-amber-400" />
+   801→              <span className="text-sm font-bold text-amber-400">{score}</span>
+   802→            </div>
+   803→
+   804→            {/* Close */}
+   805→            <button
+   806→              onClick={() => { resetGame(); onClose(); }}
+   807→              className="p-1.5 rounded-lg text-[#8888a0] hover:text-white hover:bg-white/10 transition-colors"
+   808→              aria-label="Close"
+   809→            >
+   810→              <X className="w-4 h-4" />
+   811→            </button>
+   812→          </div>
+   813→        </div>
+   814→
+   815→        {/* Game area */}
+   816→        <div className="p-5 space-y-5">
+   817→          {/* Timer display */}
+   818→          <div className="flex items-center justify-center gap-2">
+   819→            <Timer className={`w-4 h-4 ${timerProgress > 0.5 ? 'text-amber-400' : timerProgress > 0.25 ? 'text-orange-400' : 'text-red-400'}`} />
+   820→            <motion.span
+   821→              key={timeLeft}
+   822→              initial={{ scale: 1.1 }}
+   823→              animate={{ scale: 1 }}
+   824→              className={`text-lg font-bold tabular-nums ${timerProgress > 0.5 ? 'text-amber-400' : timerProgress > 0.25 ? 'text-orange-400' : 'text-red-400'}`}
+   825→            >
+   826→              {timeLeft}s
+   827→            </motion.span>
+   828→          </div>
+   829→
+   830→          {/* Hint text */}
+   831→          <motion.div
+   832→            className="text-center"
+   833→            initial={{ opacity: 0 }}
+   834→            animate={{ opacity: 1 }}
+   835→          >
+   836→            <span className="text-xs text-[#8888a0] bg-white/[0.03] px-3 py-1.5 rounded-full">
+   837→              💡 Hint: {currentWord?.hint}
+   838→            </span>
+   839→          </motion.div>
+   840→
+   841→          {/* Answer slots */}
+   842→          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+   843→            {selectedLetters.map((letter, idx) => (
+   844→              <motion.button
+   845→                key={`slot-${idx}`}
+   846→                onClick={() => handlePlacedLetterClick(idx)}
+   847→                className={`w-10 h-12 sm:w-12 sm:h-14 rounded-lg flex items-center justify-center text-lg sm:text-xl font-bold transition-all
+   848→                  ${letter !== null
+   849→                    ? showCorrect
+   850→                      ? 'border-emerald-400/50 bg-emerald-400/20 text-emerald-400'
+   851→                      : showWrong
+   852→                        ? 'border-red-400/50 bg-red-400/20 text-red-400'
+   853→                        : 'bg-amber-400/20 border border-amber-500/30 text-amber-400 cursor-pointer hover:bg-amber-400/30'
+   854→                    : 'bg-white/[0.03] border border-white/[0.08] text-transparent'
+   855→                  }
+   856→                `}
+   857→                whileHover={letter !== null && !showCorrect ? { scale: 1.05 } : {}}
+   858→                whileTap={letter !== null && !showCorrect ? { scale: 0.92 } : {}}
+   859→                layout
+   860→              >
+   861→                {letter || '_'}
+   862→              </motion.button>
+   863→            ))}
+   864→          </div>
+   865→
+   866→          {/* Scrambled letter tiles */}
+   867→          <div className="relative">
+   868→            {/* Confetti */}
+   869→            {showConfetti && (
+   870→              <div className="absolute inset-0 pointer-events-none z-10">
+   871→                {[...Array(20)].map((_, i) => (
+   872→                  <ConfettiParticle
+   873→                    key={i}
+   874→                    delay={i * 0.03}
+   875→                    x={20 + Math.random() * 60}
+   876→                    color={confettiColors[i % confettiColors.length]}
+   877→                  />
+   878→                ))}
+   879→              </div>
+   880→            )}
+   881→
+   882→            <div className="flex items-center justify-center gap-2 flex-wrap">
+   883→              {scrambledLetters.map((letter, idx) => {
+   884→                const isUsed = usedIndices.has(idx);
+   885→
+   886→                return (
+   887→                  <motion.button
+   888→                    key={`letter-${idx}`}
+   889→                    onClick={() => handleLetterClick(idx)}
+   890→                    disabled={isUsed || showCorrect}
+   891→                    className={`w-11 h-13 sm:w-13 sm:h-15 rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold transition-all shadow-lg
+   892→                      ${isUsed
+   893→                        ? 'bg-white/[0.02] border border-white/[0.04] text-white/20 cursor-not-allowed scale-90'
+   894→                        : 'bg-white/[0.06] border border-white/[0.1] text-[#e8e8ed] cursor-pointer hover:bg-amber-400/20 hover:border-amber-500/30 hover:text-amber-400'
+   895→                      }
+   896→                    `}
+   897→                    whileHover={!isUsed ? { scale: 1.08, y: -2 } : {}}
+   898→                    whileTap={!isUsed ? { scale: 0.88 } : {}}
+   899→                    initial={{ opacity: 0, y: 20, rotate: -10 }}
+   900→                    animate={{
+   901→                      opacity: isUsed ? 0.3 : 1,
+   902→                      y: 0,
+   903→                      rotate: 0,
+   904→                      scale: isUsed ? 0.85 : 1,
+   905→                    }}
+   906→                    transition={{ type: 'spring', stiffness: 400, damping: 20, delay: idx * 0.03 }}
+   907→                  >
+   908→                    {letter}
+   909→                  </motion.button>
+   910→                );
+   911→              })}
+   912→            </div>
+   913→          </div>
+   914→
+   915→          {/* Action buttons */}
+   916→          <div className="flex items-center justify-center gap-3 pt-1">
+   917→            <motion.button
+   918→              onClick={handleHint}
+   919→              disabled={hintUsed || coins < 5}
+   920→              className={`flex items-center gap-1.5 py-2 px-4 rounded-xl text-xs font-medium transition-all
+   921→                ${hintUsed || coins < 5
+   922→                  ? 'bg-white/[0.02] border border-white/[0.04] text-white/20 cursor-not-allowed'
+   923→                  : 'bg-white/[0.04] border border-white/[0.08] text-[#8888a0] hover:text-amber-400 hover:border-amber-500/20 hover:bg-amber-400/10'
+   924→                }
+   925→              `}
+   926→              whileHover={!hintUsed && coins >= 5 ? { scale: 1.03 } : {}}
+   927→              whileTap={!hintUsed && coins >= 5 ? { scale: 0.95 } : {}}
+   928→            >
+   929→              <Lightbulb className="w-3.5 h-3.5" />
+   930→              <span>Hint (5🪙)</span>
+   931→            </motion.button>
+   932→
+   933→            <motion.button
+   934→              onClick={handleSkip}
+   935→              className="flex items-center gap-1.5 py-2 px-4 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/[0.08] text-[#8888a0] hover:text-[#e8e8ed] hover:bg-white/[0.06] transition-all"
+   936→              whileHover={{ scale: 1.03 }}
+   937→              whileTap={{ scale: 0.95 }}
+   938→            >
+   939→              <SkipForward className="w-3.5 h-3.5" />
+   940→              <span>Skip</span>
+   941→            </motion.button>
+   942→          </div>
+   943→
+   944→          {/* Correct/Wrong feedback */}
+   945→          <AnimatePresence>
+   946→            {showCorrect && (
+   947→              <motion.div
+   948→                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+   949→                animate={{ opacity: 1, y: 0, scale: 1 }}
+   950→                exit={{ opacity: 0, y: -10 }}
+   951→                className="text-center"
+   952→              >
+   953→                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-400/10 border border-emerald-500/20">
+   954→                  <Sparkles className="w-4 h-4 text-emerald-400" />
+   955→                  <span className="text-sm font-bold text-emerald-400">Sahi jawaab! 🎉</span>
+   956→                </div>
+   957→              </motion.div>
+   958→            )}
+   959→          </AnimatePresence>
+   960→
+   961→          <AnimatePresence>
+   962→            {showWrong && (
+   963→              <motion.div
+   964→                initial={{ opacity: 0, x: 0 }}
+   965→                animate={{ opacity: 1, x: [0, -8, 8, -8, 8, 0] }}
+   966→                exit={{ opacity: 0 }}
+   967→                transition={{ duration: 0.4 }}
+   968→                className="text-center"
+   969→              >
+   970→                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-400/10 border border-red-500/20">
+   971→                  <X className="w-4 h-4 text-red-400" />
+   972→                  <span className="text-sm font-bold text-red-400">Galat! Try again 😅</span>
+   973→                </div>
+   974→              </motion.div>
+   975→            )}
+   976→          </AnimatePresence>
+   977→        </div>
+   978→      </DialogContent>
+   979→    </Dialog>
+   980→  );
+   981→}
+   982→

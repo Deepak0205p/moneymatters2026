@@ -57,12 +57,12 @@ export function Navbar() {
                 >
                   Hey, {user?.displayName?.split(' ')[0] || 'User'}
                 </Link>
-                <Link href="/dashboard">
+                <Link href="/profile">
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald/15 border border-emerald/25 cursor-pointer transition-colors hover:bg-emerald/20"
-                    title="Dashboard"
+                    title="My Profile"
                   >
                     <User size={16} className="text-emerald-soft" />
                   </motion.div>
@@ -134,7 +134,7 @@ export function Navbar() {
               {isAuthenticated ? (
                 <>
                   <Link
-                    href="/dashboard"
+                    href="/profile"
                     onClick={() => setIsMenuOpen(false)}
                     className="block"
                   >
@@ -147,7 +147,7 @@ export function Navbar() {
                         )}
                       </div>
                       <span className="font-semibold text-emerald-soft text-sm flex-1">
-                        {user?.displayName?.split(' ')[0] || 'Dashboard'}
+                        {user?.displayName?.split(' ')[0] || 'My Profile'}
                       </span>
                       <span className="text-[10px] text-emerald-soft/60 uppercase font-semibold">View</span>
                     </div>
