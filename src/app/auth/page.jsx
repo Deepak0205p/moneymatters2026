@@ -10,6 +10,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   updateProfile
 } from 'firebase/auth';
 import {
@@ -48,6 +50,43 @@ export default function AuthPage() {
   useEffect(() => {
     if (hydrated && isAuthenticated) router.push('/dashboard');
   }, [hydrated, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    let active = true;
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && active) {
+          const user = result.user;
+          const profile = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || user.email.split('@')[0],
+            phoneNumber: user.phoneNumber || null,
+            photoURL: user.photoURL || null
+          };
+          await loginUser(profile);
+          router.push('/dashboard');
+        }
+      } catch (err) {
+        console.error("Redirect auth error:", err);
+        if (active) {
+          if (err.code === 'auth/operation-not-allowed') {
+            setError('Google Sign-In is not enabled in Firebase Console. Please enable it in Authentication -> Sign-in method.');
+          } else if (err.code === 'auth/unauthorized-domain') {
+            setError('This domain is not authorized in Firebase Console. Please add your current domain/IP to the Authorized Domains list.');
+          } else {
+            setError(err.message || 'Google Sign-In fail ho gaya.');
+          }
+        }
+      }
+    };
+    checkRedirect();
+    return () => {
+      active = false;
+    };
+  }, [hydrated, router, loginUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -128,10 +167,26 @@ export default function AuthPage() {
       await loginUser(profile);
       router.push('/dashboard');
     } catch (err) {
-      console.error(err);
-      setError(err.message || 'Google Sign-In fail ho gaya.');
-    } finally {
-      setLoading(false);
+      console.error("Popup signin failed, trying redirect:", err);
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        try {
+          setError('Popup blocked ya closed. Redirecting to Google Sign-In...');
+          await signInWithRedirect(auth, googleProvider);
+        } catch (redirectErr) {
+          console.error(redirectErr);
+          setError(redirectErr.message || 'Google Sign-In redirect fail ho gaya.');
+          setLoading(false);
+        }
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('Google Sign-In is not enabled in Firebase Console. Please enable it in Authentication -> Sign-in method.');
+        setLoading(false);
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized in Firebase Console. Please add your current domain/IP to the Authorized Domains list.');
+        setLoading(false);
+      } else {
+        setError(err.message || 'Google Sign-In fail ho gaya.');
+        setLoading(false);
+      }
     }
   };
 
