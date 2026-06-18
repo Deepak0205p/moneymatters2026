@@ -32,6 +32,7 @@ export const viewport = {
   maximumScale: 5
 };
 import { AnimationProvider } from "@/components/AnimationProvider";
+import { TranslationProvider } from "@/components/TranslationProvider";
 
 export default function RootLayout({
   children
@@ -47,7 +48,9 @@ export default function RootLayout({
         defaultTheme: "dark",
         enableSystem: false,
         children: [
-          /*#__PURE__*/_jsx(AnimationProvider, { children }),
+          /*#__PURE__*/_jsx(TranslationProvider, {
+            children: /*#__PURE__*/_jsx(AnimationProvider, { children })
+          }),
           /*#__PURE__*/_jsx(Toaster, {})
         ]
       })
