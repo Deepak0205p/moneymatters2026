@@ -108,7 +108,7 @@ export function Navbar() {
             </div>
 
             {/* Language Selector Dropdown (Tactile border-b) */}
-            <div ref={langRef} className="relative">
+            <div ref={langRef} className="relative no-translate" data-no-translate>
               <button
                 onClick={() => setIsLangOpen(!isLangOpen)}
                 className="flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-3 py-1.5 text-xs font-semibold text-ink-muted hover:text-ink hover:bg-white/10 hover:border-emerald/20 transition-all cursor-pointer border-b-2"
@@ -254,7 +254,7 @@ export function Navbar() {
               </div>
 
               {/* Language Selection inside Mobile Menu */}
-              <div className="rounded-xl bg-white/5 border border-white/10 p-3 border-b-2">
+              <div className="rounded-xl bg-white/5 border border-white/10 p-3 border-b-2 no-translate" data-no-translate>
                 <div className="flex items-center gap-2 mb-2">
                   <Globe size={14} className="text-emerald-soft" />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">

@@ -20,6 +20,23 @@ export function TranslationProvider({ children }) {
     const origMap = originalTexts.current;
     const transMap = translatedNodes.current;
 
+    // Restore any previously translated nodes to original texts first
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+    const restoreWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let restoreNode;
+    while (restoreNode = restoreWalker.nextNode()) {
+      if (origMap.has(restoreNode)) {
+        restoreNode.textContent = origMap.get(restoreNode);
+        transMap.delete(restoreNode);
+      }
+    }
+
+    if (targetLang === 'hinglish') {
+      return;
+    }
+
     // Helper to translate a single text node
     async function translateNode(node) {
       const text = node.textContent;
@@ -94,20 +111,7 @@ export function TranslationProvider({ children }) {
       nodes.forEach(n => translateNode(n));
     }
 
-    // If default language (hinglish), restore original values
-    if (targetLang === 'hinglish') {
-      if (observerRef.current) observerRef.current.disconnect();
-      
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-      let node;
-      while (node = walker.nextNode()) {
-        if (origMap.has(node)) {
-          node.textContent = origMap.get(node);
-          transMap.delete(node);
-        }
-      }
-      return;
-    }
+
 
     // Initial translation of the whole body
     translateTree(document.body);
