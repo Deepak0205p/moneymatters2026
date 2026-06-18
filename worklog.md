@@ -1,8 +1,8 @@
-# RUPAIYA 101 - Work Log
+# Money Matters - Work Log
 
 ## Project Status
 - **Status**: Production-ready with 28+ features + Story-Based Learning + 18 interactive tools + enhanced dashboard + 580+ lines CSS + 110+ lines story CSS
-- **App**: RUPAIYA 101 - Financial Literacy App for Indian Youth (Hinglish)
+- **App**: Money Matters - Financial Literacy App for Indian Youth (Hinglish)
 - **Tech**: Next.js 16, Tailwind CSS 4, Framer Motion, Zustand, Recharts, shadcn/ui, z-ai-web-dev-sdk
 - **Latest**: Story-based learning system — each module is now an immersive narrative with chapters, dialogues, interactive choices, and XP rewards
 
@@ -10,7 +10,7 @@
 
 Task ID: 1
 Agent: Main Orchestrator
-Task: Build complete RUPAIYA 101 financial literacy app from spec documents
+Task: Build complete Money Matters financial literacy app from spec documents
 
 Work Log:
 - Read and analyzed RUPAIYA_101_Master_Build_Prompt.docx (2000+ lines of spec)
@@ -1101,7 +1101,7 @@ Stage Summary:
 
 ## 1. Current Project Status Assessment
 
-### App: RUPAIYA 101 — Financial Literacy App for Indian Youth (Hinglish)
+### App: Money Matters — Financial Literacy App for Indian Youth (Hinglish)
 ### Tech Stack: Next.js 16 + TypeScript 5 + Tailwind CSS 4 + Framer Motion + Zustand + Recharts + shadcn/ui + z-ai-web-dev-sdk
 
 ### Overall Health: ✅ PRODUCTION-READY
@@ -1380,7 +1380,7 @@ Work Log:
 
 - Enhanced WelcomeOnboarding.tsx:
   - Added `animate-bounce-in` class to welcome title `<h1>`
-  - Added `text-neon-gold` class to RUPAIYA 101 span, step 1 heading, step 2 heading
+  - Added `text-neon-gold` class to Money Matters span, step 1 heading, step 2 heading
   - Added `glass-card-glow` class to info card and strategy selection cards
 
 - Ran `bun run lint` — zero errors confirmed
@@ -1513,7 +1513,7 @@ Stage Summary:
 
 ## 1. Current Project Status Assessment
 
-### App: RUPAIYA 101 — Financial Literacy App for Indian Youth (Hinglish)
+### App: Money Matters — Financial Literacy App for Indian Youth (Hinglish)
 ### Tech Stack: Next.js 16 + TypeScript 5 + Tailwind CSS 4 + Framer Motion + Zustand + Recharts + shadcn/ui + z-ai-web-dev-sdk
 
 ### Overall Health: ✅ PRODUCTION-READY
@@ -1842,7 +1842,7 @@ Stage Summary:
 
 ## 1. Current Project Status Assessment
 
-### App: RUPAIYA 101 — Financial Literacy App for Indian Youth (Hinglish)
+### App: Money Matters — Financial Literacy App for Indian Youth (Hinglish)
 ### Tech Stack: Next.js 16 + TypeScript 5 + Tailwind CSS 4 + Framer Motion + Zustand + Recharts + shadcn/ui + z-ai-web-dev-sdk
 
 ### Overall Health: ✅ PRODUCTION-READY
@@ -1992,7 +1992,7 @@ Work Log:
   - Financial age calculation with 5 result tiers: Financial Bachcha 👶 (5-12), Financial Teenager 🧑‍🎓 (13-19), Financial Young Adult 🧑‍💼 (20-29), Financial Adult 💼 (30-45), Financial Guru 🧙‍♂️ (45+)
   - Results screen with animated age counter, progress ring with glow, confetti particles
   - Top 3 improvement areas based on weakest answers with progress bars
-  - Share button (copies Hinglish text to clipboard): "🎒 Mera Financial Age hai XX! Tumhara kitna hai? RUPAIYA 101 se check karo!"
+  - Share button (copies Hinglish text to clipboard): "🎒 Mera Financial Age hai XX! Tumhara kitna hai? Money Matters se check karo!"
   - Retake quiz button, coin reward of 15 coins
   - Dialog using shadcn/ui Dialog, dark theme with amber accents, glass morphism cards
   - Mobile responsive, animated option buttons with amber border + glow on selection
@@ -2109,7 +2109,7 @@ Work Log:
 - Gradient progress bar showing question X/10 + running score
 - 5 Financial Age tiers: Bachcha 👶 (5-12), Teenager 🧑‍🎓 (13-19), Young Adult 🧑‍💼 (20-29), Adult 💼 (30-45), Guru 🧙‍♂️ (45+)
 - Results screen: animated age counter, progress ring with glow, confetti particles, badge with glow, Top 3 improvement areas
-- Share button: "🎒 Mera Financial Age hai XX! Tumhara kitna hai? RUPAIYA 101 se check karo!"
+- Share button: "🎒 Mera Financial Age hai XX! Tumhara kitna hai? Money Matters se check karo!"
 - 15 coin reward on completion
 - Added `financialAge`, `financialAgeLastTaken`, `setFinancialAge` to Zustand store
 - Integrated into Navbar with UserCheck icon, tooltip "Financial Age 🎂"
@@ -2177,7 +2177,7 @@ Stage Summary:
 
 ## 1. Current Project Status Assessment
 
-### App: RUPAIYA 101 — Financial Literacy App for Indian Youth (Hinglish)
+### App: Money Matters — Financial Literacy App for Indian Youth (Hinglish)
 ### Tech Stack: Next.js 16 + TypeScript 5 + Tailwind CSS 4 + Framer Motion + Zustand + Recharts + shadcn/ui + z-ai-web-dev-sdk
 
 ### Overall Health: ✅ PRODUCTION-READY
@@ -2517,9 +2517,9 @@ Task: User uploaded a tar workspace snapshot and asked to extract + run it witho
 
 Work Log:
 - Extracted `upload/workspace-893b7784-f798-45ec-859e-22268ca0dbdb (1).tar` into /home/z/my-project (excluded .git internals, tool-results, and the redundant RUPAIYA_101_Project.zip to avoid clobbering).
-- Verified project files landed correctly: src/app/page.tsx (Rupaiya 101 client app), 12 strategy components, 18+ shared tool components, lib/data/* + lib/store/useAppStore.ts, prisma/schema.prisma, db/custom.db, public assets, Caddyfile.
+- Verified project files landed correctly: src/app/page.tsx (Money Matters client app), 12 strategy components, 18+ shared tool components, lib/data/* + lib/store/useAppStore.ts, prisma/schema.prisma, db/custom.db, public assets, Caddyfile.
 - Dev server (`bun run dev`) was already auto-started on port 3000 by the sandbox; verified `Ready in 530ms` and only the harmless Next.js cross-origin-dev-origin warning in dev.log (no fatal errors).
-- Smoke-tested HTTP GET / → 200, 139 KB HTML, title "RUPAIYA 101".
+- Smoke-tested HTTP GET / → 200, 139 KB HTML, title "Money Matters".
 - Used agent-browser to verify rendering + interactivity:
   - Initial render shows WelcomeOnboarding ("Aage badho" / "Skip"), all 12 strategy tabs, all 18 tool buttons, modules list, quick stats.
   - Clicked "Aage badho" → advanced to name-input step. Clicked "← Peeche" → returned to welcome. Clicked "Skip" → main app rendered cleanly.
@@ -2530,7 +2530,7 @@ Work Log:
 - Created scheduled cron job (kind=webDevReview, fixed_rate=900s, tz=Asia/Calcutta, priority=10, job_id=209913) to run the standard 15-minute review/development loop.
 
 Stage Summary:
-- Project state: Production-ready RUPAIYA 101 app (Next.js 16 + Turbopack, Tailwind 4, shadcn/ui, Zustand, Framer Motion, z-ai-web-dev-sdk).
+- Project state: Production-ready Money Matters app (Next.js 16 + Turbopack, Tailwind 4, shadcn/ui, Zustand, Framer Motion, z-ai-web-dev-sdk).
 - Dev server: running on port 3000, compiles cleanly, all routes return 200.
 - Browser verification: page renders, onboarding flow works, strategy tabs switch, no console/runtime errors.
 - Reviewer: NOT invoked this round (user will request explicitly when needed). A webDevReview cron has been scheduled for autonomous future rounds.
@@ -2575,7 +2575,7 @@ Verification (agent-browser + VLM + lint):
 - HTTP GET / → 200, clean compiles throughout.
 - Zero ESLint errors.
 - Zero runtime/console errors across: onboarding flow (3 steps), 4 strategy tabs (GPS, Compounding, Mistakes, Swipe), SIP Calculator dialog, mobile viewport (390px).
-- VLM analysis of onboarding: "background is midnight navy, primary accents are emerald green, card uses glassmorphism, RUPAIYA 101 has brand gradient (green to purple), no visual glitches."
+- VLM analysis of onboarding: "background is midnight navy, primary accents are emerald green, card uses glassmorphism, Money Matters has brand gradient (green to purple), no visual glitches."
 - VLM analysis of home dashboard: "Consistent midnight navy + emerald green + purple + gold palette, sidebar uses glassmorphism, progress bars use emerald gradients, polish 8/10, no major glitches."
 - VLM analysis of mobile: "Layout adapts well, hamburger + bottom nav clear, content readable, no overflow, premium dark theme with green accents, no glitches, responsive and user-friendly."
 
@@ -2787,7 +2787,7 @@ Unresolved Issues / Risks:
 ---
 Task ID: PREMIUM-UI (Hackathon-Ready FinTech UI Upgrade)
 Agent: Main Orchestrator (no reviewer, per user request)
-Task: Complete premium UI upgrade to "RUPAIYA 101" — a heavily funded startup product combining Duolingo (gamification) + Groww (finance) + ChatGPT (AI) + Notion (clean productivity). Strict Midnight Wealth + Emerald Growth palette, Inter/Poppins fonts, premium glassmorphism, mobile-first responsive.
+Task: Complete premium UI upgrade to "Money Matters" — a heavily funded startup product combining Duolingo (gamification) + Groww (finance) + ChatGPT (AI) + Notion (clean productivity). Strict Midnight Wealth + Emerald Growth palette, Inter/Poppins fonts, premium glassmorphism, mobile-first responsive.
 
 Work Log:
 - Upgraded globals.css (904 → ~960 lines, refined): premium ambient backdrop (dual radial gradients), ::selection emerald, focus-visible ring, slim premium scrollbars with emerald tint, refined glassmorphism (.glass, .glass-strong, .glass-card, .glass-card-premium, .glass-card-glow) all using rgba(255,255,255,0.05) + backdrop-filter: blur(16px), card-shine hover sweep, btn-emerald/btn-gold/btn-ghost-emerald premium buttons, custom range input styling (emerald thumb + glow), shimmer loading animation, all keyframes (float, pulse-glow, shimmer, aurora-drift, particles-float, divider-sweep, badge-pulse, breathing, emoji-pulse, streak-fire, slide-up-reveal, page-fade-in, sound-wave, trophy-glow, rotate-slow), reduced-motion support, light-theme overrides.
@@ -2989,7 +2989,7 @@ Files Created (4 strategy components):
 
 4. src/components/strategies/ReportCard.tsx (298 lines) — Strategy 8: Financial Health Report Card
    - Indian school report card design with decorative corner brackets, gold-bordered glass card
-   - Header: "RUPAIYA 101 — Financial Vidyalaya" with 🎓 GraduationCap crest, motto "Padho, Bachao, Badho"
+   - Header: "Money Matters — Financial Vidyalaya" with 🎓 GraduationCap crest, motto "Padho, Bachao, Badho"
    - Student name pulled from Zustand store (userName fallback to "Student")
    - 5 subjects with grades derived from store data:
      • Saving Habits 🐷 — from completedModules count (0-11 modules × ~9%)
@@ -3088,7 +3088,7 @@ Stage Summary:
 ---
 Task ID: STRAT-1-4 (4 Interactive Strategy Components)
 Agent: Strategy Component Developer (no reviewer, per user request)
-Task: Build 4 self-contained interactive React strategy components for RUPAIYA 101 FinTech education app. Each is a full interactive experience using Framer Motion + Zustand store. Theme: Midnight Wealth + Emerald Growth. Content in Hinglish.
+Task: Build 4 self-contained interactive React strategy components for Money Matters FinTech education app. Each is a full interactive experience using Framer Motion + Zustand store. Theme: Midnight Wealth + Emerald Growth. Content in Hinglish.
 
 Work Log:
 - Read /home/z/my-project/worklog.md (project state: premium FinTech UI, capital-mastery shell, Context-Aware AI Tutor, SwipeCardViewer as module page).
@@ -3308,7 +3308,7 @@ Agent: Strategy Route Builder
 Task: Build the dynamic /strategy/[slug] route page and update the strategy registry with slug, hook, and 4-step onboardingSteps for all 8 strategies. Midnight Wealth + Emerald Growth theme.
 
 Work Log:
-- Read worklog.md to understand the existing project (RUPAIYA 101 / Capital Mastery — Next.js 16, Tailwind 4, Framer Motion, Zustand, shadcn/ui).
+- Read worklog.md to understand the existing project (Money Matters / Capital Mastery — Next.js 16, Tailwind 4, Framer Motion, Zustand, shadcn/ui).
 - Read existing src/lib/data/strategyRegistry.ts — confirmed 8 strategies already present with id/name/description/iconName/accentColor/rewardCoins/moduleId/triggerAfterCard. Existing ids already match the requested slugs 1:1.
 - Read src/lib/store/useAppStore.ts — confirmed useHydration hook + isAuthenticated + coins selector + persist middleware (storage key: rupaiya-101-storage).
 - Read src/app/dashboard/module/[id]/page.tsx and src/app/auth/page.tsx to mirror the auth-guard + hydration-loading + router.replace('/auth') pattern.
@@ -3439,7 +3439,7 @@ Work record: /home/z/my-project/agent-ctx/P2-CSS-premium-3d-overhaul.md
 ---
 
 Task ID: P3-CONTENT
-Agent: Content Fill Agent (Rupaiya 101 Module Cards)
+Agent: Content Fill Agent (Money Matters Module Cards)
 Task: Fill missing learning module content from source Rupaiya_101_Complete_Guide.md into module1Cards.ts through module11Cards.ts
 
 Work Log:
@@ -3814,3 +3814,4 @@ Stage Summary:
 - Part 3 (Module Content + Strategy Redesign): ✅ All 11 modules fully populated (193 cards), 3 standalone strategies redesigned
 - Part 4 (Badges + Profile + Gaming Path + AI): ✅ 31 badges, profile page, XP/leveling, activity feed
 - Part 5 (Final QA): ✅ All 17 routes 200, zero errors, production-ready
+

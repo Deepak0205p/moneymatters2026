@@ -5,7 +5,7 @@
 @custom-variant light (&:is(.light *));
 
 /* ════════════════════════════════════════════════════════════════════════
-   RUPAIYA 101 — Premium FinTech Design System
+   Money Matters — Premium FinTech Design System
    "Midnight Wealth + Emerald Growth"
    ───────────────────────────────────────────────────────────────────────
    Background  : #0B1220  (Deep Midnight Navy)
@@ -178,6 +178,13 @@
    BASE LAYER — Typography, body, ambient backdrop
    ════════════════════════════════════════════════════════════════════════ */
 @layer base {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -1368,5 +1375,5 @@ body {
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   END — Capital Mastery Premium 3D Overhaul (P2-CSS)
+   END — Money Matters Premium 3D Overhaul (P2-CSS)
    ════════════════════════════════════════════════════════════════════════ */
