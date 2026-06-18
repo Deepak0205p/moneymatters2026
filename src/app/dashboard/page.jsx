@@ -358,141 +358,243 @@ function ModuleCard({
   } = useAppStore();
   const isCompleted = completedModules.includes(mod.id);
   const progressPercent = isCompleted ? 100 : Math.floor((moduleProgress[mod.id] || 0) / Math.max(cardCount - 1, 1) * 100);
-  return /*#__PURE__*/_jsxs(motion.div, {
+
+  return _jsxs(motion.div, {
     initial: {
       opacity: 0,
-      y: 20
+      y: 30
     },
     animate: {
       opacity: 1,
       y: 0
     },
     transition: {
-      delay: index * 0.04
+      delay: index * 0.05,
+      duration: 0.5,
+      ease: [0.16, 1, 0.3, 1]
     },
-    whileHover: {
-      scale: isUnlocked ? 1.02 : 1,
-      y: isUnlocked ? -5 : 0
-    },
-    className: `relative group cursor-pointer rounded-2xl p-5 border border-white/[0.06] overflow-hidden transition-all duration-500 glass-card card-3d ${isUnlocked ? 'unlocked' : 'locked'}`,
+    whileHover: isUnlocked ? {
+      y: -6,
+      boxShadow: `0 20px 40px rgba(0, 0, 0, 0.4), 0 0 25px ${mod.color}12`,
+      borderColor: `${mod.color}40`
+    } : undefined,
+    className: `relative group cursor-pointer rounded-3xl p-6 border transition-all duration-300 flex flex-col justify-between h-full bg-gradient-to-b ${
+      isUnlocked 
+        ? 'from-midnight-soft/90 to-midnight-deep/95 border-white/[0.07] hover:border-t-white/15' 
+        : 'from-midnight-deep/40 to-midnight/20 border-white/[0.03] grayscale opacity-45'
+    } overflow-hidden`,
     onClick: isUnlocked ? onClick : undefined,
-    children: [/*#__PURE__*/_jsx("div", {
-      className: "absolute -top-12 -right-12 w-32 h-32 rounded-full blur-[60px] opacity-10 group-hover:opacity-30 transition-opacity duration-500",
-      style: {
-        backgroundColor: mod.color
-      }
-    }), /*#__PURE__*/_jsxs("div", {
-      className: "flex flex-col h-full relative z-10",
-      children: [/*#__PURE__*/_jsxs("div", {
-        className: "flex items-start justify-between mb-3",
-        children: [/*#__PURE__*/_jsxs("div", {
-          className: "relative",
-          children: [isUnlocked && /*#__PURE__*/_jsxs("svg", {
-            className: "absolute -inset-1.5 w-[calc(100%+12px)] h-[calc(100%+12px)] -rotate-90",
-            children: [/*#__PURE__*/_jsx("circle", {
-              cx: "50%",
-              cy: "50%",
-              r: "45%",
-              fill: "none",
-              stroke: "white",
-              strokeWidth: "1.5",
-              strokeOpacity: "0.05"
-            }), /*#__PURE__*/_jsx(motion.circle, {
-              cx: "50%",
-              cy: "50%",
-              r: "45%",
-              fill: "none",
-              stroke: mod.color,
-              strokeWidth: "2",
-              strokeLinecap: "round",
-              initial: {
-                pathLength: 0
-              },
-              animate: {
-                pathLength: progressPercent / 100
-              },
-              transition: {
-                duration: 1.5,
-                delay: 0.5
-              }
-            })]
-          }), /*#__PURE__*/_jsx("div", {
-            className: `w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-transform duration-500 group-hover:scale-110 ${isUnlocked ? 'shadow-lg shadow-black/20' : 'grayscale opacity-50'}`,
+    children: [
+      isUnlocked && _jsxs("div", {
+        className: "absolute inset-0 pointer-events-none",
+        children: [
+          _jsx("div", {
+            className: "absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[70px] opacity-15 group-hover:opacity-35 group-hover:scale-110 transition-all duration-500",
             style: {
-              backgroundColor: isUnlocked ? `${mod.color}20` : 'rgba(255,255,255,0.05)'
-            },
-            children: isUnlocked ? mod.emoji : /*#__PURE__*/_jsx(Lock, {
-              size: 16,
-              className: "text-zinc-600"
-            })
-          })]
-        }), isActive && /*#__PURE__*/_jsxs(motion.div, {
-          animate: {
-            opacity: [0.5, 1, 0.5]
-          },
-          transition: {
-            repeat: Infinity,
-            duration: 2
-          },
-          className: "px-2 py-1 rounded-full bg-emerald/10 border border-emerald/30 flex items-center gap-1.5",
-          children: [/*#__PURE__*/_jsx("div", {
-            className: "w-1.5 h-1.5 rounded-full bg-emerald-soft"
-          }), /*#__PURE__*/_jsx("span", {
-            className: "text-[9px] font-black text-emerald-soft uppercase",
-            children: "Next"
-          })]
-        }), isCompleted && /*#__PURE__*/_jsxs("div", {
-          className: "px-2 py-1 rounded-full bg-white/5 border border-white/10 flex items-center gap-1",
-          children: [/*#__PURE__*/_jsx(CheckCircle2, {
-            size: 10,
-            className: "text-emerald-soft"
-          }), /*#__PURE__*/_jsx("span", {
-            className: "text-[9px] font-bold text-zinc-400 uppercase",
-            children: "Done"
-          })]
-        })]
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "flex-1",
-        children: [/*#__PURE__*/_jsxs("span", {
-          className: "text-[9px] font-black tracking-[0.2em] uppercase mb-1 block",
-          style: {
-            color: isUnlocked ? mod.color : '#94A3B8'
-          },
-          children: ["Module ", mod.id]
-        }), /*#__PURE__*/_jsx("h3", {
-          className: `font-bold text-base leading-tight mb-1.5 ${isUnlocked ? 'text-white' : 'text-zinc-500'}`,
-          children: mod.title
-        }), /*#__PURE__*/_jsx("p", {
-          className: "text-zinc-500 text-[11px] line-clamp-2 leading-relaxed",
-          children: mod.description
-        })]
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between",
-        children: [/*#__PURE__*/_jsxs("div", {
-          className: "flex items-center gap-3 text-[10px] font-medium text-zinc-500",
-          children: [/*#__PURE__*/_jsxs("span", {
-            className: "flex items-center gap-1",
-            children: [/*#__PURE__*/_jsx(BookOpen, {
-              size: 10
-            }), " ", cardCount, " Cards"]
-          }), /*#__PURE__*/_jsxs("span", {
-            className: "flex items-center gap-1",
-            children: [/*#__PURE__*/_jsx(Clock, {
-              size: 10
-            }), " ", cardCount * 2, "m"]
-          })]
-        }), /*#__PURE__*/_jsx("div", {
-          className: `w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${isUnlocked ? 'bg-white/5 group-hover:bg-white/10' : 'bg-transparent'}`,
-          children: isUnlocked ? /*#__PURE__*/_jsx(ChevronRight, {
-            size: 14,
-            className: "text-zinc-400 group-hover:text-white transition-all"
-          }) : /*#__PURE__*/_jsx(Lock, {
-            size: 12,
-            className: "text-zinc-700"
+              backgroundColor: mod.color
+            }
+          }),
+          _jsx("div", {
+            className: "absolute -bottom-24 -left-24 w-36 h-36 rounded-full blur-[70px] opacity-5 group-hover:opacity-20 transition-all duration-500",
+            style: {
+              backgroundColor: mod.color
+            }
           })
-        })]
-      })]
-    })]
+        ]
+      }),
+      _jsxs("div", {
+        className: "flex flex-col h-full relative z-10",
+        children: [
+          _jsxs("div", {
+            className: "flex items-start justify-between mb-4",
+            children: [
+              _jsxs("div", {
+                className: "relative",
+                children: [
+                  isUnlocked && _jsxs("svg", {
+                    className: "absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] -rotate-90",
+                    children: [
+                      _jsx("circle", {
+                        cx: "50%",
+                        cy: "50%",
+                        r: "44%",
+                        fill: "none",
+                        stroke: "white",
+                        strokeWidth: "1.5",
+                        strokeOpacity: "0.04"
+                      }),
+                      _jsx(motion.circle, {
+                        cx: "50%",
+                        cy: "50%",
+                        r: "44%",
+                        fill: "none",
+                        stroke: mod.color,
+                        strokeWidth: "2.5",
+                        strokeLinecap: "round",
+                        style: {
+                          filter: `drop-shadow(0 0 4px ${mod.color}50)`
+                        },
+                        initial: {
+                          pathLength: 0
+                        },
+                        animate: {
+                          pathLength: progressPercent / 100
+                        },
+                        transition: {
+                          duration: 1.5,
+                          delay: 0.2
+                        }
+                      })
+                    ]
+                  }),
+                  _jsx("div", {
+                    className: `w-14 h-14 rounded-2xl flex items-center justify-center text-3xl transition-transform duration-500 group-hover:scale-110 ${
+                      isUnlocked ? 'shadow-[0_4px_16px_rgba(0,0,0,0.3)]' : 'opacity-60'
+                    }`,
+                    style: {
+                      backgroundColor: isUnlocked ? `${mod.color}15` : 'rgba(255,255,255,0.03)',
+                      border: isUnlocked ? `1px solid ${mod.color}25` : '1px solid rgba(255,255,255,0.05)'
+                    },
+                    children: isUnlocked ? mod.emoji : _jsx(Lock, {
+                      size: 20,
+                      className: "text-zinc-600"
+                    })
+                  })
+                ]
+              }),
+              _jsxs("div", {
+                className: "flex gap-1.5 items-center",
+                children: [
+                  isActive && _jsxs(motion.div, {
+                    animate: {
+                      opacity: [0.5, 1, 0.5]
+                    },
+                    transition: {
+                      repeat: Infinity,
+                      duration: 2
+                    },
+                    className: "px-2.5 py-1 rounded-full bg-emerald/10 border border-emerald/30 flex items-center gap-1.5 shadow-sm",
+                    children: [
+                      _jsx("div", {
+                        className: "w-1.5 h-1.5 rounded-full bg-emerald-soft animate-ping"
+                      }),
+                      _jsx("span", {
+                        className: "text-[9px] font-black text-emerald-soft uppercase tracking-wider",
+                        children: "Next"
+                      })
+                    ]
+                  }),
+                  isCompleted && _jsxs("div", {
+                    className: "px-2.5 py-1 rounded-full bg-emerald/15 border border-emerald-500/20 flex items-center gap-1 shadow-sm",
+                    children: [
+                      _jsx(CheckCircle2, {
+                        size: 11,
+                        className: "text-emerald-soft"
+                      }),
+                      _jsx("span", {
+                        className: "text-[9px] font-black text-emerald-soft uppercase tracking-wider",
+                        children: "Done"
+                      })
+                    ]
+                  }),
+                  !isUnlocked && _jsxs("div", {
+                    className: "px-2.5 py-1 rounded-full bg-white/5 border border-white/10 flex items-center gap-1",
+                    children: [
+                      _jsx(Lock, {
+                        size: 10,
+                        className: "text-zinc-500"
+                      }),
+                      _jsx("span", {
+                        className: "text-[9px] font-black text-zinc-500 uppercase tracking-wider",
+                        children: "Locked"
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          }),
+          _jsxs("div", {
+            className: "flex-1 mt-2",
+            children: [
+              _jsxs("span", {
+                className: "text-[9px] font-black tracking-[0.25em] uppercase mb-1.5 block",
+                style: {
+                  color: isUnlocked ? mod.color : '#64748B'
+                },
+                children: ["Module ", mod.id]
+              }),
+              _jsx("h3", {
+                className: `font-display font-extrabold text-lg leading-snug mb-2 transition-colors duration-300 ${
+                  isUnlocked ? 'text-white group-hover:text-emerald-soft' : 'text-zinc-600'
+                }`,
+                children: mod.title
+              }),
+              _jsx("p", {
+                className: `text-[12px] leading-relaxed line-clamp-3 transition-colors duration-300 ${
+                  isUnlocked ? 'text-zinc-400 group-hover:text-zinc-300' : 'text-zinc-600'
+                }`,
+                children: mod.description
+              })
+            ]
+          }),
+          _jsxs("div", {
+            className: `mt-5 pt-4 border-t flex items-center justify-between transition-colors duration-300 ${
+              isUnlocked ? 'border-white/[0.06] group-hover:border-white/[0.1]' : 'border-white/[0.02]'
+            }`,
+            children: [
+              _jsxs("div", {
+                className: "flex items-center gap-3.5 text-[11px] font-semibold text-zinc-500",
+                children: [
+                  _jsxs("span", {
+                    className: "flex items-center gap-1.5 hover:text-zinc-400 transition-colors",
+                    children: [
+                      _jsx(BookOpen, {
+                        size: 11,
+                        className: "text-zinc-500"
+                      }),
+                      " ",
+                      cardCount,
+                      " Cards"
+                    ]
+                  }),
+                  _jsxs("span", {
+                    className: "flex items-center gap-1.5 hover:text-zinc-400 transition-colors",
+                    children: [
+                      _jsx(Clock, {
+                        size: 11,
+                        className: "text-zinc-500"
+                      }),
+                      " ",
+                      cardCount * 2,
+                      " min"
+                    ]
+                  })
+                ]
+              }),
+              _jsx(motion.div, {
+                whileHover: isUnlocked ? {
+                  backgroundColor: `${mod.color}25`,
+                  borderColor: `${mod.color}40`,
+                  boxShadow: `0 0 12px ${mod.color}40`,
+                  x: 2
+                } : undefined,
+                className: `w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                  isUnlocked ? 'bg-white/5 border border-white/10' : ''
+                }`,
+                children: isUnlocked ? _jsx(ChevronRight, {
+                  size: 16,
+                  className: "text-zinc-400 group-hover:text-white transition-colors"
+                }) : _jsx(Lock, {
+                  size: 14,
+                  className: "text-zinc-800"
+                })
+              })
+            ]
+          })
+        ]
+      })
+    ]
   });
 }
 
@@ -997,9 +1099,9 @@ export default function Dashboard() {
             })]
           })]
         }), /*#__PURE__*/_jsx("div", {
-          className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
-          children: modules.map((mod, i) => {
-            const isUnlocked = i === 0 || completedModules.includes(modules[i - 1].id);
+          className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+          children: translatedModules.map((mod, i) => {
+            const isUnlocked = i === 0 || completedModules.includes(translatedModules[i - 1]?.id);
             const isActive = i === activeModuleIndex;
             return /*#__PURE__*/_jsx(ModuleCard, {
               mod: mod,
