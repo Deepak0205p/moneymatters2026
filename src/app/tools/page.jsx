@@ -264,6 +264,29 @@ function LazyToolDialog({ toolId, onClose }) {
   return <Component open={true} onClose={onClose} />;
 }
 
+const toolGamerInfo = (id) => {
+  const infoMap = {
+    achievement: { cat: 'Showcase 🏆', xp: '+20 XP' },
+    goals: { cat: 'Tracker 🎯', xp: '+50 XP' },
+    health: { cat: 'Checkup 🩺', xp: '+80 XP' },
+    expense: { cat: 'Tracker 🧾', xp: '+40 XP' },
+    savings: { cat: 'Challenge 🐷', xp: '+100 XP' },
+    quiz: { cat: 'Battle 🧠', xp: '+150 XP' },
+    spin: { cat: 'Daily Luck 🎡', xp: '+10 XP' },
+    memory: { cat: 'Minigame 🃏', xp: '+80 XP' },
+    word: { cat: 'Minigame 🔠', xp: '+80 XP' },
+    news: { cat: 'Feed 📰', xp: '+10 XP' },
+    priority: { cat: 'Calculator 🔢', xp: '+30 XP' },
+    invest: { cat: 'Comparison 📈', xp: '+40 XP' },
+    emergency: { cat: 'Calculator 🛡️', xp: '+40 XP' },
+    habit: { cat: 'Habits 📅', xp: '+60 XP' },
+    age: { cat: 'Calculator 🩺', xp: '+50 XP' },
+    sip: { cat: 'Calculator 🧮', xp: '+30 XP' },
+    badges: { cat: 'Gallery 🥇', xp: '+10 XP' }
+  };
+  return infoMap[id] || { cat: 'Utility ⚙️', xp: '+20 XP' };
+};
+
 // ── Tools Page ───────────────────────────────────────────────────────────────
 export default function ToolsPage() {
   const hydrated = useHydration();
@@ -484,81 +507,128 @@ export default function ToolsPage() {
               })]
             })]
           }), /*#__PURE__*/_jsx("div", {
-            className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
+            className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6",
             children: translatedStrategies.map((strategy, i) => {
               const Icon = getIcon(strategy.icon);
+              const difficulty = strategy.priority === 'highest' || strategy.priority === 'high' 
+                ? { label: 'Advanced 🔴', xp: '+100 XP' }
+                : strategy.priority === 'medium'
+                ? { label: 'Intermediate 🟡', xp: '+50 XP' }
+                : { label: 'Beginner 🟢', xp: '+30 XP' };
               return /*#__PURE__*/_jsxs(motion.button, {
                 initial: {
                   opacity: 0,
-                  y: 20
+                  y: 30
                 },
                 animate: {
                   opacity: 1,
                   y: 0
                 },
                 transition: {
-                  delay: i * 0.04
+                  delay: i * 0.05,
+                  duration: 0.5,
+                  ease: [0.16, 1, 0.3, 1]
                 },
                 whileHover: {
-                  y: -4,
-                  scale: 1.02
+                  y: -6,
+                  boxShadow: `0 20px 45px rgba(0, 0, 0, 0.5), 0 0 30px ${strategy.color}15`,
+                  borderColor: `${strategy.color}40`
                 },
                 whileTap: {
                   scale: 0.98
                 },
                 onClick: () => setActiveStrategy(strategy.id),
-                className: "group relative text-left rounded-3xl p-5 border border-white/[0.06] glass-card card-shine overflow-hidden",
-                children: [/*#__PURE__*/_jsx("div", {
-                  className: "absolute -top-12 -right-12 w-32 h-32 rounded-full blur-[60px] opacity-10 group-hover:opacity-30 transition-opacity duration-500",
-                  style: {
-                    backgroundColor: strategy.color
-                  }
-                }), /*#__PURE__*/_jsxs("div", {
-                  className: "relative z-10",
-                  children: [/*#__PURE__*/_jsxs("div", {
-                    className: "flex items-start justify-between mb-4",
-                    children: [/*#__PURE__*/_jsx("div", {
-                      className: "w-12 h-12 rounded-2xl flex items-center justify-center",
-                      style: {
-                        backgroundColor: `${strategy.color}20`,
-                        boxShadow: `0 0 14px ${strategy.color}20`
-                      },
-                      children: /*#__PURE__*/_jsx(Icon, {
-                        size: 22,
-                        style: {
-                          color: strategy.color
-                        }
+                className: "group relative text-left rounded-3xl p-6 border border-white/[0.07] bg-gradient-to-b from-midnight-soft/90 to-midnight-deep/95 overflow-hidden transition-all duration-300 cursor-pointer",
+                children: [
+                  /*#__PURE__*/_jsx("div", {
+                    className: "absolute -top-20 -right-20 w-40 h-40 rounded-full blur-[70px] opacity-15 group-hover:opacity-35 group-hover:scale-110 transition-all duration-500",
+                    style: {
+                      backgroundColor: strategy.color
+                    }
+                  }),
+                  /*#__PURE__*/_jsxs("div", {
+                    className: "relative z-10 flex flex-col h-full justify-between",
+                    children: [
+                      /*#__PURE__*/_jsxs("div", {
+                        className: "flex items-start justify-between mb-5",
+                        children: [
+                          /*#__PURE__*/_jsx("div", {
+                            className: "w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shadow-lg",
+                            style: {
+                              backgroundColor: `${strategy.color}15`,
+                              border: `1px solid ${strategy.color}25`
+                            },
+                            children: /*#__PURE__*/_jsx(Icon, {
+                              size: 24,
+                              style: {
+                                color: strategy.color
+                              }
+                            })
+                          }),
+                          /*#__PURE__*/_jsxs("div", {
+                            className: "flex gap-1.5 items-center",
+                            children: [
+                              /*#__PURE__*/_jsx("span", {
+                                className: "text-[9px] font-black px-2 py-0.5 rounded-full",
+                                style: {
+                                  backgroundColor: `${strategy.color}15`,
+                                  color: strategy.color,
+                                  border: `1px solid ${strategy.color}25`
+                                },
+                                children: `S-${String(strategy.id).padStart(2, '0')}`
+                              }),
+                              /*#__PURE__*/_jsx("span", {
+                                className: "text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-soft border border-emerald-500/20",
+                                children: difficulty.xp
+                              })
+                            ]
+                          })
+                        ]
+                      }),
+                      /*#__PURE__*/_jsxs("div", {
+                        children: [
+                          /*#__PURE__*/_jsx("h3", {
+                            className: "font-display text-lg font-extrabold text-white mb-1.5 group-hover:text-emerald-soft transition-colors duration-300",
+                            children: strategy.title
+                          }),
+                          /*#__PURE__*/_jsx("p", {
+                            className: "text-[12px] text-zinc-400 group-hover:text-zinc-300 transition-colors leading-relaxed line-clamp-3 mb-4",
+                            children: strategy.description || strategy.titleEn
+                          })
+                        ]
+                      }),
+                      /*#__PURE__*/_jsxs("div", {
+                        className: "flex items-center justify-between pt-4 border-t border-white/[0.06] group-hover:border-white/[0.1] transition-colors",
+                        children: [
+                          /*#__PURE__*/_jsxs("div", {
+                            className: "flex items-center gap-1 text-[10px] font-semibold text-zinc-500",
+                            children: [
+                              /*#__PURE__*/_jsx("span", {
+                                children: difficulty.label
+                              })
+                            ]
+                          }),
+                          /*#__PURE__*/_jsxs(motion.div, {
+                            whileHover: {
+                              backgroundColor: `${strategy.color}25`,
+                              borderColor: `${strategy.color}40`,
+                              boxShadow: `0 0 12px ${strategy.color}40`,
+                              x: 2
+                            },
+                            className: "px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold text-white group-hover:text-white transition-all flex items-center gap-1",
+                            children: [
+                              "KHELO 🎮",
+                              /*#__PURE__*/_jsx(Zap, {
+                                size: 10,
+                                className: "text-amber-400"
+                              })
+                            ]
+                          })
+                        ]
                       })
-                    }), /*#__PURE__*/_jsx("span", {
-                      className: "text-[9px] font-black px-2 py-0.5 rounded-full",
-                      style: {
-                        backgroundColor: `${strategy.color}20`,
-                        color: strategy.color
-                      },
-                      children: String(strategy.id).padStart(2, '0')
-                    })]
-                  }), /*#__PURE__*/_jsx("h3", {
-                    className: "font-bold text-white mb-1 group-hover:text-emerald-soft transition-colors",
-                    children: strategy.title
-                  }), /*#__PURE__*/_jsx("p", {
-                    className: "text-[11px] text-ink-muted line-clamp-2 mb-3",
-                    children: strategy.titleEn
-                  }), /*#__PURE__*/_jsxs("div", {
-                    className: "flex items-center justify-between pt-3 border-t border-white/[0.04]",
-                    children: [/*#__PURE__*/_jsxs("span", {
-                      className: "text-[9px] font-bold uppercase tracking-wider",
-                      style: {
-                        color: strategy.color
-                      },
-                      children: [strategy.priority, " priority"]
-                    }), /*#__PURE__*/_jsxs("span", {
-                      className: "text-[10px] text-ink-muted group-hover:text-emerald-soft transition-colors flex items-center gap-1",
-                      children: ["Kholo ", /*#__PURE__*/_jsx(Zap, {
-                        size: 10
-                      })]
-                    })]
-                  })]
-                })]
+                    ]
+                  })
+                ]
               }, strategy.id);
             })
           })]
@@ -585,57 +655,95 @@ export default function ToolsPage() {
               })]
             })]
           }), /*#__PURE__*/_jsx("div", {
-            className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3",
+            className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4",
             children: translatedTools.map((tool, i) => {
               const Icon = tool.Icon;
+              const gamer = toolGamerInfo(tool.id);
               return /*#__PURE__*/_jsxs(motion.button, {
                 initial: {
                   opacity: 0,
-                  y: 20
+                  y: 30
                 },
                 animate: {
                   opacity: 1,
                   y: 0
                 },
                 transition: {
-                  delay: i * 0.03
+                  delay: i * 0.04,
+                  duration: 0.4,
+                  ease: [0.16, 1, 0.3, 1]
                 },
                 whileHover: {
-                  y: -4,
-                  scale: 1.03
+                  y: -6,
+                  boxShadow: `0 15px 30px rgba(0, 0, 0, 0.45), 0 0 20px ${tool.color}15`,
+                  borderColor: `${tool.color}45`
                 },
                 whileTap: {
                   scale: 0.97
                 },
                 onClick: () => setOpenTool(tool.id),
-                className: "group relative text-left rounded-2xl p-4 border border-white/[0.06] glass-card card-shine overflow-hidden",
-                children: [/*#__PURE__*/_jsx("div", {
-                  className: "absolute -top-8 -right-8 w-24 h-24 rounded-full blur-[50px] opacity-10 group-hover:opacity-30 transition-opacity duration-500",
-                  style: {
-                    backgroundColor: tool.color
-                  }
-                }), /*#__PURE__*/_jsxs("div", {
-                  className: "relative z-10 flex flex-col items-center text-center",
-                  children: [/*#__PURE__*/_jsx("div", {
-                    className: "w-11 h-11 rounded-xl flex items-center justify-center mb-3",
+                className: "group relative text-left rounded-3xl p-5 border border-white/[0.07] bg-gradient-to-b from-midnight-soft/90 to-midnight-deep/95 overflow-hidden transition-all duration-300 cursor-pointer",
+                children: [
+                  /*#__PURE__*/_jsx("div", {
+                    className: "absolute -top-12 -right-12 w-28 h-28 rounded-full blur-[50px] opacity-10 group-hover:opacity-30 transition-opacity duration-500",
                     style: {
-                      backgroundColor: `${tool.color}20`,
-                      boxShadow: `0 0 14px ${tool.color}20`
-                    },
-                    children: /*#__PURE__*/_jsx(Icon, {
-                      size: 20,
-                      style: {
-                        color: tool.color
-                      }
-                    })
-                  }), /*#__PURE__*/_jsx("h3", {
-                    className: "text-xs font-bold text-white mb-1 line-clamp-1",
-                    children: tool.label
-                  }), /*#__PURE__*/_jsx("p", {
-                    className: "text-[10px] text-ink-muted line-clamp-2 leading-tight",
-                    children: tool.description
-                  })]
-                })]
+                      backgroundColor: tool.color
+                    }
+                  }),
+                  /*#__PURE__*/_jsxs("div", {
+                    className: "relative z-10 flex flex-col h-full justify-between items-center text-center",
+                    children: [
+                      /*#__PURE__*/_jsxs("div", {
+                        className: "w-full flex items-center justify-between mb-4",
+                        children: [
+                          /*#__PURE__*/_jsx("span", {
+                            className: "text-[8px] font-black tracking-wider text-zinc-500 group-hover:text-zinc-400 truncate max-w-[60%]",
+                            children: gamer.cat
+                          }),
+                          /*#__PURE__*/_jsx("span", {
+                            className: "text-[8px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-soft border border-emerald-500/20",
+                            children: gamer.xp
+                          })
+                        ]
+                      }),
+                      /*#__PURE__*/_jsx("div", {
+                        className: "w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-transform duration-500 group-hover:scale-110 shadow-md",
+                        style: {
+                          backgroundColor: `${tool.color}15`,
+                          border: `1px solid ${tool.color}25`
+                        },
+                        children: /*#__PURE__*/_jsx(Icon, {
+                          size: 22,
+                          style: {
+                            color: tool.color
+                          }
+                        })
+                      }),
+                      /*#__PURE__*/_jsxs("div", {
+                        className: "w-full",
+                        children: [
+                          /*#__PURE__*/_jsx("h3", {
+                            className: "text-sm font-extrabold text-white mb-1 group-hover:text-emerald-soft transition-colors duration-300 line-clamp-1",
+                            children: tool.label
+                          }),
+                          /*#__PURE__*/_jsx("p", {
+                            className: "text-[11px] text-zinc-400 group-hover:text-zinc-300 transition-colors leading-relaxed line-clamp-2 min-h-[2.2rem]",
+                            children: tool.description
+                          })
+                        ]
+                      }),
+                      /*#__PURE__*/_jsx(motion.div, {
+                        whileHover: {
+                          backgroundColor: `${tool.color}25`,
+                          borderColor: `${tool.color}40`,
+                          boxShadow: `0 0 10px ${tool.color}30`
+                        },
+                        className: "mt-3 w-full py-1.5 rounded-xl bg-white/5 border border-white/10 text-[9px] font-bold text-zinc-400 group-hover:text-white transition-all flex items-center justify-center gap-1",
+                        children: "OPEN ⚙️"
+                      })
+                    ]
+                  })
+                ]
               }, tool.id);
             })
           })]
