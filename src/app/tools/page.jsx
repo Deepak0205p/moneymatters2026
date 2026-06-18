@@ -8,6 +8,8 @@ import { useAppStore, useHydration } from '@/lib/store/useAppStore';
 import { Navbar } from '@/components/2d/navbar';
 import { strategies } from '@/lib/data/strategies';
 import { ArrowLeft, X, Sparkles, Wrench, Brain, Calculator, TrendingUp, Target, Trophy, Zap, Brain as BrainIcon, Type, Newspaper, ListOrdered, UserCheck, Shield, Calendar, HeartPulse, Receipt, PiggyBank, CircleDot, Coins, BookOpen, Navigation, GitBranch, Eye, Layers, Home, DoorOpen, TreePine, Award, Clock, Store, Construction } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { translateObject, translateText } from '@/lib/utils/translateHelper';
 
 const ICON_MAP = { Navigation, GitBranch, Eye, Layers, Home, DoorOpen, TreePine, Award, BookOpen, Clock, Store };
 
@@ -275,6 +277,64 @@ export default function ToolsPage() {
   const [openTool, setOpenTool] = useState(null);
   const toolCount = useMemo(() => TOOLS.length + strategies.length, []);
 
+  const { t, locale } = useTranslation();
+  const [translatedTools, setTranslatedTools] = useState(TOOLS);
+  const [translatedStrategies, setTranslatedStrategies] = useState(strategies);
+  const [translatedHeroSub, setTranslatedHeroSub] = useState('');
+  const [translatedGuardTitle, setTranslatedGuardTitle] = useState('Tools kholne ke liye login karo');
+  const [translatedGuardSub, setTranslatedGuardSub] = useState('Apni progress save karne aur coins earn karne ke liye pehle login karo.');
+  const [translatedStrategiesTitle, setTranslatedStrategiesTitle] = useState('Interactive Strategies');
+  const [translatedStrategiesSub, setTranslatedStrategiesSub] = useState('11 visual + gamified financial learning experiences');
+  const [translatedToolsTitle, setTranslatedToolsTitle] = useState('Financial Tools');
+  const [translatedToolsSub, setTranslatedToolsSub] = useState('Calculators, trackers, games aur more');
+
+  // Translate dynamic content
+  useEffect(() => {
+    let active = true;
+    async function loadTranslations() {
+      try {
+        const transTools = await Promise.all(TOOLS.map(async tool => ({
+          ...tool,
+          label: await translateText(tool.label, locale),
+          description: await translateText(tool.description, locale)
+        })));
+        
+        const transStrategies = await Promise.all(strategies.map(async s => ({
+          ...s,
+          title: await translateText(s.title, locale),
+          titleEn: await translateText(s.titleEn, locale)
+        })));
+
+        const heroSub = await translateText("11 interactive strategies + 16 financial tools — SIP calculator, expense tracker, quizzes, games, AI advisor aur bahut kuch. Sab kuch Hinglish mein!", locale);
+        const guardTitle = await translateText("Tools kholne ke liye login karo", locale);
+        const guardSub = await translateText("Apni progress save karne aur coins earn karne ke liye pehle login karo.", locale);
+        
+        const stratTitle = await translateText("Interactive Strategies", locale);
+        const stratSub = await translateText("11 visual + gamified financial learning experiences", locale);
+        const toolsTitle = await translateText("Financial Tools", locale);
+        const toolsSub = await translateText("Calculators, trackers, games aur more", locale);
+
+        if (active) {
+          setTranslatedTools(transTools);
+          setTranslatedStrategies(transStrategies);
+          setTranslatedHeroSub(heroSub);
+          setTranslatedGuardTitle(guardTitle);
+          setTranslatedGuardSub(guardSub);
+          setTranslatedStrategiesTitle(stratTitle);
+          setTranslatedStrategiesSub(stratSub);
+          setTranslatedToolsTitle(toolsTitle);
+          setTranslatedToolsSub(toolsSub);
+        }
+      } catch (e) {
+        console.error('Translation error in ToolsPage:', e);
+      }
+    }
+    loadTranslations();
+    return () => {
+      active = false;
+    };
+  }, [locale]);
+
   // Auth guard (soft — allow viewing but suggest login)
   if (hydrated && !isAuthenticated) {
     return /*#__PURE__*/_jsx("main", {
@@ -292,10 +352,10 @@ export default function ToolsPage() {
           })
         }), /*#__PURE__*/_jsx("h1", {
           className: "text-2xl font-bold text-white mb-2",
-          children: "Tools kholne ke liye login karo"
+          children: translatedGuardTitle
         }), /*#__PURE__*/_jsx("p", {
           className: "text-sm text-ink-muted mb-6",
-          children: "Apni progress save karne aur coins earn karne ke liye pehle login karo."
+          children: translatedGuardSub
         }), /*#__PURE__*/_jsxs("div", {
           className: "flex gap-3 justify-center",
           children: [/*#__PURE__*/_jsx(Link, {
@@ -350,11 +410,11 @@ export default function ToolsPage() {
             className: "font-display text-4xl sm:text-5xl font-extrabold tracking-tight mb-3",
             children: /*#__PURE__*/_jsx("span", {
               className: "text-gradient-brand",
-              children: "Strategies & Tools"
+              children: t('auth.title_login').includes('Wapas') ? "Strategies & Tools" : "Strategies & Tools"
             })
           }), /*#__PURE__*/_jsx("p", {
             className: "text-ink-muted max-w-2xl mx-auto",
-            children: "11 interactive strategies + 16 financial tools \u2014 SIP calculator, expense tracker, quizzes, games, AI advisor aur bahut kuch. Sab kuch Hinglish mein!"
+            children: translatedHeroSub || "11 interactive strategies + 16 financial tools — SIP calculator, expense tracker, quizzes, games, AI advisor aur bahut kuch. Sab kuch Hinglish mein!"
           })]
         }), /*#__PURE__*/_jsxs(motion.div, {
           initial: {
@@ -417,15 +477,15 @@ export default function ToolsPage() {
             }), /*#__PURE__*/_jsxs("div", {
               children: [/*#__PURE__*/_jsx("h2", {
                 className: "font-display text-xl font-bold text-ink",
-                children: "Interactive Strategies"
+                children: translatedStrategiesTitle
               }), /*#__PURE__*/_jsx("p", {
                 className: "text-xs text-ink-muted",
-                children: "11 visual + gamified financial learning experiences"
+                children: translatedStrategiesSub
               })]
             })]
           }), /*#__PURE__*/_jsx("div", {
             className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
-            children: strategies.map((strategy, i) => {
+            children: translatedStrategies.map((strategy, i) => {
               const Icon = getIcon(strategy.icon);
               return /*#__PURE__*/_jsxs(motion.button, {
                 initial: {
@@ -518,15 +578,15 @@ export default function ToolsPage() {
             }), /*#__PURE__*/_jsxs("div", {
               children: [/*#__PURE__*/_jsx("h2", {
                 className: "font-display text-xl font-bold text-ink",
-                children: "Financial Tools"
+                children: translatedToolsTitle
               }), /*#__PURE__*/_jsx("p", {
                 className: "text-xs text-ink-muted",
-                children: "Calculators, trackers, games aur more"
+                children: translatedToolsSub
               })]
             })]
           }), /*#__PURE__*/_jsx("div", {
             className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3",
-            children: TOOLS.map((tool, i) => {
+            children: translatedTools.map((tool, i) => {
               const Icon = tool.Icon;
               return /*#__PURE__*/_jsxs(motion.button, {
                 initial: {
@@ -583,7 +643,7 @@ export default function ToolsPage() {
           className: "text-center py-8 border-t border-white/[0.03]",
           children: /*#__PURE__*/_jsx("p", {
             className: "text-[10px] font-black text-ink-muted/60 uppercase tracking-[0.4em]",
-            children: "Money Matters \u2014 Tools Hub"
+            children: "Money Matters — Tools Hub"
           })
         })]
       })]

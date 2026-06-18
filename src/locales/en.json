@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "home": "Home",
+    "welcome": "Hey, {name}"
+  },
+  "auth": {
+    "title_signup": "Create your account",
+    "title_login": "Welcome back, friend!",
+    "sub_signup": "Sign up to get 25 bonus coins! 🎁",
+    "sub_login": "Login to continue your progress",
+    "name_label": "Name",
+    "name_placeholder": "Enter your name",
+    "email_label": "Email",
+    "email_placeholder": "friend@example.com",
+    "password_label": "Password",
+    "submit_signup": "Sign Up",
+    "submit_login": "Login",
+    "or": "or",
+    "google_login": "Login with Google",
+    "guest_login": "Continue as Guest",
+    "footer_note": "By continuing, you agree to our Terms of Service. Your data syncs to Supabase automatically."
+  },
+  "dashboard": {
+    "title": "Your Progress",
+    "coins": "Coins",
+    "streak": "Streak",
+    "level": "Level",
+    "modules_title": "Financial Literacy Modules",
+    "modules_sub": "Master personal finance with interactive modules!",
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "start_learning": "Start Learning",
+    "continue_learning": "Continue Learning",
+    "completed": "Completed"
+  },
+  "common": {
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "coins": "Coins",
+    "streak": "Streak",
+    "days": "Days",
+    "xp": "XP"
+  }
+}

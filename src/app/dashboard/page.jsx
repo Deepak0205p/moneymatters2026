@@ -8,6 +8,9 @@ import { useAppStore, useHydration } from '@/lib/store/useAppStore';
 import { Navbar } from '@/components/2d/navbar';
 import { modules, getAllCardsForModule } from '@/data/modulesIndex';
 import { ChevronRight, Zap, BookOpen, ArrowRight, Lock, CheckCircle2, Sparkles, Clock, IndianRupee } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { translateObject, translateText } from '@/lib/utils/translateHelper';
+
 
 // ════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -496,12 +499,13 @@ function ModuleCard({
 // ════════════════════════════════════════════════════════════════════════════
 // RECENT ACTIVITY FEED
 // ════════════════════════════════════════════════════════════════════════════
-function buildActivityFeed(state) {
+// Recent activity feed translation support
+function buildActivityFeed(state, translatedModules = modules) {
   const items = [];
 
   // Module completions
   Object.entries(state.moduleCompletionDates || {}).forEach(([modId, date]) => {
-    const mod = modules.find(m => m.id === Number(modId));
+    const mod = (translatedModules || modules).find(m => m.id === Number(modId));
     if (mod) items.push({
       id: `mod-${modId}`,
       icon: mod.emoji,
@@ -510,8 +514,7 @@ function buildActivityFeed(state) {
       color: mod.color
     });
   });
-
-  // Health checkup
+// Rest of the feed logic
   if (state.healthCheckup?.completedAt) {
     items.push({
       id: 'health',
@@ -558,9 +561,11 @@ function buildActivityFeed(state) {
   // Sort by date desc, take 5
   return items.sort((a, b) => b.time.localeCompare(a.time)).slice(0, 5);
 }
-function RecentActivity() {
+
+function RecentActivity({ translatedModules }) {
   const state = useAppStore();
-  const items = useMemo(() => buildActivityFeed(state), [state]);
+  const items = useMemo(() => buildActivityFeed(state, translatedModules), [state, translatedModules]);
+
   if (items.length === 0) {
     return /*#__PURE__*/_jsxs("div", {
       className: "text-center py-8",
@@ -630,23 +635,68 @@ export default function Dashboard() {
   const hydrated = useHydration();
   const router = useRouter();
   const [quoteIndex, setQuoteIndex] = useState(0);
-  const activeModuleIndex = modules.findIndex(m => !completedModules.includes(m.id));
-  const activeModule = activeModuleIndex >= 0 ? modules[activeModuleIndex] : null;
-  const totalCards = modules.reduce((acc, m) => acc + getAllCardsForModule(m.id).length, 0);
+
+  const { t, locale } = useTranslation();
+  const [translatedModules, setTranslatedModules] = useState(modules);
+  const [translatedQuotes, setTranslatedQuotes] = useState(QUOTES);
+  const [translatedQuickTools, setTranslatedQuickTools] = useState(QUICK_TOOLS);
+  const [translatedGreeting, setTranslatedGreeting] = useState('Subah ki shubhkamnayein');
+
+  // Translate dynamic content
+  useEffect(() => {
+    let active = true;
+    async function loadTranslations() {
+      try {
+        const transMods = await translateObject(modules, locale);
+        const transQuotes = await Promise.all(QUOTES.map(q => translateText(q, locale)));
+        const transTools = await Promise.all(QUICK_TOOLS.map(async tool => ({
+          ...tool,
+          label: await translateText(tool.label, locale)
+        })));
+        
+        const rawGreeting = (() => {
+          const h = new Date().getHours();
+          if (h < 12) return 'Subah ki shubhkamnayein';
+          if (h < 17) return 'Good Afternoon';
+          return 'Good Evening';
+        })();
+        const transGreeting = await translateText(rawGreeting, locale);
+        
+        if (active) {
+          setTranslatedModules(transMods);
+          setTranslatedQuotes(transQuotes);
+          setTranslatedQuickTools(transTools);
+          setTranslatedGreeting(transGreeting);
+        }
+      } catch (e) {
+        console.error('Translation error in Dashboard:', e);
+      }
+    }
+    loadTranslations();
+    return () => {
+      active = false;
+    };
+  }, [locale]);
+
+  const activeModuleIndex = translatedModules.findIndex(m => !completedModules.includes(m.id));
+  const activeModule = activeModuleIndex >= 0 ? translatedModules[activeModuleIndex] : null;
+  const totalCards = translatedModules.reduce((acc, m) => acc + getAllCardsForModule(m.id).length, 0);
   const completedCards = Object.values(moduleProgress).reduce((a, b) => a + b, 0);
   const overallProgress = totalCards ? Math.min(100, Math.round(completedCards / totalCards * 100)) : 0;
 
   // Financial Health Score = weighted aggregate
   const healthScore = useMemo(() => {
-    const moduleScore = completedModules.length / modules.length * 40;
+    const moduleScore = completedModules.length / translatedModules.length * 40;
     const progressScore = overallProgress / 100 * 30;
     const checkupScore = healthCheckup ? healthCheckup.score / 100 * 20 : 5;
     const coinScore = Math.min(10, coins / 50);
     return Math.min(100, Math.round(moduleScore + progressScore + checkupScore + coinScore));
-  }, [completedModules.length, overallProgress, healthCheckup, coins]);
+  }, [completedModules.length, overallProgress, healthCheckup, coins, translatedModules.length]);
+
   useEffect(() => {
     if (hydrated && !isAuthenticated) router.push('/auth');
   }, [hydrated, isAuthenticated, router]);
+
   useEffect(() => {
     const interval = setInterval(() => setQuoteIndex(prev => (prev + 1) % QUOTES.length), 4500);
     return () => clearInterval(interval);
@@ -666,12 +716,6 @@ export default function Dashboard() {
     });
   }
   if (!isAuthenticated) return null;
-  const greeting = (() => {
-    const h = new Date().getHours();
-    if (h < 12) return 'Subah ki shubhkamnayein';
-    if (h < 17) return 'Good Afternoon';
-    return 'Good Evening';
-  })();
   const activeCardCount = activeModule ? getAllCardsForModule(activeModule.id).length : 0;
   const activeProgress = activeModule ? Math.round((moduleProgress[activeModule.id] || 0) / Math.max(activeCardCount - 1, 1) * 100) : 0;
   return /*#__PURE__*/_jsxs("main", {
@@ -708,10 +752,10 @@ export default function Dashboard() {
               className: "flex-1",
               children: [/*#__PURE__*/_jsxs("p", {
                 className: "text-xs font-bold text-emerald-soft uppercase tracking-widest mb-2",
-                children: [greeting, " \uD83D\uDC4B"]
+                children: [translatedGreeting, " \uD83D\uDC4B"]
               }), /*#__PURE__*/_jsxs("h1", {
                 className: "font-display text-3xl sm:text-4xl font-extrabold heading-gradient mb-2",
-                children: ["Kya haal hai, ", user?.displayName?.split(' ')[0] ?? 'Champion', "! \uD83D\uDD25"]
+                children: [t('auth.title_login').includes('Wapas') ? "Kya haal hai, " : "How are you, ", user?.displayName?.split(' ')[0] ?? 'Champion', "! \uD83D\uDD25"]
               }), /*#__PURE__*/_jsx(AnimatePresence, {
                 mode: "wait",
                 children: /*#__PURE__*/_jsxs(motion.p, {
@@ -728,7 +772,7 @@ export default function Dashboard() {
                     x: 10
                   },
                   className: "text-sm text-ink-muted font-medium",
-                  children: ["\"", QUOTES[quoteIndex], "\""]
+                  children: ["\"", translatedQuotes[quoteIndex] || QUOTES[quoteIndex], "\""]
                 }, quoteIndex)
               })]
             }), /*#__PURE__*/_jsx("div", {
@@ -896,7 +940,7 @@ export default function Dashboard() {
             }), " Quick Access"]
           }), /*#__PURE__*/_jsx("div", {
             className: "grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3",
-            children: QUICK_TOOLS.map((tool, i) => /*#__PURE__*/_jsxs(motion.button, {
+            children: translatedQuickTools.map((tool, i) => /*#__PURE__*/_jsxs(motion.button, {
               initial: {
                 opacity: 0,
                 scale: 0.8
@@ -938,10 +982,10 @@ export default function Dashboard() {
           children: [/*#__PURE__*/_jsxs("div", {
             children: [/*#__PURE__*/_jsx("h2", {
               className: "font-display text-2xl font-extrabold text-white tracking-tight",
-              children: "Financial Journey Map \uD83D\uDDFA\uFE0F"
+              children: t('auth.title_login').includes('Wapas') ? "Financial Journey Map 🗺️" : "Financial Journey Map 🗺️"
             }), /*#__PURE__*/_jsx("p", {
               className: "text-sm text-ink-muted mt-1 max-w-xl",
-              children: "Step-by-step personal finance seekho. Har module complete karo aur naya level unlock karo! \uD83D\uDE80"
+              children: t('auth.title_login').includes('Wapas') ? "Step-by-step personal finance seekho. Har module complete karo aur naya level unlock karo! 🚀" : "Learn personal finance step-by-step. Complete each module to unlock new levels! 🚀"
             })]
           }), /*#__PURE__*/_jsxs("div", {
             className: "px-4 py-2 rounded-full bg-white/5 border border-white/10 flex items-center gap-2 w-fit",
@@ -996,7 +1040,7 @@ export default function Dashboard() {
                 size: 12
               })]
             })]
-          }), /*#__PURE__*/_jsx(RecentActivity, {})]
+          }), /*#__PURE__*/_jsx(RecentActivity, { translatedModules })]
         })
       }), /*#__PURE__*/_jsxs("div", {
         className: "text-center py-8 border-t border-white/[0.03]",

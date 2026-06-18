@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "dashboard": "डैशबोर्ड",
+    "profile": "प्रोफ़ाइल",
+    "logout": "लॉगआउट",
+    "login": "लॉगिन",
+    "home": "होम",
+    "welcome": "नमस्ते, {name}"
+  },
+  "auth": {
+    "title_signup": "अपना खाता बनाएं",
+    "title_login": "वापस स्वागत है, दोस्त!",
+    "sub_signup": "साइन अप करें और 25 बोनस कॉइन्स पाएं! 🎁",
+    "sub_login": "अपनी प्रगति जारी रखने के लिए लॉगिन करें",
+    "name_label": "नाम",
+    "name_placeholder": "अपना नाम लिखें",
+    "email_label": "ईमेल",
+    "email_placeholder": "dost@example.com",
+    "password_label": "पासवर्ड",
+    "submit_signup": "साइन अप",
+    "submit_login": "लॉगिन",
+    "or": "या",
+    "google_login": "गूगल से लॉगिन करें",
+    "guest_login": "अतिथि के रूप में जारी रखें",
+    "footer_note": "आगे बढ़ने पर आप हमारी सेवा की शर्तों से सहमत होते हैं। आपका डेटा सुपाबेस डेटाबेस में सिंक होगा।"
+  },
+  "dashboard": {
+    "title": "आपकी प्रगति",
+    "coins": "सिक्के",
+    "streak": "लगातार दिन",
+    "level": "स्तर",
+    "modules_title": "वित्तीय साक्षरता मॉड्यूल",
+    "modules_sub": "इंटरएक्टिव मॉड्यूल के साथ व्यक्तिगत वित्त में महारत हासिल करें!",
+    "unlocked": "खुला हुआ",
+    "locked": "बंद",
+    "start_learning": "सीखना शुरू करें",
+    "continue_learning": "जारी रखें",
+    "completed": "पूरा हुआ"
+  },
+  "common": {
+    "back": "पीछे",
+    "next": "आगे",
+    "submit": "जमा करें",
+    "coins": "सिक्के",
+    "streak": "लगातार दिन",
+    "days": "दिन",
+    "xp": "एक्सपी"
+  }
+}

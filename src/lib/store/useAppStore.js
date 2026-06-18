@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useEffect, useState } from 'react';
 import { BADGES, getLevelInfo } from '@/lib/data/badges';
+import { fetchUserProfile, syncUserProfile } from '@/lib/dbSync';
+
 
 // Hook to detect when Zustand has finished hydrating from localStorage
 export function useHydration() {
@@ -457,13 +459,35 @@ export const useAppStore = create()(persist((set, get) => ({
     };
   }),
   resetProgress: () => set(initialState),
-  // ── capital-mastery auth actions (local mock, no Firebase) ──
+  // ── capital-mastery auth actions (Firebase + Supabase integrated) ──
   setHasCompletedOnboarding: value => set({
     hasCompletedOnboarding: value
   }),
   setUser: user => set({
     user
   }),
+  loginUser: async (user) => {
+    set({ user, isAuthenticated: true });
+    if (user && user.uid && !user.uid.startsWith('guest-')) {
+      const cloudProfile = await fetchUserProfile(user.uid);
+      if (cloudProfile) {
+        set({
+          coins: cloudProfile.coins ?? 0,
+          streak: cloudProfile.streak ?? 0,
+          xp: cloudProfile.xp ?? 0,
+          level: cloudProfile.level ?? 1,
+          completedModules: cloudProfile.completed_modules ?? [],
+          badges: cloudProfile.badges ?? [],
+          earnedBadges: cloudProfile.badges ?? [],
+          goals: cloudProfile.goals ?? [],
+          expenses: cloudProfile.expenses ?? [],
+        });
+      } else {
+        // First time signup, push current local state to cloud
+        await syncUserProfile(user.uid, get());
+      }
+    }
+  },
   setIsAuthenticated: value => set({
     isAuthenticated: value
   }),
@@ -500,3 +524,21 @@ export const useAppStore = create()(persist((set, get) => ({
 }), {
   name: 'rupaiya-101-storage'
 }));
+
+// Automatic cloud synchronization subscriber
+if (typeof window !== 'undefined') {
+  useAppStore.subscribe((state, prevState) => {
+    if (state.isAuthenticated && state.user?.uid && !state.user.uid.startsWith('guest-') && !state.user.uid.startsWith('local-')) {
+      const keysToSync = [
+        'coins', 'streak', 'xp', 'level', 'completedModules',
+        'badges', 'earnedBadges', 'goals', 'expenses'
+      ];
+      
+      const hasChanged = keysToSync.some(key => JSON.stringify(state[key]) !== JSON.stringify(prevState[key]));
+      if (hasChanged) {
+        syncUserProfile(state.user.uid, state);
+      }
+    }
+  });
+}
+
