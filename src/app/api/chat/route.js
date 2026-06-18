@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { validateMessagesArray, sanitizeString } from '@/lib/security';
 
 const MAX_MESSAGES = 30;
 
@@ -31,15 +32,15 @@ You help Indian youth (16-25) understand financial concepts they are currently l
 
   const contextBlock = `## Current Learning Context (ANSWER STRICTLY BASED ON THIS)
 
-**Module:** ${moduleContext.moduleTitle}
-**Module Description:** ${moduleContext.moduleDescription}
+**Module:** ${sanitizeString(moduleContext.moduleTitle)}
+**Module Description:** ${sanitizeString(moduleContext.moduleDescription)}
 
-**Current Card Topic:** ${moduleContext.cardTopic}
-**Current Card Title:** ${moduleContext.cardTitle}
+**Current Card Topic:** ${sanitizeString(moduleContext.cardTopic)}
+**Current Card Title:** ${sanitizeString(moduleContext.cardTitle)}
 
 **Current Card Content:**
 ---
-${moduleContext.cardContent}
+${sanitizeString(moduleContext.cardContent)}
 ---
 
 ## Important
@@ -97,24 +98,24 @@ export async function POST(request) {
     const body = await request.json();
     const { messages, moduleContext, userName } = body;
 
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    const validation = validateMessagesArray(messages);
+    if (!validation.valid) {
       return NextResponse.json(
-        { error: 'Messages array is required' },
+        { error: validation.error },
         { status: 400 }
       );
     }
 
-    if (messages.length > MAX_MESSAGES) {
+    if (validation.sanitized.length > MAX_MESSAGES) {
       return NextResponse.json({
         reply: `Bhai, bahut zyada messages ho gaye hain! 😅 Ek break lo, jo seekha hai usko digest karo, aur phir aao.`,
         rateLimited: true,
       });
     }
 
-    const systemPrompt = buildSystemPrompt(moduleContext || null, userName || '');
+    const systemPrompt = buildSystemPrompt(moduleContext || null, sanitizeString(userName || ''));
 
-    // Try LLM if API key is available
-    const llmReply = await callLLM(messages, systemPrompt);
+    const llmReply = await callLLM(validation.sanitized, systemPrompt);
 
     if (llmReply) {
       return NextResponse.json({
@@ -123,7 +124,6 @@ export async function POST(request) {
       });
     }
 
-    // Fallback
     return NextResponse.json({
       reply: FALLBACK,
       hasContext: !!(moduleContext && moduleContext.moduleTitle),

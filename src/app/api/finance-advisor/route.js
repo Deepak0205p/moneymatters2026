@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { validateMessage } from '@/lib/security';
 
 const MAX_MESSAGES_PER_SESSION = 20;
 
@@ -100,9 +101,10 @@ export async function POST(request) {
     const body = await request.json();
     const { message, context } = body;
 
-    if (!message || typeof message !== 'string') {
+    const validation = validateMessage(message);
+    if (!validation.valid) {
       return NextResponse.json(
-        { error: 'Message zaruri hai! Kuch toh poocho bhai 😄' },
+        { error: validation.error },
         { status: 400 }
       );
     }
@@ -128,9 +130,8 @@ export async function POST(request) {
       }
     }
 
-    // Try LLM if API key is available
     const llmReply = await callLLM(
-      [{ role: 'user', content: message }],
+      [{ role: 'user', content: validation.sanitized }],
       SYSTEM_PROMPT + contextStr
     );
 
@@ -138,8 +139,7 @@ export async function POST(request) {
       return NextResponse.json({ reply: llmReply });
     }
 
-    // Fallback to static responses
-    return NextResponse.json({ reply: getFallbackResponse(message) });
+    return NextResponse.json({ reply: getFallbackResponse(validation.sanitized) });
   } catch (error) {
     console.error('Finance Advisor API error:', error);
     return NextResponse.json(

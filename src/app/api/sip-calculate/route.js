@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { validateNumericFields } from '@/lib/security';
 
 const FALLBACK_TIPS = [
   (m, r, y, t, ret) => `₹${Number(m).toLocaleString('en-IN')} har mahine invest karke aap ₹${Number(t).toLocaleString('en-IN')} bana sakte ho! Bas consistency rakho, compounding sab kuch karega! 💪`,
@@ -49,6 +50,19 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const { monthlyInvestment, returnRate, years, totalValue, totalInvested, estimatedReturns } = body;
+
+    const validation = validateNumericFields({
+      monthlyInvestment,
+      returnRate,
+      years,
+      totalValue,
+      totalInvested,
+      estimatedReturns,
+    });
+
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
 
     if (!monthlyInvestment || !returnRate || !years) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

@@ -54,9 +54,13 @@ async function callLLMForTips() {
 export async function GET() {
   const tips = await callLLMForTips() ?? FALLBACK_TIPS;
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     news: FALLBACK_NEWS,
     tips,
     timestamp: Date.now(),
   });
+
+  response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=600');
+
+  return response;
 }

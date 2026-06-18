@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { validateNumericFields } from '@/lib/security';
 
 const FALLBACK_TIPS = [
   { tip: 'Pehle emergency fund banao — 6 mahine ka kharcha save karo', priority: 'high' },
@@ -55,6 +56,11 @@ Return ONLY the JSON array, no markdown. Example:
 export async function POST(request) {
   try {
     const { income, expenses, savings } = await request.json();
+
+    const validation = validateNumericFields({ income, expenses, savings });
+    if (!validation.valid) {
+      return NextResponse.json({ tips: FALLBACK_TIPS });
+    }
 
     if (!income || income <= 0) {
       return NextResponse.json({ tips: FALLBACK_TIPS });
