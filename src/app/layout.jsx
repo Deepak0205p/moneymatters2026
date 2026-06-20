@@ -22,7 +22,8 @@ export const metadata = {
     name: "Money Matters"
   }],
   icons: {
-    icon: "/favicon.svg"
+    icon: "/logo.ico",
+    apple: "/logo.png"
   }
 };
 export const viewport = {

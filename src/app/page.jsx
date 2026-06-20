@@ -297,15 +297,14 @@ export default function HomePage() {
           children: [/*#__PURE__*/_jsxs("div", {
             className: "flex items-center justify-center gap-2.5 mb-4",
             children: [/*#__PURE__*/_jsx("div", {
-              className: "w-8 h-8 rounded-xl flex items-center justify-center",
+              className: "w-8 h-8 rounded-xl flex items-center justify-center overflow-hidden",
               style: {
-                background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
                 boxShadow: '0 0 14px rgba(16,185,129,0.30)'
               },
-              children: /*#__PURE__*/_jsx(Coins, {
-                size: 16,
-                className: "text-midnight",
-                strokeWidth: 2.5
+              children: /*#__PURE__*/_jsx("img", {
+                src: "/logo.png",
+                alt: "Logo",
+                className: "h-full w-full object-cover"
               })
             }), /*#__PURE__*/_jsxs("span", {
               className: "text-base font-bold font-display",

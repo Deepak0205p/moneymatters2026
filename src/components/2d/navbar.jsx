@@ -76,13 +76,12 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group btn-magnetic">
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105 coin-spin-3d"
+              className="flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)',
                 boxShadow: '0 0 16px rgba(16,185,129,0.35)'
               }}
             >
-              <Coins size={18} className="text-midnight" strokeWidth={2.5} />
+              <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
             </div>
             <span className="text-lg font-bold font-display tracking-tight text-ink">
               Money
