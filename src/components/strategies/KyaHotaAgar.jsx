@@ -107,19 +107,51 @@ export default function KyaHotaAgar() {
   const smartTotal = useCountUp(smart.total);
   const smartReturns = useCountUp(smart.returns);
   const diff = smart.total - careless.total;
+
+  const chartPoints = useMemo(() => {
+    const points = [];
+    for (let y = 1; y <= 20; y++) {
+      const sVal = calcSmart(scenario.income, y).total;
+      const cVal = calcCareless(scenario.income, y).total;
+      points.push({ year: y, smart: sVal, careless: cVal });
+    }
+    return points;
+  }, [scenario.income]);
+
+  const { maxVal, minVal } = useMemo(() => {
+    let max = 0;
+    let min = 0;
+    chartPoints.forEach(p => {
+      if (p.smart > max) max = p.smart;
+      if (p.careless < min) min = p.careless;
+    });
+    return { maxVal: max * 1.05, minVal: min * 1.05 };
+  }, [chartPoints]);
+
+  const width = 500;
+  const height = 180;
+  const padding = 20;
+
+  const getX = (yearValue) => {
+    return padding + ((yearValue - 1) / 19) * (width - 2 * padding);
+  };
+
+  const getY = (val) => {
+    const range = maxVal - minVal;
+    if (range === 0) return height / 2;
+    return height - padding - ((val - minVal) / range) * (height - 2 * padding);
+  };
+
   return /*#__PURE__*/_jsxs("div", {
     className: "w-full space-y-6",
     children: [/*#__PURE__*/_jsxs("div", {
       className: "text-center space-y-2",
-      children: [/*#__PURE__*/_jsxs("div", {
+      children: [/*#__PURE__*/_jsx("div", {
         className: "flex items-center justify-center gap-2",
-        children: [/*#__PURE__*/_jsx(Sparkles, {
-          className: "text-ai",
-          size: 26
-        }), /*#__PURE__*/_jsx("h2", {
+        children: /*#__PURE__*/_jsx("h2", {
           className: "text-2xl md:text-3xl font-display font-bold text-gradient-brand",
           children: "Kya Hota Agar..."
-        })]
+        })
       }), /*#__PURE__*/_jsx("p", {
         className: "text-sm text-ink-muted font-medium",
         children: "Consequence Simulator \u2014 Aaj ke faisle ka 20 saal baad ka asar!"
@@ -331,6 +363,127 @@ export default function KyaHotaAgar() {
             className: "text-[11px] text-emerald/80 italic",
             children: [year, " saal me tum financial freedom ke kareeb pahunchoge!"]
           })]
+        })]
+      })]
+    }), /*#__PURE__*/_jsxs("div", {
+      className: "glass-card rounded-2xl p-5 space-y-4 border border-white/[0.06] bg-gradient-to-b from-[#0F1326]/60 to-[#0B0F19]/80 overflow-hidden relative",
+      children: [/*#__PURE__*/_jsxs("div", {
+        className: "flex items-center justify-between",
+        children: [/*#__PURE__*/_jsxs("div", {
+          children: [/*#__PURE__*/_jsx("h4", {
+            className: "text-xs uppercase tracking-wider text-zinc-400 font-bold",
+            children: "20-Year Growth Comparison Graph"
+          }), /*#__PURE__*/_jsx("p", {
+            className: "text-[11px] text-zinc-500 mt-0.5",
+            children: "Green = Smart SIP path, Red = Careless Debt path"
+          })]
+        }), /*#__PURE__*/_jsx("span", {
+          className: "text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400",
+          children: "COMPARE VISUALS"
+        })]
+      }), /*#__PURE__*/_jsxs("div", {
+        className: "relative h-44 w-full bg-black/40 rounded-xl border border-white/[0.04] p-1 flex items-center justify-center overflow-hidden",
+        children: [/*#__PURE__*/_jsxs("svg", {
+          className: "w-full h-full",
+          viewBox: `0 0 ${width} ${height}`,
+          preserveAspectRatio: "none",
+          children: [/*#__PURE__*/_jsxs("defs", {
+            children: [/*#__PURE__*/_jsxs("linearGradient", {
+              id: "smartGlow",
+              x1: "0",
+              y1: "0",
+              x2: "0",
+              y2: "1",
+              children: [/*#__PURE__*/_jsx("stop", {
+                offset: "0%",
+                stopColor: "#10B981",
+                stopOpacity: "0.2"
+              }), /*#__PURE__*/_jsx("stop", {
+                offset: "100%",
+                stopColor: "#10B981",
+                stopOpacity: "0.0"
+              })]
+            }), /*#__PURE__*/_jsxs("linearGradient", {
+              id: "carelessGlow",
+              x1: "0",
+              y1: "0",
+              x2: "0",
+              y2: "1",
+              children: [/*#__PURE__*/_jsx("stop", {
+                offset: "0%",
+                stopColor: "#EF4444",
+                stopOpacity: "0.0"
+              }), /*#__PURE__*/_jsx("stop", {
+                offset: "100%",
+                stopColor: "#EF4444",
+                stopOpacity: "0.15"
+              })]
+            })]
+          }), /*#__PURE__*/_jsx("line", {
+            x1: padding,
+            y1: getY(0),
+            x2: width - padding,
+            y2: getY(0),
+            stroke: "rgba(255,255,255,0.15)",
+            strokeWidth: "1",
+            strokeDasharray: "4 4"
+          }), /*#__PURE__*/_jsx("path", {
+            d: `M ${getX(1)} ${getY(0)} ${chartPoints.map(p => `L ${getX(p.year)} ${getY(p.smart)}`).join(' ')} L ${getX(20)} ${getY(0)} Z`,
+            fill: "url(#smartGlow)"
+          }), /*#__PURE__*/_jsx("path", {
+            d: `M ${getX(1)} ${getY(0)} ${chartPoints.map(p => `L ${getX(p.year)} ${getY(p.careless)}`).join(' ')} L ${getX(20)} ${getY(0)} Z`,
+            fill: "url(#carelessGlow)"
+          }), /*#__PURE__*/_jsx("path", {
+            d: chartPoints.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${getX(p.year)} ${getY(p.smart)}`).join(' '),
+            fill: "none",
+            stroke: "#10B981",
+            strokeWidth: "2.5",
+            strokeLinecap: "round"
+          }), /*#__PURE__*/_jsx("path", {
+            d: chartPoints.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${getX(p.year)} ${getY(p.careless)}`).join(' '),
+            fill: "none",
+            stroke: "#EF4444",
+            strokeWidth: "2",
+            strokeLinecap: "round"
+          }), /*#__PURE__*/_jsx("line", {
+            x1: getX(year),
+            y1: padding,
+            x2: getX(year),
+            y2: height - padding,
+            stroke: "rgba(255,255,255,0.3)",
+            strokeWidth: "1.5",
+            strokeDasharray: "2 2"
+          }), /*#__PURE__*/_jsx("circle", {
+            cx: getX(year),
+            cy: getY(calcSmart(scenario.income, year).total),
+            r: "5",
+            fill: "#10B981",
+            stroke: "#fff",
+            strokeWidth: "1.5"
+          }), /*#__PURE__*/_jsx("circle", {
+            cx: getX(year),
+            cy: getY(calcCareless(scenario.income, year).total),
+            r: "5",
+            fill: "#EF4444",
+            stroke: "#fff",
+            strokeWidth: "1.5"
+          })]
+        }), /*#__PURE__*/_jsx("div", {
+          className: "absolute bg-emerald-500 text-black font-black text-[9px] px-1.5 py-0.5 rounded shadow-lg transition-all duration-200",
+          style: {
+            left: `${Math.min(90, Math.max(10, (getX(year) / width) * 100))}%`,
+            top: `${Math.min(90, Math.max(5, (getY(calcSmart(scenario.income, year).total) / height) * 100 - 15))}%`,
+            transform: 'translateX(-50%)'
+          },
+          children: formatINR(calcSmart(scenario.income, year).total)
+        }), /*#__PURE__*/_jsx("div", {
+          className: "absolute bg-red-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded shadow-lg transition-all duration-200",
+          style: {
+            left: `${Math.min(90, Math.max(10, (getX(year) / width) * 100))}%`,
+            top: `${Math.min(90, Math.max(10, (getY(calcCareless(scenario.income, year).total) / height) * 100 + 15))}%`,
+            transform: 'translateX(-50%)'
+          },
+          children: formatINR(calcCareless(scenario.income, year).total)
         })]
       })]
     }), /*#__PURE__*/_jsxs(motion.div, {

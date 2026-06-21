@@ -1,55 +1,76 @@
 "use client";
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAppStore, useHydration } from '@/lib/store/useAppStore';
 import { SwipeCardViewer } from '@/components/shared/SwipeCardViewer';
+import { getModuleById } from '@/data/modulesIndex';
 
 /**
  * /dashboard/module/[id] — Dedicated page for module learning.
  * Renders the SwipeCardViewer as a full page (not an overlay).
  */
-import { jsx as _jsx } from "react/jsx-runtime";
 export default function ModulePage() {
   const router = useRouter();
   const params = useParams();
   const moduleId = Number(params.id);
   const hydrated = useHydration();
+  
   const {
     isAuthenticated,
     completedModules,
     completeModule,
-    addCoins
+    addCoins,
+    logActivity
   } = useAppStore();
+
   const handleClose = useCallback(() => {
-    router.push('/dashboard');
+    router.push('/home');
   }, [router]);
+
   const handleComplete = useCallback(id => {
     if (!completedModules.includes(id)) {
       completeModule(id);
       addCoins(100);
     }
-    router.push('/dashboard');
+    router.push('/home');
   }, [completedModules, completeModule, addCoins, router]);
+
+  const hasLogged = useRef(false);
+
+  useEffect(() => {
+    if (hydrated && isAuthenticated && moduleId && !isNaN(moduleId) && !hasLogged.current) {
+      const moduleData = getModuleById(moduleId);
+      if (moduleData) {
+        logActivity('module_section', `Started Module: ${moduleData.title}`, 0);
+        hasLogged.current = true;
+      }
+    }
+  }, [hydrated, isAuthenticated, moduleId, logActivity]);
+
   if (!hydrated) {
-    return /*#__PURE__*/_jsx("div", {
-      className: "flex min-h-screen items-center justify-center bg-midnight",
-      children: /*#__PURE__*/_jsx("div", {
-        className: "w-12 h-12 rounded-full border-2 border-emerald/30 border-t-emerald animate-spin"
-      })
-    });
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-midnight">
+        <div className="w-12 h-12 rounded-full border-2 border-emerald-500/30 border-t-emerald-500 animate-spin" />
+      </div>
+    );
   }
+
   if (!isAuthenticated) {
     router.push('/auth');
     return null;
   }
+
   if (!moduleId || isNaN(moduleId)) {
-    router.push('/dashboard');
+    router.push('/home');
     return null;
   }
-  return /*#__PURE__*/_jsx(SwipeCardViewer, {
-    moduleId: moduleId,
-    onClose: handleClose,
-    onComplete: handleComplete
-  });
+
+  return (
+    <SwipeCardViewer
+      moduleId={moduleId}
+      onClose={handleClose}
+      onComplete={handleComplete}
+    />
+  );
 }

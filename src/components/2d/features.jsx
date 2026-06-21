@@ -1,199 +1,179 @@
 "use client";
 
-import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Users, Briefcase, GraduationCap, TrendingUp } from 'lucide-react';
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Users, Briefcase, GraduationCap, TrendingUp, ShieldCheck, Sparkles, Award } from 'lucide-react';
+
 export function Features() {
-  return /*#__PURE__*/_jsx("section", {
-    className: "py-16 md:py-24",
-    children: /*#__PURE__*/_jsxs("div", {
-      className: "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8",
-      children: [/*#__PURE__*/_jsxs(motion.div, {
-        initial: {
-          opacity: 0,
-          y: 20
-        },
-        animate: {
-          opacity: 1,
-          y: 0
-        },
-        transition: {
-          duration: 0.6
-        },
-        className: "mb-12 text-center",
-        children: [/*#__PURE__*/_jsxs("h2", {
-          className: "font-display text-3xl font-extrabold tracking-tight md:text-4xl lg:text-5xl",
-          children: ["Jab Indian Youth Bole,", /*#__PURE__*/_jsx("br", {}), /*#__PURE__*/_jsx("span", {
-            className: "text-gradient-emerald",
-            children: "\"Paisa samjho, future secure karo!\""
-          })]
-        }), /*#__PURE__*/_jsx("p", {
-          className: "mx-auto mt-4 max-w-2xl text-ink-muted text-base md:text-lg",
-          children: "16-25 age group ke liye specially designed interactive financial learning"
-        })]
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2",
-        children: [/*#__PURE__*/_jsxs(motion.div, {
-          initial: {
-            opacity: 0,
-            y: 30
-          },
-          animate: {
-            opacity: 1,
-            y: 0
-          },
-          transition: {
-            duration: 0.6,
-            delay: 0.2
-          },
-          whileHover: {
-            y: -5
-          },
-          className: "glass-card card-shine group relative overflow-hidden rounded-3xl p-6 sm:col-span-2 sm:p-8 lg:row-span-2",
-          children: [/*#__PURE__*/_jsx("div", {
-            className: "absolute -top-16 -right-16 h-32 w-32 rounded-full bg-emerald/10 blur-3xl"
-          }), /*#__PURE__*/_jsxs("div", {
-            className: "relative",
-            children: [/*#__PURE__*/_jsx("div", {
-              className: "mb-4 inline-flex rounded-xl bg-emerald/15 p-3",
-              children: /*#__PURE__*/_jsx(GraduationCap, {
-                size: 26,
-                className: "text-emerald-soft"
-              })
-            }), /*#__PURE__*/_jsx("h3", {
-              className: "font-display text-2xl font-bold text-ink mb-3",
-              children: "College Students"
-            }), /*#__PURE__*/_jsx("p", {
-              className: "mb-6 max-w-md text-ink-muted leading-relaxed",
-              children: "Exam ke saath savings ka basic seekho. Budget templates, expense tracking, aur smart money habits \u2014 sab kuch ek jagah."
-            }), /*#__PURE__*/_jsx("div", {
-              className: "overflow-hidden rounded-2xl border border-white/10",
-              children: /*#__PURE__*/_jsx(Image, {
-                src: "/images/genz_banner.jpeg",
-                alt: "College students learning financial literacy",
-                width: 600,
-                height: 300,
-                className: "w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              })
-            })]
-          })]
-        }), /*#__PURE__*/_jsxs(motion.div, {
-          initial: {
-            opacity: 0,
-            y: 30
-          },
-          animate: {
-            opacity: 1,
-            y: 0
-          },
-          transition: {
-            duration: 0.6,
-            delay: 0.3
-          },
-          whileHover: {
-            y: -5
-          },
-          className: "glass-card card-shine group relative overflow-hidden rounded-3xl p-6 sm:p-8",
-          children: [/*#__PURE__*/_jsx("div", {
-            className: "absolute -bottom-12 -right-12 h-24 w-24 rounded-full bg-ai/10 blur-3xl"
-          }), /*#__PURE__*/_jsxs("div", {
-            className: "relative",
-            children: [/*#__PURE__*/_jsx("div", {
-              className: "mb-4 inline-flex rounded-xl bg-ai/15 p-3",
-              children: /*#__PURE__*/_jsx(Briefcase, {
-                size: 26,
-                className: "text-ai-soft"
-              })
-            }), /*#__PURE__*/_jsx("h3", {
-              className: "font-display text-xl font-bold text-ink mb-3",
-              children: "First Job Earners"
-            }), /*#__PURE__*/_jsx("p", {
-              className: "text-sm text-ink-muted leading-relaxed",
-              children: "Budgeting aur investing ka practical guide. Pehli salary se wealth building shuru karo."
-            })]
-          })]
-        }), /*#__PURE__*/_jsxs(motion.div, {
-          initial: {
-            opacity: 0,
-            y: 30
-          },
-          animate: {
-            opacity: 1,
-            y: 0
-          },
-          transition: {
-            duration: 0.6,
-            delay: 0.4
-          },
-          whileHover: {
-            y: -5
-          },
-          className: "glass-card card-shine group relative overflow-hidden rounded-3xl p-6 sm:p-8",
-          children: [/*#__PURE__*/_jsx("div", {
-            className: "absolute -bottom-12 -left-12 h-24 w-24 rounded-full bg-gold/10 blur-3xl"
-          }), /*#__PURE__*/_jsxs("div", {
-            className: "relative",
-            children: [/*#__PURE__*/_jsx("div", {
-              className: "mb-4 inline-flex rounded-xl bg-gold/15 p-3",
-              children: /*#__PURE__*/_jsx(Users, {
-                size: 26,
-                className: "text-gold-soft"
-              })
-            }), /*#__PURE__*/_jsx("h3", {
-              className: "font-display text-xl font-bold text-ink mb-3",
-              children: "Teenagers"
-            }), /*#__PURE__*/_jsx("p", {
-              className: "text-sm text-ink-muted leading-relaxed",
-              children: "Pocket money se business tak. Saving habits, gamified badges, aur fun learning."
-            })]
-          })]
-        }), /*#__PURE__*/_jsxs(motion.div, {
-          initial: {
-            opacity: 0,
-            y: 30
-          },
-          animate: {
-            opacity: 1,
-            y: 0
-          },
-          transition: {
-            duration: 0.6,
-            delay: 0.5
-          },
-          whileHover: {
-            y: -5
-          },
-          className: "glass-card card-shine group relative overflow-hidden rounded-3xl p-6 sm:col-span-2 sm:p-8",
-          children: [/*#__PURE__*/_jsx("div", {
-            className: "absolute -top-12 -left-12 h-24 w-24 rounded-full bg-emerald/10 blur-3xl"
-          }), /*#__PURE__*/_jsxs("div", {
-            className: "relative flex flex-col gap-6 sm:flex-row sm:items-center",
-            children: [/*#__PURE__*/_jsxs("div", {
-              className: "flex-1",
-              children: [/*#__PURE__*/_jsx("div", {
-                className: "mb-4 inline-flex rounded-xl bg-emerald/15 p-3",
-                children: /*#__PURE__*/_jsx(TrendingUp, {
-                  size: 26,
-                  className: "text-emerald-soft"
-                })
-              }), /*#__PURE__*/_jsx("h3", {
-                className: "font-display text-xl font-bold text-ink mb-3",
-                children: "Why Money Matters?"
-              }), /*#__PURE__*/_jsx("p", {
-                className: "text-sm text-ink-muted leading-relaxed",
-                children: "Hinglish mein seekho, interactive experiences se samjho, gamification se practice karo. Finance boring nahi \u2014 yeh game hai!"
-              })]
-            }), /*#__PURE__*/_jsx("div", {
-              className: "flex gap-3",
-              children: ['Compounding Tree', 'Debt Doors', 'Asset Biryani'].map(item => /*#__PURE__*/_jsx("div", {
-                className: "whitespace-nowrap rounded-xl bg-white/5 border border-white/8 px-3.5 py-2 text-xs font-medium text-ink-muted",
-                children: item
-              }, item))
-            })]
-          })]
-        })]
-      })]
-    })
-  });
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+  };
+
+  return (
+    <section className="py-20 md:py-28 relative">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+        
+        {/* Section Header */}
+        <div className="mb-16 text-center space-y-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald/10 border border-emerald/20 text-emerald-soft text-xs font-semibold uppercase tracking-wider"
+          >
+            <Award size={12} />
+            <span>Interactive Learning Modes</span>
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="font-display text-3xl font-extrabold tracking-tight md:text-4xl lg:text-5xl text-ink"
+          >
+            Custom Paths for Everyone, <br />
+            <span className="text-gradient-emerald">Learn at Your Own Pace and Style!</span>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mx-auto max-w-2xl text-ink-muted text-sm sm:text-base md:text-lg"
+          >
+            Financial literacy designed for Gen-Z, College Students, and First-Job Earners.
+          </motion.p>
+        </div>
+
+        {/* Feature Cards Grid */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          
+          {/* Card 1: College Students */}
+          <motion.div
+            variants={cardVariants}
+            whileHover={{ y: -6, transition: { duration: 0.2 } }}
+            className="glass-card-premium rounded-[24px] p-6 border-b-4 border-emerald-500/10 flex flex-col justify-between relative overflow-hidden group shadow-premium"
+          >
+            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald/5 rounded-full blur-2xl group-hover:bg-emerald/10 transition-colors" />
+            <div className="space-y-4">
+              <div className="inline-flex rounded-2xl bg-emerald/15 p-3.5 text-emerald-soft group-hover:scale-105 transition-transform duration-300">
+                <GraduationCap size={28} />
+              </div>
+              <h3 className="font-display text-xl font-bold text-ink">College Students</h3>
+              <p className="text-sm text-ink-muted leading-relaxed">
+                Simple setup for pocket money and savings. Learn budget templates, micro-investing basics, and smart expense tracking without the stress.
+              </p>
+            </div>
+            <div className="mt-8 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-emerald-soft font-semibold">
+              <span>Savings & Micro-budgeting</span>
+              <Sparkles size={14} className="animate-pulse" />
+            </div>
+          </motion.div>
+
+          {/* Card 2: First Job Earners */}
+          <motion.div
+            variants={cardVariants}
+            whileHover={{ y: -6, transition: { duration: 0.2 } }}
+            className="glass-card-premium rounded-[24px] p-6 border-b-4 border-purple-500/10 flex flex-col justify-between relative overflow-hidden group shadow-premium"
+          >
+            <div className="absolute top-0 right-0 w-20 h-20 bg-ai/5 rounded-full blur-2xl group-hover:bg-ai/10 transition-colors" />
+            <div className="space-y-4">
+              <div className="inline-flex rounded-2xl bg-ai/15 p-3.5 text-ai-soft group-hover:scale-105 transition-transform duration-300">
+                <Briefcase size={28} />
+              </div>
+              <h3 className="font-display text-xl font-bold text-ink">First Job Earners</h3>
+              <p className="text-sm text-ink-muted leading-relaxed">
+                Start building wealth from your very first salary. SIP setups, emergency funds, tax options, and long-term investing rules explained simply.
+              </p>
+            </div>
+            <div className="mt-8 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-ai-soft font-semibold">
+              <span>SIP, Investing & Taxes</span>
+              <TrendingUp size={14} />
+            </div>
+          </motion.div>
+
+          {/* Card 3: Teenagers */}
+          <motion.div
+            variants={cardVariants}
+            whileHover={{ y: -6, transition: { duration: 0.2 } }}
+            className="glass-card-premium rounded-[24px] p-6 border-b-4 border-gold-500/10 flex flex-col justify-between relative overflow-hidden group shadow-premium"
+          >
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gold/5 rounded-full blur-2xl group-hover:bg-gold/10 transition-colors" />
+            <div className="space-y-4">
+              <div className="inline-flex rounded-2xl bg-gold/15 p-3.5 text-gold-soft group-hover:scale-105 transition-transform duration-300">
+                <Users size={28} />
+              </div>
+              <h3 className="font-display text-xl font-bold text-ink">Teenagers & School</h3>
+              <p className="text-sm text-ink-muted leading-relaxed">
+                Learn how money works from the basics. Understand assets vs. liabilities, use safe financial simulators, and earn badges through interactive quizzes.
+              </p>
+            </div>
+            <div className="mt-8 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-gold-soft font-semibold">
+              <span>Financial Simulator & Badges</span>
+              <ShieldCheck size={14} />
+            </div>
+          </motion.div>
+
+        </motion.div>
+
+        {/* Why Us / Interactive games showreel */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mt-12 glass-card-premium rounded-[28px] p-8 border-b-4 border-emerald-500/10 shadow-premium"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            <div className="md:col-span-7 space-y-4">
+              <span className="text-xs font-bold text-emerald-soft uppercase tracking-wide">Why Capital Mastery?</span>
+              <h3 className="font-display text-2xl font-bold text-ink">Interactive Strategies & Simulations</h3>
+              <p className="text-sm text-ink-muted leading-relaxed">
+                We don't just teach theory. We teach through interactive tools. Run live scenarios using Compounding Tree, Debt Doors, and Asset Allocation simulators to test your financial muscle!
+              </p>
+              <div className="flex flex-wrap gap-2 pt-2">
+                {['Compounding Tree', 'Debt Doors Simulator', 'Asset Allocation Biryani'].map(item => (
+                  <span key={item} className="text-xs bg-white/5 border border-white/8 text-ink-muted px-3.5 py-1.5 rounded-xl font-medium">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="md:col-span-5 flex justify-center">
+              <div className="relative p-6 bg-emerald/5 border border-emerald/10 rounded-2xl w-full text-center">
+                <h4 className="text-sm font-bold text-ink mb-1">Interactive modules</h4>
+                <p className="text-xs text-ink-muted mb-4">11 Modules ready with quizzes</p>
+                <div className="flex items-center justify-center gap-1">
+                  {[...Array(11)].map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        i < 5 ? 'bg-emerald shadow-glow-emerald' : 'bg-white/10'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] text-emerald-soft font-semibold mt-3 block">Level UP with each complete module!</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+      </div>
+    </section>
+  );
 }

@@ -59,11 +59,17 @@ export async function POST(request) {
 
     const validation = validateNumericFields({ income, expenses, savings });
     if (!validation.valid) {
-      return NextResponse.json({ tips: FALLBACK_TIPS });
+      return NextResponse.json(
+        { error: validation.error || "Invalid numeric fields" },
+        { status: 400 }
+      );
     }
 
     if (!income || income <= 0) {
-      return NextResponse.json({ tips: FALLBACK_TIPS });
+      return NextResponse.json(
+        { error: "Income must be greater than 0" },
+        { status: 400 }
+      );
     }
 
     const tips = await callLLM(income, expenses || 0, savings || 0) ?? FALLBACK_TIPS;

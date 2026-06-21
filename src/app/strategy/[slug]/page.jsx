@@ -146,13 +146,6 @@ export default function StrategyPage() {
   const [helpOpen, setHelpOpen] = useState(false);
   const strategy = slug ? getStrategyBySlug(slug) : undefined;
 
-  // Auth guard — redirect to /auth if not authenticated (after hydration)
-  useEffect(() => {
-    if (hydrated && !isAuthenticated) {
-      router.replace("/auth");
-    }
-  }, [hydrated, isAuthenticated, router]);
-
   // Hydration loading state
   if (!hydrated) {
     return /*#__PURE__*/_jsx("div", {
@@ -163,9 +156,10 @@ export default function StrategyPage() {
     });
   }
   if (!isAuthenticated) {
+    router.replace('/auth');
     return null;
   }
-  const handleBack = () => router.push("/dashboard");
+  const handleBack = () => router.push("/home");
   const StrategyComponent = strategy ? strategyComponents[strategy.slug] : null;
   return /*#__PURE__*/_jsxs("main", {
     className: "relative min-h-screen w-full bg-midnight text-ink",

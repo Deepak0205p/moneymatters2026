@@ -1,690 +1,458 @@
-"use client";
+'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Trash2, IndianRupee, TrendingDown, Wallet, Calendar, AlertTriangle } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { 
+  X, Plus, Trash2, IndianRupee, TrendingDown, 
+  Wallet, Calendar, AlertTriangle, CheckCircle, Sparkles 
+} from 'lucide-react';
 import { useAppStore } from '@/lib/store/useAppStore';
+import { toast } from '@/hooks/use-toast';
 
-/* ──────────────────────────────────────────────────────────────
-   Props
-   ────────────────────────────────────────────────────────────── */
+const CATEGORIES = [
+  { key: 'food', label: 'Food 🍔', emoji: '🍔', color: '#F59E0B' },
+  { key: 'transport', label: 'Transport 🚗', emoji: '🚗', color: '#3B82F6' },
+  { key: 'entertainment', label: 'Entertainment 🎬', emoji: '🎬', color: '#A855F7' },
+  { key: 'education', label: 'Education 📚', emoji: '📚', color: '#10B981' },
+  { key: 'shopping', label: 'Shopping 👕', emoji: '👕', color: '#EC4899' },
+  { key: 'chai', label: 'Snacks / Chai ☕', emoji: '☕', color: '#92400E' },
+  { key: 'bills', label: 'Utility Bills 📱', emoji: '📱', color: '#EF4444' },
+  { key: 'health', label: 'Medical / Gym 💊', emoji: '💊', color: '#06B6D4' }
+];
 
-/* ──────────────────────────────────────────────────────────────
-   Category meta — fun emoji bubbles
-   ────────────────────────────────────────────────────────────── */
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-const CATEGORIES = [{
-  key: 'food',
-  label: 'Food',
-  emoji: '🍔',
-  color: '#F59E0B'
-}, {
-  key: 'transport',
-  label: 'Transport',
-  emoji: '🚗',
-  color: '#3B82F6'
-}, {
-  key: 'entertainment',
-  label: 'Entertainment',
-  emoji: '🎬',
-  color: '#A855F7'
-}, {
-  key: 'education',
-  label: 'Education',
-  emoji: '📚',
-  color: '#10B981'
-}, {
-  key: 'shopping',
-  label: 'Shopping',
-  emoji: '👕',
-  color: '#EC4899'
-}, {
-  key: 'chai',
-  label: 'Chai/Snacks',
-  emoji: '☕',
-  color: '#92400E'
-}, {
-  key: 'bills',
-  label: 'Bills',
-  emoji: '📱',
-  color: '#EF4444'
-}, {
-  key: 'health',
-  label: 'Health',
-  emoji: '💊',
-  color: '#06B6D4'
-}];
-const getCat = key => CATEGORIES.find(c => c.key === key) ?? CATEGORIES[0];
+const getCat = (key) => CATEGORIES.find(c => c.key === key) || CATEGORIES[0];
+const todayStr = () => new Date().toISOString().split('T')[0];
 
-/* ──────────────────────────────────────────────────────────────
-   Helpers
-   ────────────────────────────────────────────────────────────── */
-function generateId() {
-  return `exp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
-}
-function formatINR(amount) {
-  return '₹' + amount.toLocaleString('en-IN');
-}
-function formatDateLabel(dateStr) {
-  if (dateStr === todayStr()) return 'Aaj';
-  if (dateStr === new Date(Date.now() - 86400000).toISOString().split('T')[0]) return 'Kal';
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short'
-  });
-}
+export default function ExpenseTracker({ open, onClose }) {
+  const { expenses, addExpense, deleteExpense, monthlyBudget, setMonthlyBudget, addCoins } = useAppStore();
+  const [addOpen, setAddOpen] = useState(false);
+  const [budgetInput, setBudgetInput] = useState('');
 
-/* ──────────────────────────────────────────────────────────────
-   Need/Want toggle
-   ────────────────────────────────────────────────────────────── */
-function NeedWantToggle({
-  value,
-  onChange
-}) {
-  return /*#__PURE__*/_jsxs("div", {
-    className: "rounded-xl bg-white/5 border border-white/10 p-1 flex",
-    children: [/*#__PURE__*/_jsx("button", {
-      onClick: () => onChange('need'),
-      className: `flex-1 rounded-lg py-2 text-xs font-bold transition-all ${value === 'need' ? 'bg-emerald text-midnight' : 'text-ink-muted hover:text-white'}`,
-      children: "\uD83D\uDE07 Zaroorat"
-    }), /*#__PURE__*/_jsx("button", {
-      onClick: () => onChange('want'),
-      className: `flex-1 rounded-lg py-2 text-xs font-bold transition-all ${value === 'want' ? 'bg-gold text-midnight' : 'text-ink-muted hover:text-white'}`,
-      children: "\uD83D\uDE0E Shauq"
-    })]
-  });
-}
-
-/* ──────────────────────────────────────────────────────────────
-   Add Expense Modal
-   ────────────────────────────────────────────────────────────── */
-function AddExpenseModal({
-  open,
-  onClose,
-  onAdd
-}) {
+  // Form states for adding expense
   const [category, setCategory] = useState('food');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState('want');
-  const reset = () => {
-    setCategory('food');
-    setAmount('');
-    setDescription('');
-    setType('want');
-  };
-  const handleSubmit = () => {
-    const n = parseInt(amount, 10);
-    if (!n || n <= 0) return;
-    onAdd({
-      id: generateId(),
-      amount: n,
-      category,
-      description: description.trim() || getCat(category).label,
-      date: todayStr(),
-      createdAt: Date.now()
-    });
-    reset();
-    onClose();
-  };
-  return /*#__PURE__*/_jsx(Dialog, {
-    open: open,
-    onOpenChange: o => !o && onClose(),
-    children: /*#__PURE__*/_jsxs(DialogContent, {
-      className: "bg-midnight border-white/10 max-w-md p-0 overflow-hidden",
-      children: [/*#__PURE__*/_jsxs("div", {
-        className: "p-5 border-b border-white/10 glass-card-premium",
-        children: [/*#__PURE__*/_jsx("button", {
-          onClick: onClose,
-          className: "absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-ink-muted",
-          children: /*#__PURE__*/_jsx(X, {
-            size: 16
-          })
-        }), /*#__PURE__*/_jsx(DialogTitle, {
-          className: "font-display text-xl font-extrabold text-white",
-          children: "Naya Kharcha Add Karo \uD83E\uDDFE"
-        })]
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "p-5 space-y-4 max-h-[70vh] overflow-y-auto",
-        children: [/*#__PURE__*/_jsxs("div", {
-          children: [/*#__PURE__*/_jsx("p", {
-            className: "text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-2",
-            children: "Category Choose Karo"
-          }), /*#__PURE__*/_jsx("div", {
-            className: "grid grid-cols-4 gap-2",
-            children: CATEGORIES.map(c => /*#__PURE__*/_jsxs(motion.button, {
-              whileHover: {
-                y: -2,
-                scale: 1.05
-              },
-              whileTap: {
-                scale: 0.95
-              },
-              onClick: () => setCategory(c.key),
-              className: `relative rounded-xl p-3 flex flex-col items-center gap-1 border transition-all ${category === c.key ? 'border-white/30' : 'border-white/10 bg-white/[0.03]'}`,
-              style: category === c.key ? {
-                backgroundColor: `${c.color}25`,
-                boxShadow: `0 0 0 2px ${c.color}80`
-              } : {},
-              children: [/*#__PURE__*/_jsx("div", {
-                className: "text-2xl",
-                children: c.emoji
-              }), /*#__PURE__*/_jsx("span", {
-                className: "text-[9px] font-bold text-white",
-                children: c.label
-              })]
-            }, c.key))
-          })]
-        }), /*#__PURE__*/_jsxs("div", {
-          children: [/*#__PURE__*/_jsx("p", {
-            className: "text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-2",
-            children: "Amount"
-          }), /*#__PURE__*/_jsxs("div", {
-            className: "relative",
-            children: [/*#__PURE__*/_jsx(IndianRupee, {
-              size: 20,
-              className: "absolute left-4 top-1/2 -translate-y-1/2 text-emerald-soft"
-            }), /*#__PURE__*/_jsx(Input, {
-              type: "number",
-              value: amount,
-              onChange: e => setAmount(e.target.value),
-              placeholder: "0",
-              autoFocus: true,
-              className: "pl-12 pr-4 py-4 bg-white/5 border-white/10 text-white font-display text-3xl font-extrabold h-14"
-            })]
-          }), /*#__PURE__*/_jsx("div", {
-            className: "flex gap-2 mt-2",
-            children: [50, 100, 200, 500].map(p => /*#__PURE__*/_jsxs("button", {
-              onClick: () => setAmount(String(p)),
-              className: "flex-1 rounded-lg py-1.5 text-xs font-bold text-ink-muted bg-white/5 hover:bg-white/10 hover:text-white",
-              children: ["\u20B9", p]
-            }, p))
-          })]
-        }), /*#__PURE__*/_jsxs("div", {
-          children: [/*#__PURE__*/_jsx("p", {
-            className: "text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-2",
-            children: "Kya kharch kiya? (Optional)"
-          }), /*#__PURE__*/_jsx(Input, {
-            value: description,
-            onChange: e => setDescription(e.target.value),
-            placeholder: "Jaise: Swiggy, Petrol, Movie ticket",
-            className: "bg-white/5 border-white/10 text-white"
-          })]
-        }), /*#__PURE__*/_jsxs("div", {
-          children: [/*#__PURE__*/_jsx("p", {
-            className: "text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-2",
-            children: "Zaroorat thi ya Shauq tha? \uD83E\uDD14"
-          }), /*#__PURE__*/_jsx(NeedWantToggle, {
-            value: type,
-            onChange: setType
-          })]
-        })]
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "p-5 border-t border-white/10 flex gap-2",
-        children: [/*#__PURE__*/_jsx("button", {
-          onClick: onClose,
-          className: "flex-1 rounded-xl py-3 text-sm font-bold text-ink-muted bg-white/5 hover:bg-white/10",
-          children: "Cancel"
-        }), /*#__PURE__*/_jsx("button", {
-          onClick: handleSubmit,
-          disabled: !amount || parseInt(amount, 10) <= 0,
-          className: "flex-1 btn-3d rounded-xl py-3 text-sm font-bold text-midnight disabled:opacity-40",
-          style: {
-            background: 'linear-gradient(135deg, #34D399, #10B981)'
-          },
-          children: "Add Karo! \u2705"
-        })]
-      })]
-    })
-  });
-}
+  const [type, setType] = useState('want'); // need | want
 
-/* ──────────────────────────────────────────────────────────────
-   Today's Spending Summary Card with animated ring
-   ────────────────────────────────────────────────────────────── */
-function TodaySummary({
-  todaySpent,
-  budget
-}) {
-  const pct = budget > 0 ? Math.min(100, todaySpent / budget * 100) : 0;
-  const isOver = budget > 0 && todaySpent > budget;
-  const color = isOver ? '#EF4444' : pct > 80 ? '#F59E0B' : '#10B981';
-  const r = 36;
-  const c = 2 * Math.PI * r;
-  return /*#__PURE__*/_jsxs("div", {
-    className: "relative overflow-hidden rounded-2xl border border-white/10 glass-card-glow p-5 spotlight-card",
-    children: [/*#__PURE__*/_jsx("div", {
-      className: "absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-30",
-      style: {
-        backgroundColor: color
-      }
-    }), /*#__PURE__*/_jsxs("div", {
-      className: "relative flex items-center gap-4",
-      children: [/*#__PURE__*/_jsxs("div", {
-        className: "relative flex-shrink-0",
-        children: [/*#__PURE__*/_jsxs("svg", {
-          width: "92",
-          height: "92",
-          viewBox: "0 0 92 92",
-          className: "-rotate-90",
-          children: [/*#__PURE__*/_jsx("circle", {
-            cx: "46",
-            cy: "46",
-            r: r,
-            fill: "none",
-            stroke: "rgba(255,255,255,0.08)",
-            strokeWidth: "8"
-          }), /*#__PURE__*/_jsx(motion.circle, {
-            cx: "46",
-            cy: "46",
-            r: r,
-            fill: "none",
-            stroke: color,
-            strokeWidth: "8",
-            strokeLinecap: "round",
-            strokeDasharray: c,
-            initial: {
-              strokeDashoffset: c
-            },
-            animate: {
-              strokeDashoffset: c - pct / 100 * c
-            },
-            transition: {
-              duration: 1,
-              ease: 'easeOut'
-            },
-            style: {
-              filter: `drop-shadow(0 0 6px ${color}80)`
-            }
-          })]
-        }), /*#__PURE__*/_jsxs("div", {
-          className: "absolute inset-0 flex flex-col items-center justify-center",
-          children: [/*#__PURE__*/_jsx("span", {
-            className: "font-display text-base font-extrabold text-white",
-            children: formatINR(todaySpent)
-          }), /*#__PURE__*/_jsx("span", {
-            className: "text-[9px] font-bold text-ink-muted uppercase",
-            children: "aaj"
-          })]
-        })]
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "flex-1 min-w-0",
-        children: [/*#__PURE__*/_jsx("p", {
-          className: "text-[10px] font-bold text-ink-muted uppercase tracking-widest",
-          children: "Aaj ka Kharcha"
-        }), /*#__PURE__*/_jsxs("p", {
-          className: "font-display text-lg font-extrabold text-white",
-          children: [formatINR(todaySpent), " ", /*#__PURE__*/_jsxs("span", {
-            className: "text-xs text-ink-muted font-normal",
-            children: ["/ ", budget > 0 ? formatINR(budget) : '∞']
-          })]
-        }), /*#__PURE__*/_jsx("div", {
-          className: "mt-2 flex items-center gap-2",
-          children: isOver ? /*#__PURE__*/_jsxs("span", {
-            className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-[10px] font-bold text-red-400",
-            children: [/*#__PURE__*/_jsx(AlertTriangle, {
-              size: 10
-            }), " Budget Over!"]
-          }) : /*#__PURE__*/_jsx("span", {
-            className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald/15 border border-emerald/30 text-[10px] font-bold text-emerald-soft",
-            children: "Budget ke andar \uD83D\uDC4D"
-          })
-        })]
-      })]
-    })]
-  });
-}
-
-/* ──────────────────────────────────────────────────────────────
-   Weekly Bar Chart
-   ────────────────────────────────────────────────────────────── */
-function WeeklyChart({
-  expenses
-}) {
-  const days = useMemo(() => {
-    const result = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 86400000);
-      const dateStr = d.toISOString().split('T')[0];
-      const total = expenses.filter(e => e.date === dateStr).reduce((a, b) => a + b.amount, 0);
-      result.push({
-        label: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()],
-        total,
-        isToday: i === 0
-      });
-    }
-    return result;
-  }, [expenses]);
-  const maxVal = Math.max(...days.map(d => d.total), 100);
-  return /*#__PURE__*/_jsxs("div", {
-    className: "rounded-2xl border border-white/10 glass-card p-4",
-    children: [/*#__PURE__*/_jsxs("p", {
-      className: "text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2",
-      children: [/*#__PURE__*/_jsx(Calendar, {
-        size: 12,
-        className: "text-emerald-soft"
-      }), " Last 7 Days"]
-    }), /*#__PURE__*/_jsx("div", {
-      className: "flex items-end justify-between gap-2 h-32",
-      children: days.map((d, i) => /*#__PURE__*/_jsxs("div", {
-        className: "flex-1 flex flex-col items-center gap-1.5 h-full",
-        children: [/*#__PURE__*/_jsx("div", {
-          className: "flex-1 w-full flex items-end",
-          children: /*#__PURE__*/_jsx(motion.div, {
-            initial: {
-              height: 0
-            },
-            animate: {
-              height: `${d.total / maxVal * 100}%`
-            },
-            transition: {
-              duration: 0.8,
-              delay: i * 0.06,
-              ease: 'easeOut'
-            },
-            className: "w-full rounded-t-lg relative",
-            style: {
-              background: d.isToday ? 'linear-gradient(180deg, #34D399, #10B981)' : 'linear-gradient(180deg, rgba(16,185,129,0.4), rgba(16,185,129,0.15))',
-              minHeight: d.total > 0 ? '8px' : '2px'
-            },
-            children: d.total > 0 && /*#__PURE__*/_jsx("span", {
-              className: "absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white whitespace-nowrap",
-              children: d.total >= 1000 ? `${(d.total / 1000).toFixed(1)}k` : d.total
-            })
-          })
-        }), /*#__PURE__*/_jsx("span", {
-          className: `text-[10px] font-bold ${d.isToday ? 'text-emerald-soft' : 'text-ink-muted'}`,
-          children: d.label
-        })]
-      }, i))
-    })]
-  });
-}
-
-/* ──────────────────────────────────────────────────────────────
-   Category-wise horizontal bars
-   ────────────────────────────────────────────────────────────── */
-function CategoryBreakdown({
-  expenses
-}) {
-  const data = useMemo(() => {
-    const map = new Map();
-    expenses.forEach(e => map.set(e.category, (map.get(e.category) ?? 0) + e.amount));
-    const arr = Array.from(map.entries()).map(([key, total]) => ({
-      meta: getCat(key),
-      total
-    })).sort((a, b) => b.total - a.total);
-    return arr;
-  }, [expenses]);
-  const maxVal = Math.max(...data.map(d => d.total), 1);
-  if (data.length === 0) return null;
-  return /*#__PURE__*/_jsxs("div", {
-    className: "rounded-2xl border border-white/10 glass-card p-4",
-    children: [/*#__PURE__*/_jsxs("p", {
-      className: "text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2",
-      children: [/*#__PURE__*/_jsx(TrendingDown, {
-        size: 12,
-        className: "text-gold-soft"
-      }), " Category Breakdown"]
-    }), /*#__PURE__*/_jsx("div", {
-      className: "space-y-2.5",
-      children: data.map((d, i) => /*#__PURE__*/_jsxs("div", {
-        children: [/*#__PURE__*/_jsxs("div", {
-          className: "flex items-center justify-between text-xs mb-1",
-          children: [/*#__PURE__*/_jsxs("span", {
-            className: "font-bold text-white flex items-center gap-1.5",
-            children: [/*#__PURE__*/_jsx("span", {
-              children: d.meta.emoji
-            }), " ", d.meta.label]
-          }), /*#__PURE__*/_jsx("span", {
-            className: "font-bold text-ink-muted",
-            children: formatINR(d.total)
-          })]
-        }), /*#__PURE__*/_jsx("div", {
-          className: "h-2 rounded-full bg-white/5 overflow-hidden",
-          children: /*#__PURE__*/_jsx(motion.div, {
-            initial: {
-              width: 0
-            },
-            animate: {
-              width: `${d.total / maxVal * 100}%`
-            },
-            transition: {
-              duration: 0.8,
-              delay: i * 0.06
-            },
-            className: "h-full rounded-full",
-            style: {
-              background: `linear-gradient(90deg, ${d.meta.color}, ${d.meta.color}80)`
-            }
-          })
-        })]
-      }, d.meta.key))
-    })]
-  });
-}
-
-/* ──────────────────────────────────────────────────────────────
-   Expense Item — swipe left to delete
-   ────────────────────────────────────────────────────────────── */
-function ExpenseItem({
-  expense,
-  onDelete
-}) {
-  const meta = getCat(expense.category);
-  const handleDragEnd = (_e, info) => {
-    if (info.offset.x < -80) {
-      onDelete(expense.id);
-    }
-  };
-  return /*#__PURE__*/_jsxs(motion.div, {
-    layout: true,
-    drag: "x",
-    dragConstraints: {
-      left: -120,
-      right: 0
-    },
-    dragElastic: 0.5,
-    onDragEnd: handleDragEnd,
-    initial: {
-      opacity: 0,
-      x: -20
-    },
-    animate: {
-      opacity: 1,
-      x: 0
-    },
-    exit: {
-      opacity: 0,
-      x: -100
-    },
-    className: "relative bg-white/[0.03] border border-white/[0.05] rounded-xl p-3 flex items-center gap-3 cursor-grab active:cursor-grabbing",
-    children: [/*#__PURE__*/_jsx("div", {
-      className: "w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0",
-      style: {
-        backgroundColor: `${meta.color}20`,
-        border: `1px solid ${meta.color}30`
-      },
-      children: meta.emoji
-    }), /*#__PURE__*/_jsxs("div", {
-      className: "flex-1 min-w-0",
-      children: [/*#__PURE__*/_jsx("p", {
-        className: "text-sm font-bold text-white truncate",
-        children: expense.description
-      }), /*#__PURE__*/_jsx("p", {
-        className: "text-[10px] text-ink-muted",
-        children: formatDateLabel(expense.date)
-      })]
-    }), /*#__PURE__*/_jsx("span", {
-      className: "font-display font-extrabold text-white",
-      children: formatINR(expense.amount)
-    }), /*#__PURE__*/_jsx("button", {
-      onClick: () => onDelete(expense.id),
-      className: "w-8 h-8 rounded-lg bg-white/5 hover:bg-red-500/20 flex items-center justify-center text-ink-muted hover:text-red-400 transition-colors flex-shrink-0",
-      "aria-label": "Delete",
-      children: /*#__PURE__*/_jsx(Trash2, {
-        size: 14
-      })
-    })]
-  });
-}
-
-/* ──────────────────────────────────────────────────────────────
-   Main Component
-   ────────────────────────────────────────────────────────────── */
-export default function ExpenseTracker({
-  open,
-  onClose
-}) {
-  const {
-    expenses,
-    addExpense,
-    deleteExpense,
-    monthlyBudget,
-    setMonthlyBudget
-  } = useAppStore();
-  const [addOpen, setAddOpen] = useState(false);
-  const [budgetInput, setBudgetInput] = useState('');
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBudgetInput(monthlyBudget > 0 ? String(monthlyBudget) : '');
   }, [monthlyBudget, open]);
-  const todayExpenses = useMemo(() => expenses.filter(e => e.date === todayStr()), [expenses]);
-  const todaySpent = todayExpenses.reduce((a, b) => a + b.amount, 0);
-  const dailyBudget = monthlyBudget > 0 ? Math.round(monthlyBudget / 30) : 0;
+
+  const todayExpenses = useMemo(() => {
+    return expenses.filter(e => e.date === todayStr());
+  }, [expenses]);
+
+  const todaySpent = useMemo(() => {
+    return todayExpenses.reduce((a, b) => a + b.amount, 0);
+  }, [todayExpenses]);
+
+  const dailyBudget = useMemo(() => {
+    return monthlyBudget > 0 ? Math.round(monthlyBudget / 30) : 0;
+  }, [monthlyBudget]);
+
   const grouped = useMemo(() => {
     const map = new Map();
     expenses.slice(0, 50).forEach(e => {
-      const arr = map.get(e.date) ?? [];
+      const arr = map.get(e.date) || [];
       arr.push(e);
       map.set(e.date, arr);
     });
     return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
   }, [expenses]);
+
   const saveBudget = () => {
     const n = parseInt(budgetInput, 10);
     setMonthlyBudget(n > 0 ? n : 0);
   };
-  return /*#__PURE__*/_jsx(Dialog, {
-    open: open,
-    onOpenChange: o => !o && onClose(),
-    children: /*#__PURE__*/_jsxs(DialogContent, {
-      className: "bg-midnight border-white/10 max-w-2xl p-0 overflow-hidden",
-      children: [/*#__PURE__*/_jsxs("div", {
-        className: "relative p-5 border-b border-white/10 glass-card-premium",
-        children: [/*#__PURE__*/_jsx("button", {
-          onClick: onClose,
-          className: "absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-ink-muted",
-          children: /*#__PURE__*/_jsx(X, {
-            size: 16
-          })
-        }), /*#__PURE__*/_jsxs("div", {
-          className: "flex items-center gap-3",
-          children: [/*#__PURE__*/_jsx("div", {
-            className: "w-11 h-11 rounded-2xl flex items-center justify-center",
-            style: {
-              background: 'linear-gradient(135deg, #10B981, #34D399)',
-              boxShadow: '0 0 20px rgba(16,185,129,0.3)'
-            },
-            children: /*#__PURE__*/_jsx(Wallet, {
-              size: 20,
-              className: "text-midnight"
-            })
-          }), /*#__PURE__*/_jsxs("div", {
-            children: [/*#__PURE__*/_jsx("h2", {
-              className: "font-display text-xl font-extrabold text-white",
-              children: "Expense Tracker \uD83E\uDDFE"
-            }), /*#__PURE__*/_jsx("p", {
-              className: "text-xs text-ink-muted mt-0.5",
-              children: "Kharcha track karo, bachat karo! Swipe left to delete \u2B05\uFE0F"
-            })]
-          })]
-        })]
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "p-5 max-h-[72vh] overflow-y-auto space-y-4",
-        children: [/*#__PURE__*/_jsx(TodaySummary, {
-          todaySpent: todaySpent,
-          budget: dailyBudget
-        }), /*#__PURE__*/_jsxs("div", {
-          className: "rounded-xl bg-white/[0.03] border border-white/10 p-3 flex items-center gap-2",
-          children: [/*#__PURE__*/_jsx(Wallet, {
-            size: 14,
-            className: "text-ink-muted flex-shrink-0"
-          }), /*#__PURE__*/_jsx(Input, {
-            type: "number",
-            value: budgetInput,
-            onChange: e => setBudgetInput(e.target.value),
-            onBlur: saveBudget,
-            placeholder: "Monthly budget set karo (\u20B9)",
-            className: "bg-transparent border-0 text-white text-sm h-8 focus-visible:ring-0"
-          }), /*#__PURE__*/_jsx("span", {
-            className: "text-[10px] text-ink-muted font-bold whitespace-nowrap",
-            children: dailyBudget > 0 ? `≈ ₹${dailyBudget}/din` : ''
-          })]
-        }), /*#__PURE__*/_jsx(WeeklyChart, {
-          expenses: expenses
-        }), expenses.length > 0 && /*#__PURE__*/_jsx(CategoryBreakdown, {
-          expenses: expenses
-        }), /*#__PURE__*/_jsxs("div", {
-          children: [/*#__PURE__*/_jsxs("p", {
-            className: "text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2",
-            children: [/*#__PURE__*/_jsx(Calendar, {
-              size: 12,
-              className: "text-emerald-soft"
-            }), " Recent Kharcha"]
-          }), expenses.length === 0 ? /*#__PURE__*/_jsxs("div", {
-            className: "text-center py-8",
-            children: [/*#__PURE__*/_jsx("div", {
-              className: "text-4xl mb-2 opacity-40",
-              children: "\uD83E\uDDFE"
-            }), /*#__PURE__*/_jsx("p", {
-              className: "text-sm text-ink-muted",
-              children: "Abhi koi kharcha nahi. Naya add karo! \uD83D\uDC47"
-            })]
-          }) : /*#__PURE__*/_jsx("div", {
-            className: "space-y-2",
-            children: grouped.map(([date, items]) => /*#__PURE__*/_jsxs("div", {
-              children: [/*#__PURE__*/_jsxs("p", {
-                className: "text-[10px] font-bold text-ink-muted uppercase tracking-widest mb-1.5 mt-3",
-                children: [formatDateLabel(date), " \xB7 ", formatINR(items.reduce((a, b) => a + b.amount, 0))]
-              }), /*#__PURE__*/_jsx("div", {
-                className: "space-y-1.5",
-                children: /*#__PURE__*/_jsx(AnimatePresence, {
-                  children: items.map(e => /*#__PURE__*/_jsx(ExpenseItem, {
-                    expense: e,
-                    onDelete: deleteExpense
-                  }, e.id))
-                })
-              })]
-            }, date))
-          })]
-        })]
-      }), /*#__PURE__*/_jsxs(motion.button, {
-        whileHover: {
-          scale: 1.05
-        },
-        whileTap: {
-          scale: 0.95
-        },
-        onClick: () => setAddOpen(true),
-        className: "btn-3d absolute bottom-5 right-5 rounded-2xl px-5 py-3 font-bold text-sm text-midnight flex items-center gap-2 shadow-2xl",
-        style: {
-          background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)'
-        },
-        children: [/*#__PURE__*/_jsx(Plus, {
-          size: 18
-        }), " Add"]
-      }), /*#__PURE__*/_jsx(AddExpenseModal, {
-        open: addOpen,
-        onClose: () => setAddOpen(false),
-        onAdd: addExpense
-      })]
-    })
-  });
+
+  const handleAddExpense = () => {
+    const amtNum = parseInt(amount, 10);
+    if (!amtNum || amtNum <= 0) return;
+
+    addExpense({
+      id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      amount: amtNum,
+      category,
+      description: description.trim() || getCat(category).label.split(' ')[0],
+      date: todayStr(),
+      type, // need vs want
+      createdAt: Date.now()
+    });
+
+    // Reset Form
+    setAmount('');
+    setDescription('');
+    setCategory('food');
+    setType('want');
+    setAddOpen(false);
+
+    addCoins(2);
+    toast({
+      title: "Expense added! +2 Coins 💸",
+      description: "Smart monitoring keeps budget healthy."
+    });
+  };
+
+  const totalMonthlySpent = useMemo(() => {
+    return expenses.reduce((s, e) => s + e.amount, 0);
+  }, [expenses]);
+
+  // Last 7 days chart compilation
+  const chartDays = useMemo(() => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000);
+      const dateStr = d.toISOString().split('T')[0];
+      const sum = expenses
+        .filter(e => e.date === dateStr)
+        .reduce((a, b) => a + b.amount, 0);
+      days.push({
+        label: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()],
+        total: sum,
+        isToday: i === 0
+      });
+    }
+    return days;
+  }, [expenses]);
+
+  const maxChartVal = useMemo(() => {
+    return Math.max(...chartDays.map(d => d.total), 500);
+  }, [chartDays]);
+
+  const breakdownData = useMemo(() => {
+    const map = new Map();
+    expenses.forEach(e => {
+      map.set(e.category, (map.get(e.category) || 0) + e.amount);
+    });
+    return Array.from(map.entries())
+      .map(([key, total]) => ({ meta: getCat(key), total }))
+      .sort((a, b) => b.total - a.total);
+  }, [expenses]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+      {/* Backdrop blur overlay */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+
+      {/* Modal Card wrapper */}
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        className="relative z-10 w-full max-w-2xl bg-[#090D1A] border border-white/[0.08] rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Glow backdrop header */}
+        <div className="absolute -top-24 -left-24 w-64 h-64 rounded-full bg-emerald-500/10 blur-[80px] pointer-events-none" />
+
+        {/* Header */}
+        <div className="shrink-0 px-6 py-4 border-b border-white/[0.06] bg-[#0C1021]/80 backdrop-blur-md flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+              <Wallet size={20} className="text-emerald-400" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-white">Kharcha Spy 🕵️‍♂️</h2>
+              <p className="text-[10px] text-zinc-400">Smart Expense Tracker & Budget Auditor</p>
+            </div>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Scrollable Modal Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
+          
+          {/* Daily limit gauge card */}
+          <div className="bg-[#0B0E19] border border-white/[0.04] rounded-3xl p-5 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Wallet className="text-emerald-400" size={24} />
+              </div>
+              <div>
+                <span className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">Today's Spends</span>
+                <p className="text-xl font-black text-white">
+                  ₹{todaySpent.toLocaleString('en-IN')}{' '}
+                  <span className="text-xs text-zinc-500 font-bold">
+                    / {dailyBudget > 0 ? `₹${dailyBudget.toLocaleString('en-IN')}` : 'No Daily Limit'}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            {/* Alert status or budget tracking indicator */}
+            {dailyBudget > 0 && (
+              <div className="shrink-0">
+                {todaySpent > dailyBudget ? (
+                  <span className="px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <AlertTriangle size={12} /> Limit Crossed!
+                  </span>
+                ) : (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <CheckCircle size={12} /> Safe Zone
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Quick set monthly limit */}
+          <div className="bg-[#0B0E19] border border-white/[0.04] rounded-3xl p-4 flex items-center gap-2">
+            <span className="text-xs font-bold text-zinc-400 ml-2">Monthly Budget:</span>
+            <input 
+              type="number"
+              value={budgetInput}
+              onChange={(e) => setBudgetInput(e.target.value)}
+              onBlur={saveBudget}
+              placeholder="Set limit (e.g. 15000)"
+              className="bg-transparent border-none text-white text-xs font-black placeholder:text-zinc-600 focus:outline-none flex-1 py-1"
+            />
+            {dailyBudget > 0 && (
+              <span className="text-[10px] text-zinc-500 font-black tracking-wider uppercase bg-white/5 px-2.5 py-1 rounded">
+                ≈ ₹{dailyBudget}/day limit
+              </span>
+            )}
+          </div>
+
+          {/* Last 7 Days Visual Chart */}
+          <div className="bg-[#05070F] border border-white/[0.03] rounded-3xl p-5 space-y-4">
+            <h3 className="text-xs font-black uppercase text-zinc-400 tracking-wider flex items-center gap-1.5">
+              <Calendar size={13} className="text-emerald-400" /> Spends over last 7 days
+            </h3>
+            <div className="flex items-end justify-between gap-3 h-28 pt-4">
+              {chartDays.map((day, idx) => (
+                <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full">
+                  <div className="flex-1 w-full flex items-end">
+                    <div 
+                      className={`w-full rounded-t-lg transition-all duration-500 ${
+                        day.isToday 
+                          ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-md shadow-emerald-500/10' 
+                          : 'bg-white/10 hover:bg-white/15'
+                      }`}
+                      style={{ 
+                        height: `${Math.max(4, (day.total / maxChartVal) * 100)}%` 
+                      }}
+                      title={`₹${day.total}`}
+                    />
+                  </div>
+                  <span className={`text-[9px] font-black ${day.isToday ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                    {day.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add expense toggler & form */}
+          <div className="border border-white/[0.04] rounded-3xl overflow-hidden bg-[#0B0E19]">
+            <button
+              onClick={() => setAddOpen(!addOpen)}
+              className="w-full p-4 flex items-center justify-between text-xs font-black uppercase text-white bg-[#0F1326] border-b border-white/[0.03]"
+            >
+              <span>➕ Add New Expense</span>
+              <span>{addOpen ? 'Hide Form' : 'Show Form'}</span>
+            </button>
+
+            {addOpen && (
+              <div className="p-5 space-y-4">
+                {/* Categories Cloud */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">Choose Category</span>
+                  <div className="grid grid-cols-4 gap-2">
+                    {CATEGORIES.map(c => (
+                      <button
+                        key={c.key}
+                        onClick={() => setCategory(c.key)}
+                        className={`p-2.5 rounded-xl border text-center transition-all ${
+                          category === c.key 
+                            ? 'bg-white/10 border-white/20' 
+                            : 'bg-[#05070F] border-transparent text-zinc-500 hover:text-white'
+                        }`}
+                        style={category === c.key ? { borderColor: c.color } : {}}
+                      >
+                        <span className="text-xl block">{c.emoji}</span>
+                        <span className="text-[8px] font-black block mt-0.5">{c.label.split(' ')[0]}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Amount & Description */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">Amount (₹)</span>
+                    <div className="relative">
+                      <IndianRupee size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
+                      <input 
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0"
+                        className="w-full pl-8 pr-3 py-2 rounded-xl bg-[#05070F] border border-white/5 text-xs font-black text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">Note (Optional)</span>
+                    <input 
+                      type="text"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="e.g. Uber ride, dinner"
+                      className="w-full px-3 py-2 rounded-xl bg-[#05070F] border border-white/5 text-xs font-black text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+                    />
+                  </div>
+                </div>
+
+                {/* Need vs Want toggle */}
+                <div className="flex items-center justify-between bg-[#05070F] p-3 rounded-2xl border border-white/5">
+                  <span className="text-xs font-bold text-zinc-400">Expense priority category:</span>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setType('need')}
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all ${
+                        type === 'need' 
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                          : 'text-zinc-500 hover:text-white'
+                      }`}
+                    >
+                      😇 Zaroorat
+                    </button>
+                    <button 
+                      onClick={() => setType('want')}
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all ${
+                        type === 'want' 
+                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
+                          : 'text-zinc-500 hover:text-white'
+                      }`}
+                    >
+                      😎 Shauq
+                    </button>
+                  </div>
+                </div>
+
+                {/* Action button */}
+                <button
+                  onClick={handleAddExpense}
+                  disabled={!amount || parseInt(amount, 10) <= 0}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-[#070913] text-xs font-black uppercase tracking-wider disabled:opacity-40 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  Confirm Expense Spends
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Breakdown bars */}
+          {breakdownData.length > 0 && (
+            <div className="bg-[#0B0E19] border border-white/[0.04] rounded-3xl p-5 space-y-3">
+              <h4 className="text-xs font-black uppercase text-zinc-400 tracking-wider">Breakdown By Category</h4>
+              <div className="space-y-3">
+                {breakdownData.map((item, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-white">{item.meta.label}</span>
+                      <span className="text-zinc-400">₹{item.total.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full"
+                        style={{ 
+                          backgroundColor: item.meta.color, 
+                          width: `${(item.total / totalMonthlySpent) * 100}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent list */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-black uppercase text-zinc-400 tracking-wider flex items-center gap-1.5">
+              Recent Spends Log (Swipe left or click trash to delete)
+            </h4>
+
+            {expenses.length === 0 ? (
+              <div className="text-center py-8 text-zinc-500 text-xs bg-[#0B0E19] border border-white/[0.04] rounded-3xl">
+                🤷‍♂️ Koi expenses logs available nahi hai. Add custom items now.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {grouped.map(([date, items]) => (
+                  <div key={date} className="space-y-1.5">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 block">
+                      {date} · Total: ₹{items.reduce((a, b) => a + b.amount, 0).toLocaleString('en-IN')}
+                    </span>
+                    <div className="space-y-2">
+                      <AnimatePresence>
+                        {items.map(e => {
+                          const meta = getCat(e.category);
+                          return (
+                            <motion.div
+                              key={e.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -100 }}
+                              className="p-3.5 rounded-2xl bg-[#0B0E19] border border-white/[0.04] flex items-center justify-between"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-xl bg-white/5 p-1 rounded-lg">{meta.emoji}</span>
+                                <div>
+                                  <span className="text-xs font-extrabold text-white block">{e.description}</span>
+                                  <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                                    e.type === 'need' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+                                  }`}>
+                                    {e.type === 'need' ? 'Zaroorat' : 'Shauq'}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-black text-white">
+                                  ₹{e.amount.toLocaleString('en-IN')}
+                                </span>
+                                <button
+                                  onClick={() => deleteExpense(e.id)}
+                                  className="p-1 rounded bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all cursor-pointer"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* Footer actions */}
+        <div className="shrink-0 px-6 py-4 border-t border-white/[0.06] bg-[#0C1021]/80 backdrop-blur-md flex items-center justify-between">
+          <button 
+            onClick={onClose} 
+            className="px-5 py-3 rounded-2xl text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/5 transition-all border border-white/[0.05]"
+          >
+            Close
+          </button>
+          <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">
+            Kharcha Spy — track limits wisely
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  );
 }

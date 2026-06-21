@@ -13,6 +13,7 @@ const RAINBOW_COLORS = ['#FF6B6B', '#FF9F43', '#FECA57', '#48DBFB', '#0ABDE3', '
 // ════════════════════════════════════════════════════════════════════════
 // RICH CONTENT PARSER
 // ════════════════════════════════════════════════════════════════════════
+const boldColors = ['#FBBF24', '#22D3EE', '#34D399', '#F472B6', '#A78BFA'];
 function parseInline(text, color) {
   const parts = [];
   const regex = /\*\*([^*]+)\*\*|\*([^*]+)\*|`([^`]+)`|(₹[\d,./+\-% ]+)/g;
@@ -21,10 +22,14 @@ function parseInline(text, color) {
   let key = 0;
   while ((m = regex.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index));
-    if (m[1]) parts.push(/*#__PURE__*/_jsx("strong", {
-      className: "text-white font-bold",
-      children: m[1]
-    }, key++));else if (m[2]) parts.push(/*#__PURE__*/_jsx("em", {
+    if (m[1]) {
+      const highlightColor = boldColors[key % boldColors.length];
+      parts.push(/*#__PURE__*/_jsx("strong", {
+        className: "font-black drop-shadow-[0_0_8px_rgba(251,191,36,0.15)]",
+        style: { color: highlightColor },
+        children: m[1]
+      }, key++));
+    } else if (m[2]) parts.push(/*#__PURE__*/_jsx("em", {
       className: "text-zinc-200 italic",
       children: m[2]
     }, key++));else if (m[3]) parts.push(/*#__PURE__*/_jsx("code", {
@@ -77,7 +82,7 @@ export function RichContent({
             className: "text-[10px] font-bold text-zinc-500 mb-1 px-2 uppercase tracking-wider",
             children: name
           }), /*#__PURE__*/_jsx("div", {
-            className: `max-w-[85%] px-4 py-3 rounded-2xl text-[14px] leading-relaxed shadow-sm ${isBhaiya ? 'rounded-tr-none' : 'bg-white/5 border border-white/10 text-zinc-200 rounded-tl-none'}`,
+            className: `max-w-[85%] px-4 py-3 rounded-2xl text-[15.5px] sm:text-[17.5px] font-semibold leading-relaxed shadow-sm ${isBhaiya ? 'rounded-tr-none' : 'bg-white/5 border border-white/10 text-zinc-200 rounded-tl-none'}`,
             style: isBhaiya ? {
               backgroundColor: `${color}ee`,
               color: '#000'
@@ -213,7 +218,7 @@ export function RichContent({
       blocks.push(/*#__PURE__*/_jsx("ul", {
         className: "space-y-1.5 mt-2 mb-2",
         children: items.map((item, idx) => /*#__PURE__*/_jsxs("li", {
-          className: "flex gap-2 text-zinc-300 text-[13px] leading-relaxed",
+          className: "flex gap-2 text-zinc-200 text-[15.5px] sm:text-[17.5px] font-semibold leading-relaxed",
           children: [/*#__PURE__*/_jsx("span", {
             className: "mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full",
             style: {
@@ -235,7 +240,7 @@ export function RichContent({
       blocks.push(/*#__PURE__*/_jsx("ol", {
         className: "space-y-2 mt-2 mb-2",
         children: items.map((item, idx) => /*#__PURE__*/_jsxs("li", {
-          className: "flex gap-2.5 text-zinc-300 text-[13px] leading-relaxed",
+          className: "flex gap-2.5 text-zinc-200 text-[15.5px] sm:text-[17.5px] font-semibold leading-relaxed",
           children: [/*#__PURE__*/_jsx("span", {
             className: "flex-shrink-0 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center",
             style: {
@@ -260,13 +265,13 @@ export function RichContent({
       continue;
     }
     blocks.push(/*#__PURE__*/_jsx("p", {
-      className: "text-zinc-300 text-[13.5px] leading-[1.85] font-normal",
+      className: "text-zinc-150 text-[16px] sm:text-[18px] leading-relaxed font-semibold",
       children: parseInline(line, color)
     }, blockKey++));
     i++;
   }
   return /*#__PURE__*/_jsx("div", {
-    className: "space-y-1",
+    className: "space-y-1 font-mono",
     children: blocks
   });
 }

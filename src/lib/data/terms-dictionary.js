@@ -1,4 +1,136 @@
 export const termsDictionary = [
+// ---- BASICS (new) ----
+{
+  id: 'income',
+  term: 'Income',
+  definition: 'Income matlab wo paisa jo tum kamate ho — salary, business profit, rent, ya koi bhi earning. Income 2 types ki hoti hai: Active income (kaam karo toh milti hai) aur Passive income (bina kaam ke bhi aati hai).',
+  example: 'Salary Rs.25,000/month = Active income. Rental property se Rs.8,000/month = Passive income. Goal: passive income itni ho jaaye ki kaam karna optional ho!',
+  category: 'basics',
+  relatedModule: 1,
+  mastered: false
+}, {
+  id: 'expense',
+  term: 'Expense',
+  definition: 'Expense matlab wo paisa jo tum kharch karte ho. Fixed expenses (rent, EMI — hamesha same) aur Variable expenses (food, entertainment — badte ghate rehte hain). Expenses ko track karna zaruri hai!',
+  example: 'Fixed: Rent Rs.8,000 + EMI Rs.3,000 = Rs.11,000 (change nahi hota). Variable: Groceries Rs.4,000, entertainment Rs.2,000 (hata sakte ho). Variable expenses mein hi bachat milti hai!',
+  category: 'basics',
+  relatedModule: 2,
+  mastered: false
+}, {
+  id: 'savings',
+  term: 'Savings',
+  definition: 'Savings = Income minus Expenses. Jo paisa bachta hai woh savings hai. Rule: "Pay yourself first" — pehle save karo, phir baaki kharch karo. Golden rule: Income ka kam se kam 20% save karo!',
+  example: 'Income Rs.30,000 — agar pehle Rs.6,000 save kiya (20%) aur Rs.24,000 mein guzara kiya = savings first approach. Baad mein bachane ki koshish karo toh zyadaatar kuch nahi bachta!',
+  category: 'basics',
+  relatedModule: 1,
+  mastered: false
+}, {
+  id: 'investment',
+  term: 'Investment',
+  definition: 'Investment matlab apna paisa kisi jagah lagana taki wo paisa aur zyada paisa kamaye. Savings mein paisa safe rehta hai, investment mein paisa grow karta hai. Fark: savings ka real value inflation se ghatta hai!',
+  example: 'Rs.1,00,000 savings account mein @4% = 10 saal baad Rs.1,48,000. Same amount equity mutual fund mein @12% = Rs.3,10,000. Investment ne double se zyada diya!',
+  category: 'basics',
+  relatedModule: 7,
+  mastered: false
+}, {
+  id: 'budget',
+  term: 'Budget (50-30-20 Rule)',
+  definition: '50-30-20 Rule: Income ka 50% Needs (rent, food, bills), 30% Wants (entertainment, shopping), 20% Savings/Investment. Yeh simplest budgeting framework hai — shuruaat ke liye perfect!',
+  example: 'Rs.40,000 salary: Rs.20,000 Needs (rent+groceries+bills), Rs.12,000 Wants (eating out+subscriptions), Rs.8,000 Savings (SIP+emergency fund). Simple, clear, effective!',
+  category: 'basics',
+  relatedModule: 2,
+  mastered: false
+}, {
+  id: 'debt',
+  term: 'Debt (Karz)',
+  definition: 'Debt matlab kisi se paisa borrow karna — loan, credit card, ya EMI ke form mein. Debt bad nahi hota agar productive use ho (education loan, home loan). Bad debt = luxury items pe loan lena!',
+  example: 'Good debt: Education loan — Rs.3,00,000 invest kiya, Rs.12,00,000/year salary mili = worth it! Bad debt: Rs.80,000 phone EMI pe liya = extra Rs.16,000 interest pay kiya bina kisi return ke.',
+  category: 'basics',
+  relatedModule: 5,
+  mastered: false
+}, {
+  id: 'interest',
+  term: 'Interest (Byaj)',
+  definition: 'Interest wo cost hai jo tum kisi ka paisa use karne ke liye pay karte ho — ya jo tum paisa dene par earn karte ho. Interest rate typically % per year mein hota hai. Low interest = less cost; High interest = more profit.',
+  example: 'Bank ko Rs.1,00,000 FD mein diya @7% = tum Rs.7,000/year earn karte ho. Bank se same amount loan liya @10% = tum Rs.10,000/year pay karte ho. Banker always wins!',
+  category: 'basics',
+  relatedModule: 1,
+  mastered: false
+}, {
+  id: 'principal',
+  term: 'Principal',
+  definition: 'Principal matlab wo original amount jo tumne invest kiya ya loan liya — interest alag hota hai. EMI mein principal portion aur interest portion dono hote hain. Starting mein interest zyada hota hai, time ke saath principal zyada!',
+  example: 'Rs.5,00,000 home loan 20 saal ke liye — pehle EMI mein mostly interest, last saalon mein mostly principal. Total paid ~Rs.10-11 lakh = Rs.5-6 lakh sirf interest!',
+  category: 'basics',
+  relatedModule: 5,
+  mastered: false
+},
+// ---- IMPORTANT (new) ----
+{
+  id: 'power-of-compounding',
+  term: 'Power of Compounding',
+  definition: 'Compounding matlab interest pe bhi interest milna — Einstein ne ise 8th wonder of the world kaha! Jitna jaldi shuru karo, utna zyada milega. 10 saal ki delay = 3x-4x kam corpus at retirement!',
+  example: 'Age 20 pe Rs.1,000/month shuru kiya @12% = age 60 pe Rs.3.5 crore. Age 30 pe same amount = sirf Rs.1.1 crore. 10 saal ki delay = Rs.2.4 crore ka nuksaan!',
+  category: 'important',
+  relatedModule: 7,
+  mastered: false
+}, {
+  id: 'time-value-of-money',
+  term: 'Time Value of Money',
+  definition: 'Aaj ka Rs.100 kal ke Rs.100 se zyada valuable hai — kyunki aaj ka paisa invest kar sakte ho aur kal wo zyada ban jayega. Paisa jitna jaldi haath mein aaye, utna better!',
+  example: 'Court case jeet kar Rs.1,00,000 milega — 5 saal baad. Aaj invest karo toh Rs.1,76,000 (at 12%). 5 saal baad same Rs.1,00,000 mil raha hai = actually Rs.76,000 ka nuksaan!',
+  category: 'important',
+  relatedModule: 1,
+  mastered: false
+}, {
+  id: 'rule-of-72',
+  term: 'Rule of 72',
+  definition: 'Rule of 72: 72 ko interest rate se divide karo — itne saalo mein paisa double ho jayega! Quick mental math formula. Zyada return = jaldi double. Yeh compounding ka power samajhne ka shortcut!',
+  example: '72 ÷ 6% (FD) = 12 saal mein double. 72 ÷ 12% (equity) = 6 saal mein double. 72 ÷ 36% (credit card debt) = 2 saal mein DEBT double! Credit card mein minimum pay karna kitna dangerous hai!',
+  category: 'important',
+  relatedModule: 7,
+  mastered: false
+}, {
+  id: 'liquidity',
+  term: 'Liquidity (Naqdaari)',
+  definition: 'Liquidity matlab kitni aasaani se asset ko cash mein convert kar sakte ho bina value lose kiye. Cash = highest liquidity. Property = low liquidity (beche mein time lagta hai). Emergency mein liquid assets chahiye!',
+  example: 'Emergency mein Rs.50,000 chahiye: Savings account (high liquidity) = kal milega. FD (medium) = 24 hours, thodi penalty. Real estate (low) = months lag sakte hain. Emergency fund always liquid raho!',
+  category: 'important',
+  relatedModule: 4,
+  mastered: false
+}, {
+  id: 'risk-return',
+  term: 'Risk vs Return',
+  definition: 'Higher risk = Higher potential return. Lower risk = Lower return. Yeh finance ka golden rule hai. Risk tolerate karna padta hai returns ke liye — no risk, no reward! Par risk = volatility, loss of capital nahi!',
+  example: 'FD @7% = low risk, guaranteed. Equity mutual fund @12-15% average = high volatility lekin better long-term. Gold @8-10% = medium risk. Apni risk tolerance samjho pehle!',
+  category: 'important',
+  relatedModule: 7,
+  mastered: false
+}, {
+  id: 'inflation-enemy',
+  term: 'Inflation — Paisa Ka Dushman',
+  definition: 'Inflation tumhare paisa ki purchasing power ghata deta hai silently. India mein average 6% inflation = 12 saal mein paisa HALF ho jaata hai real terms mein. Sirf save mat karo — invest bhi karo!',
+  example: 'Rs.10,000 savings account mein rakhe @4% interest. Inflation 6%. Real return = 4% - 6% = -2%. Matlab tumhara paisa actually ghaat raha hai! Equity invest karo to beat inflation.',
+  category: 'important',
+  relatedModule: 1,
+  mastered: false
+}, {
+  id: 'financial-freedom',
+  term: 'Financial Freedom',
+  definition: 'Financial freedom = Jab tumhari passive income tumhare expenses se zyada ho! Tab kaam optional ho jaata hai. FIRE movement: Financial Independence, Retire Early. Formula: 25x annual expenses = financial freedom corpus!',
+  example: 'Annual expenses Rs.3,60,000 (Rs.30,000/month). FIRE corpus = 25 × 3,60,000 = Rs.90,00,000 (90 lakhs). Is corpus se 4% withdrawal = Rs.3,60,000/year income. Goal clear hai!',
+  category: 'important',
+  relatedModule: 8,
+  mastered: false
+}, {
+  id: 'net-worth-track',
+  term: 'Net Worth Track Karo',
+  definition: 'Net Worth = Total Assets – Total Liabilities. Yeh tumhara financial health ka real indicator hai, income nahi! High income + high debt = low net worth. Medium income + low debt + investments = high net worth!',
+  example: 'Ravi: Rs.80,000 salary, Rs.10L car loan, Rs.2L savings = Net Worth ~(-8L). Priya: Rs.35,000 salary, zero loan, Rs.5L mutual funds = Net Worth +5L. Priya financially better off hai!',
+  category: 'important',
+  relatedModule: 1,
+  mastered: false
+},
 // ---- INVESTING ----
 {
   id: 'sip',

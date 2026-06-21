@@ -20,15 +20,18 @@ export function FinanceAdvisor() {
   const {
     advisorMessages,
     advisorSessionCount,
+    advisorConversationId,
+    setAdvisorConversationId,
     addAdvisorMessage,
     clearAdvisorMessages,
     coins,
     completedModules,
     streak,
     masteredTerms,
-    userName
+    userName,
+    isAdvisorOpen: isOpen,
+    setAdvisorOpen: setIsOpen
   } = useAppStore();
-  const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -69,6 +72,7 @@ export function FinanceAdvisor() {
         },
         body: JSON.stringify({
           message: trimmed,
+          conversationId: advisorConversationId,
           context: {
             coins,
             completedModules,
@@ -76,11 +80,15 @@ export function FinanceAdvisor() {
             masteredTerms,
             userName,
             sessionCount: advisorSessionCount,
-            recentMessages
+            recentMessages,
+            moduleContext: useAppStore.getState().moduleContext
           }
         })
       });
       const data = await response.json();
+      if (data.conversationId && !advisorConversationId) {
+        setAdvisorConversationId(data.conversationId);
+      }
       if (data.reply) {
         const aiMsg = {
           role: 'assistant',

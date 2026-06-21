@@ -8,8 +8,7 @@ import { useAppStore, useHydration } from '@/lib/store/useAppStore';
 import { Navbar } from '@/components/2d/navbar';
 import { strategies } from '@/lib/data/strategies';
 import { ArrowLeft, X, Sparkles, Wrench, Brain, Calculator, TrendingUp, Target, Trophy, Zap, Brain as BrainIcon, Type, Newspaper, ListOrdered, UserCheck, Shield, Calendar, HeartPulse, Receipt, PiggyBank, CircleDot, Coins, BookOpen, Navigation, GitBranch, Eye, Layers, Home, DoorOpen, TreePine, Award, Clock, Store, Construction } from 'lucide-react';
-import { useTranslation } from '@/hooks/useTranslation';
-import { translateObject, translateText } from '@/lib/utils/translateHelper';
+
 
 const ICON_MAP = { Navigation, GitBranch, Eye, Layers, Home, DoorOpen, TreePine, Award, BookOpen, Clock, Store };
 
@@ -300,103 +299,17 @@ export default function ToolsPage() {
   const [openTool, setOpenTool] = useState(null);
   const toolCount = useMemo(() => TOOLS.length + strategies.length, []);
 
-  const { t, locale } = useTranslation();
-  const [translatedTools, setTranslatedTools] = useState(TOOLS);
-  const [translatedStrategies, setTranslatedStrategies] = useState(strategies);
-  const [translatedHeroSub, setTranslatedHeroSub] = useState('');
-  const [translatedGuardTitle, setTranslatedGuardTitle] = useState('Tools kholne ke liye login karo');
-  const [translatedGuardSub, setTranslatedGuardSub] = useState('Apni progress save karne aur coins earn karne ke liye pehle login karo.');
-  const [translatedStrategiesTitle, setTranslatedStrategiesTitle] = useState('Interactive Strategies');
-  const [translatedStrategiesSub, setTranslatedStrategiesSub] = useState('11 visual + gamified financial learning experiences');
-  const [translatedToolsTitle, setTranslatedToolsTitle] = useState('Financial Tools');
-  const [translatedToolsSub, setTranslatedToolsSub] = useState('Calculators, trackers, games aur more');
-
-  // Translate dynamic content
   useEffect(() => {
-    let active = true;
-    async function loadTranslations() {
-      try {
-        const transTools = await Promise.all(TOOLS.map(async tool => ({
-          ...tool,
-          label: await translateText(tool.label, locale),
-          description: await translateText(tool.description, locale)
-        })));
-        
-        const transStrategies = await Promise.all(strategies.map(async s => ({
-          ...s,
-          title: await translateText(s.title, locale),
-          titleEn: await translateText(s.titleEn, locale)
-        })));
+    if (hydrated && !isAuthenticated) router.push('/auth');
+  }, [hydrated, isAuthenticated, router]);
 
-        const heroSub = await translateText("11 interactive strategies + 16 financial tools — SIP calculator, expense tracker, quizzes, games, AI advisor aur bahut kuch. Sab kuch Hinglish mein!", locale);
-        const guardTitle = await translateText("Tools kholne ke liye login karo", locale);
-        const guardSub = await translateText("Apni progress save karne aur coins earn karne ke liye pehle login karo.", locale);
-        
-        const stratTitle = await translateText("Interactive Strategies", locale);
-        const stratSub = await translateText("11 visual + gamified financial learning experiences", locale);
-        const toolsTitle = await translateText("Financial Tools", locale);
-        const toolsSub = await translateText("Calculators, trackers, games aur more", locale);
+  const translatedStrategies = strategies;
+  const translatedStrategiesTitle = 'Interactive Strategies';
+  const translatedStrategiesSub = '11 visual + gamified financial learning experiences';
+  const translatedToolsTitle = 'Financial Tools';
+  const translatedToolsSub = 'Calculators, trackers, games aur more';
 
-        if (active) {
-          setTranslatedTools(transTools);
-          setTranslatedStrategies(transStrategies);
-          setTranslatedHeroSub(heroSub);
-          setTranslatedGuardTitle(guardTitle);
-          setTranslatedGuardSub(guardSub);
-          setTranslatedStrategiesTitle(stratTitle);
-          setTranslatedStrategiesSub(stratSub);
-          setTranslatedToolsTitle(toolsTitle);
-          setTranslatedToolsSub(toolsSub);
-        }
-      } catch (e) {
-        console.error('Translation error in ToolsPage:', e);
-      }
-    }
-    loadTranslations();
-    return () => {
-      active = false;
-    };
-  }, [locale]);
-
-  // Auth guard (soft — allow viewing but suggest login)
-  if (hydrated && !isAuthenticated) {
-    return /*#__PURE__*/_jsx("main", {
-      className: "relative min-h-screen bg-midnight flex items-center justify-center p-4",
-      children: /*#__PURE__*/_jsxs("div", {
-        className: "glass-card-premium rounded-3xl p-8 max-w-md text-center",
-        children: [/*#__PURE__*/_jsx("div", {
-          className: "w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center",
-          style: {
-            background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)'
-          },
-          children: /*#__PURE__*/_jsx(Wrench, {
-            size: 28,
-            className: "text-midnight"
-          })
-        }), /*#__PURE__*/_jsx("h1", {
-          className: "text-2xl font-bold text-white mb-2",
-          children: translatedGuardTitle
-        }), /*#__PURE__*/_jsx("p", {
-          className: "text-sm text-ink-muted mb-6",
-          children: translatedGuardSub
-        }), /*#__PURE__*/_jsxs("div", {
-          className: "flex gap-3 justify-center",
-          children: [/*#__PURE__*/_jsx(Link, {
-            href: "/auth",
-            className: "rounded-xl px-5 py-3 font-bold text-sm text-midnight",
-            style: {
-              background: 'linear-gradient(135deg, #34D399, #10B981 60%, #047857)'
-            },
-            children: "Login / Signup"
-          }), /*#__PURE__*/_jsx(Link, {
-            href: "/",
-            className: "rounded-xl border border-white/10 bg-white/5 px-5 py-3 font-semibold text-sm text-white hover:bg-white/10 transition-colors",
-            children: "Home"
-          })]
-        })]
-      })
-    });
-  }
+  // Auth guard removed since user is always authenticated
   return /*#__PURE__*/_jsxs("main", {
     className: "relative min-h-screen w-full overflow-hidden bg-midnight",
     children: [/*#__PURE__*/_jsxs("div", {
@@ -433,7 +346,7 @@ export default function ToolsPage() {
             className: "font-display text-4xl sm:text-5xl font-extrabold tracking-tight mb-3",
             children: /*#__PURE__*/_jsx("span", {
               className: "text-gradient-brand",
-              children: t('auth.title_login').includes('Wapas') ? "Strategies & Tools" : "Strategies & Tools"
+              children: "Strategies & Tools"
             })
           }), /*#__PURE__*/_jsx("p", {
             className: "text-ink-muted max-w-2xl mx-auto",
@@ -477,7 +390,7 @@ export default function ToolsPage() {
               children: "Badges"
             })]
           }), /*#__PURE__*/_jsxs(Link, {
-            href: "/dashboard",
+            href: "/home",
             className: "flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm font-semibold text-ink hover:bg-white/10 hover:border-emerald/20 transition-colors",
             children: [/*#__PURE__*/_jsx(BookOpen, {
               size: 15,
@@ -656,7 +569,7 @@ export default function ToolsPage() {
             })]
           }), /*#__PURE__*/_jsx("div", {
             className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4",
-            children: translatedTools.map((tool, i) => {
+            children: TOOLS.map((tool, i) => {
               const Icon = tool.Icon;
               const gamer = toolGamerInfo(tool.id);
               return /*#__PURE__*/_jsxs(motion.button, {

@@ -38,7 +38,7 @@ const STATUS_OPTIONS = [{
   emoji: '🔍'
 }];
 function statusLabel(s) {
-  return STATUS_OPTIONS.find(o => o.value === s)?.label ?? 'Select karo';
+  return STATUS_OPTIONS.find(o => o.value === s)?.label ?? 'Select status';
 }
 function formatINR(n) {
   return '₹' + n.toLocaleString('en-IN');
@@ -46,13 +46,13 @@ function formatINR(n) {
 function relativeTime(ts) {
   const diff = Date.now() - ts;
   const sec = Math.floor(diff / 1000);
-  if (sec < 60) return 'abhi';
+  if (sec < 60) return 'just now';
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min} min pehle`;
+  if (min < 60) return `${min} min ago`;
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr} ghante pehle`;
+  if (hr < 24) return `${hr} hours ago`;
   const day = Math.floor(hr / 24);
-  if (day < 30) return `${day} din pehle`;
+  if (day < 30) return `${day} days ago`;
   return new Date(ts).toLocaleDateString('en-IN');
 }
 function calcAge(dob) {
@@ -121,7 +121,6 @@ export default function ProfilePage() {
     addBadge
   } = useAppStore();
 
-  // Auth guard — redirect to /auth if not logged in
   useEffect(() => {
     if (hydrated && !isAuthenticated) router.replace('/auth');
   }, [hydrated, isAuthenticated, router]);
@@ -166,7 +165,7 @@ export default function ProfilePage() {
           className: "w-12 h-12 rounded-full border-2 border-emerald/30 border-t-emerald animate-spin"
         }), /*#__PURE__*/_jsx("p", {
           className: "text-ink-muted text-sm",
-          children: "Profile load ho raha hai..."
+          children: "Loading profile..."
         })]
       })
     });
@@ -241,7 +240,7 @@ export default function ProfilePage() {
         children: [/*#__PURE__*/_jsxs("div", {
           className: "flex items-center justify-between mb-6",
           children: [/*#__PURE__*/_jsxs(Link, {
-            href: "/dashboard",
+            href: "/home",
             className: "flex items-center gap-2 text-sm text-ink-muted hover:text-emerald-soft transition-colors",
             children: [/*#__PURE__*/_jsx(ArrowLeft, {
               className: "w-4 h-4"
@@ -258,7 +257,7 @@ export default function ProfilePage() {
             className: "flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald/15 border border-emerald/30 text-emerald-soft text-xs font-semibold",
             children: [/*#__PURE__*/_jsx(CheckCircle2, {
               className: "w-3.5 h-3.5"
-            }), " Profile save ho gayi!"]
+            }), " Profile saved!"]
           })]
         }), /*#__PURE__*/_jsx(motion.h1, {
           initial: {
@@ -270,10 +269,10 @@ export default function ProfilePage() {
             y: 0
           },
           className: "font-display text-3xl sm:text-4xl font-extrabold heading-gradient mb-1",
-          children: "Mera Profile"
+          children: "My Profile"
         }), /*#__PURE__*/_jsx("p", {
           className: "text-sm text-ink-muted mb-6",
-          children: "Apni journey dekho, profile update karo, aur achievements celebrate karo \uD83D\uDE80"
+          children: "View your journey, update your profile, and celebrate your achievements \uD83D\uDE80"
         }), /*#__PURE__*/_jsxs(motion.section, {
           initial: {
             opacity: 0,
@@ -435,7 +434,7 @@ export default function ProfilePage() {
                 }), "Learning Progress"]
               }), /*#__PURE__*/_jsx("p", {
                 className: "text-xs text-ink-muted mt-0.5",
-                children: "Saare 11 modules ka status \u2014 kahan ho aur kahan jaana hai"
+                children: "Status of all 11 modules — where you are and where you're going"
               })]
             }), /*#__PURE__*/_jsxs("div", {
               className: "text-right",
@@ -444,7 +443,7 @@ export default function ProfilePage() {
                 children: [overallProgress, "%"]
               }), /*#__PURE__*/_jsx("div", {
                 className: "text-[10px] text-ink-muted uppercase tracking-wider font-semibold",
-                children: "Journey Complete \uD83D\uDE80"
+                children: "Journey Complete 🚀"
               })]
             })]
           }), /*#__PURE__*/_jsx("div", {
@@ -467,14 +466,14 @@ export default function ProfilePage() {
             })
           }), estDaysLeft > 0 && /*#__PURE__*/_jsxs("p", {
             className: "text-[11px] text-gold-soft font-semibold mb-4",
-            children: ["\u23F3 Aise chalte rahe toh ~", estDaysLeft, " din mein expert ban jaoge!"]
+            children: ["\u23F3 At this pace, you'll be an expert in ~", estDaysLeft, " days!"]
           }), /*#__PURE__*/_jsx("div", {
             className: "grid grid-cols-1 md:grid-cols-2 gap-2.5",
             children: modules.map((mod, i) => {
               const cardCount = getAllCardsForModule(mod.id).length;
               const isCompleted = completedModules.includes(mod.id);
               const progress = isCompleted ? 100 : Math.min(99, Math.floor((moduleProgress[mod.id] || 0) / Math.max(cardCount - 1, 1) * 100));
-              const isLocked = !isCompleted && i > 0 && !completedModules.includes(modules[i - 1].id) && progress === 0;
+              const isLocked = false;
               const statusColor = isCompleted ? '#10B981' : isLocked ? '#64748B' : '#F59E0B';
               const statusEmoji = isCompleted ? '🟢' : isLocked ? '🔒' : '🟡';
               const statusLabel = isCompleted ? 'Complete' : isLocked ? 'Locked' : 'In Progress';
@@ -706,7 +705,7 @@ export default function ProfilePage() {
               className: "w-8 h-8 text-ink-muted/50 mx-auto mb-2"
             }), /*#__PURE__*/_jsx("p", {
               className: "text-sm text-ink-muted",
-              children: "Abhi koi activity nahi. Module padho, quiz khelo, ya strategy complete karo \u2014 yahan dikhega!"
+              children: "No activity yet. Read a module, take a quiz, or complete a strategy \u2014 it will show up here!"
             })]
           }) : /*#__PURE__*/_jsx("div", {
             className: "max-h-96 overflow-y-auto pr-1 -mr-1 scrollbar-none",

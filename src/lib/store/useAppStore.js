@@ -2,7 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useEffect, useState } from 'react';
 import { BADGES, getLevelInfo } from '@/lib/data/badges';
-import { fetchUserProfile, syncUserProfile } from '@/lib/dbSync';
+import {
+  checkCoinBadges,
+  checkModuleBadges,
+  checkStreakBadges,
+  checkSavingsBadges,
+  generateActivityId,
+} from './badgeHelpers';
 
 
 // Hook to detect when Zustand has finished hydrating from localStorage
@@ -30,6 +36,7 @@ export function useHydration() {
 // Re-export ActivityEntry for downstream consumers
 
 const initialState = {
+  user: null,
   activeStrategy: 1,
   activeModule: null,
   completedModules: [],
@@ -51,8 +58,11 @@ const initialState = {
   masteredTerms: [],
   dismissedTipDate: '',
   advisorMessages: [],
+  advisorConversationId: null,
   advisorSessionCount: 0,
   goals: [],
+  moduleContext: null,
+  isAdvisorOpen: false,
   lastSpinTime: 0,
   totalSpins: 0,
   spinWinnings: 0,
@@ -76,17 +86,32 @@ const initialState = {
   financialAge: 0,
   financialAgeLastTaken: '',
   habitTracker: {},
-  // capital-mastery auth/onboarding defaults (local-only)
-  hasCompletedOnboarding: false,
-  user: null,
-  isAuthenticated: false,
-  isEmailVerified: false,
-  isPhoneVerified: false,
   isAudioEnabled: true,
-  language: 'hinglish'
+  isAuthenticated: false,
+  hasCompletedOnboarding: false
 };
+
 export const useAppStore = create()(persist((set, get) => ({
   ...initialState,
+  setUser: user => set({ user }),
+  loginUser: (user) => set({ user, isAuthenticated: true }),
+  setHasCompletedOnboarding: value => set({ hasCompletedOnboarding: value }),
+  logout: () => set({
+    user: null,
+    isAuthenticated: false,
+    activeStrategy: 1,
+    activeModule: null,
+    coins: 0,
+    streak: 0,
+    completedModules: [],
+    moduleProgress: {},
+    badges: [],
+    earnedBadges: [],
+    xp: 0,
+    level: 1,
+    activityLog: [],
+    userName: ''
+  }),
   setActiveStrategy: id => set({
     activeStrategy: id
   }),
@@ -100,18 +125,12 @@ export const useAppStore = create()(persist((set, get) => ({
       ...state.moduleCompletionDates,
       [id]: new Date().toISOString().split('T')[0]
     };
-    const newBadges = [...state.badges];
+    let newBadges = [...state.badges];
     if (!alreadyCompleted) {
-      const count = newCompletedModules.length;
-      if (count === 1 && !newBadges.includes('first-module')) newBadges.push('first-module');
-      if (count >= 3 && !newBadges.includes('three-modules')) newBadges.push('three-modules');
-      if (count >= 6 && !newBadges.includes('six-modules')) newBadges.push('six-modules');
-      if (count >= 11 && !newBadges.includes('all-modules')) newBadges.push('all-modules');
+      newBadges = checkModuleBadges(newCompletedModules.length, newBadges);
     }
     const newCoins = alreadyCompleted ? state.coins : state.coins + 50;
-    const updatedBadges = [...newBadges];
-    if (newCoins >= 100 && !updatedBadges.includes('coins-100')) updatedBadges.push('coins-100');
-    if (newCoins >= 500 && !updatedBadges.includes('coins-500')) updatedBadges.push('coins-500');
+    newBadges = checkCoinBadges(newCoins, newBadges);
     return {
       completedModules: newCompletedModules,
       moduleProgress: {
@@ -120,7 +139,7 @@ export const useAppStore = create()(persist((set, get) => ({
       },
       moduleCompletionDates: newModuleCompletionDates,
       coins: newCoins,
-      badges: updatedBadges
+      badges: newBadges
     };
   }),
   updateModuleProgress: (id, progress) => set(state => ({
@@ -131,12 +150,9 @@ export const useAppStore = create()(persist((set, get) => ({
   })),
   addCoins: amount => set(state => {
     const newCoins = state.coins + amount;
-    const newBadges = [...state.badges];
-    if (newCoins >= 100 && !newBadges.includes('coins-100')) newBadges.push('coins-100');
-    if (newCoins >= 500 && !newBadges.includes('coins-500')) newBadges.push('coins-500');
     return {
       coins: newCoins,
-      badges: newBadges
+      badges: checkCoinBadges(newCoins, state.badges)
     };
   }),
   spendCoins: amount => {
@@ -155,12 +171,9 @@ export const useAppStore = create()(persist((set, get) => ({
     if (state.lastLoginDate === today) return;
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const newStreak = state.lastLoginDate === yesterday ? state.streak + 1 : 1;
-    const newBadges = [...state.badges];
-    if (newStreak >= 3 && !newBadges.includes('streak-3')) newBadges.push('streak-3');
-    if (newStreak >= 7 && !newBadges.includes('streak-7')) newBadges.push('streak-7');
     const newCoins = state.coins + newStreak * 5;
-    if (newCoins >= 100 && !newBadges.includes('coins-100')) newBadges.push('coins-100');
-    if (newCoins >= 500 && !newBadges.includes('coins-500')) newBadges.push('coins-500');
+    let newBadges = checkStreakBadges(newStreak, state.badges);
+    newBadges = checkCoinBadges(newCoins, newBadges);
     set({
       streak: newStreak,
       lastLoginDate: today,
@@ -179,14 +192,14 @@ export const useAppStore = create()(persist((set, get) => ({
     const newLevel = getLevelInfo(newXp).level;
     const leveledUp = newLevel > state.level;
     const newActivity = {
-      id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      id: generateActivityId(),
       type: 'badge',
       description: `🏆 Nayi badge mili: ${badge?.name ?? badgeId}${badge ? ` (${badge.tier})` : ''}`,
       timestamp: Date.now(),
       coins: reward
     };
     const leveledUpActivity = leveledUp ? {
-      id: `act-${Date.now()}-lvl-${Math.random().toString(36).slice(2, 7)}`,
+      id: generateActivityId('act-lvl'),
       type: 'level_up',
       description: `🚀 Level Up! Ab tum Level ${newLevel} pe ho — ${getLevelInfo(newXp).name} ${getLevelInfo(newXp).emoji}`,
       timestamp: Date.now(),
@@ -214,7 +227,7 @@ export const useAppStore = create()(persist((set, get) => ({
     if (leveledUp) {
       const levelInfo = getLevelInfo(newXp);
       const newActivity = {
-        id: `act-${Date.now()}-lvl-${Math.random().toString(36).slice(2, 7)}`,
+        id: generateActivityId('act-lvl'),
         type: 'level_up',
         description: `🚀 Level Up! Ab tum Level ${newLevel} — ${levelInfo.name} ${levelInfo.emoji}`,
         timestamp: Date.now(),
@@ -233,7 +246,7 @@ export const useAppStore = create()(persist((set, get) => ({
   }),
   logActivity: (type, description, coins) => set(state => {
     const entry = {
-      id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      id: generateActivityId(),
       type,
       description,
       timestamp: Date.now(),
@@ -244,11 +257,10 @@ export const useAppStore = create()(persist((set, get) => ({
     };
   }),
   recordQuizScore: (quizId, score) => set(state => {
-    const newBadges = [...state.badges];
+    let newBadges = [...state.badges];
     if (score === 100 && !newBadges.includes('perfect-quiz')) newBadges.push('perfect-quiz');
     const newCoins = state.coins + Math.floor(score / 10);
-    if (newCoins >= 100 && !newBadges.includes('coins-100')) newBadges.push('coins-100');
-    if (newCoins >= 500 && !newBadges.includes('coins-500')) newBadges.push('coins-500');
+    newBadges = checkCoinBadges(newCoins, newBadges);
     return {
       quizScores: {
         ...state.quizScores,
@@ -283,7 +295,20 @@ export const useAppStore = create()(persist((set, get) => ({
   })),
   clearAdvisorMessages: () => set({
     advisorMessages: [],
-    advisorSessionCount: 0
+    advisorSessionCount: 0,
+    advisorConversationId: null
+  }),
+  setAdvisorConversationId: (id) => set({
+    advisorConversationId: id
+  }),
+  setModuleContext: context => set({
+    moduleContext: context
+  }),
+  setAdvisorOpen: open => set({
+    isAdvisorOpen: open
+  }),
+  openTutorChat: () => set({
+    isAdvisorOpen: true
   }),
   addGoal: goal => set(state => ({
     goals: [...state.goals, goal]
@@ -308,15 +333,11 @@ export const useAppStore = create()(persist((set, get) => ({
     totalSpins: state.totalSpins + 1
   })),
   addSpinWinnings: amount => set(state => {
-    const newSpinWinnings = state.spinWinnings + amount;
     const newCoins = state.coins + amount;
-    const newBadges = [...state.badges];
-    if (newCoins >= 100 && !newBadges.includes('coins-100')) newBadges.push('coins-100');
-    if (newCoins >= 500 && !newBadges.includes('coins-500')) newBadges.push('coins-500');
     return {
-      spinWinnings: newSpinWinnings,
+      spinWinnings: state.spinWinnings + amount,
       coins: newCoins,
-      badges: newBadges
+      badges: checkCoinBadges(newCoins, state.badges)
     };
   }),
   setQuizArenaHighScore: (mode, score) => set(state => ({
@@ -366,10 +387,7 @@ export const useAppStore = create()(persist((set, get) => ({
         currentStreak = 0;
       }
     });
-    const newBadges = [...state.badges];
-    if (longestStreak >= 7 && !newBadges.includes('savings-streak-7')) newBadges.push('savings-streak-7');
-    if (longestStreak >= 14 && !newBadges.includes('savings-streak-14')) newBadges.push('savings-streak-14');
-    if (longestStreak >= 30 && !newBadges.includes('savings-streak-30')) newBadges.push('savings-streak-30');
+    const newBadges = checkSavingsBadges(longestStreak, state.badges);
     const newCoins = state.coins + 5;
     return {
       savingsChallenge: {
@@ -402,12 +420,11 @@ export const useAppStore = create()(persist((set, get) => ({
     monthlyBudget: budget
   }),
   setHealthCheckup: result => set(state => {
-    const newBadges = [...state.badges];
+    let newBadges = [...state.badges];
     if (result.score >= 80 && !newBadges.includes('health-guru')) newBadges.push('health-guru');
     if (result.score >= 60 && !newBadges.includes('health-aware')) newBadges.push('health-aware');
     const newCoins = state.coins + 20;
-    if (newCoins >= 100 && !newBadges.includes('coins-100')) newBadges.push('coins-100');
-    if (newCoins >= 500 && !newBadges.includes('coins-500')) newBadges.push('coins-500');
+    newBadges = checkCoinBadges(newCoins, newBadges);
     return {
       healthCheckup: result,
       badges: newBadges,
@@ -449,96 +466,17 @@ export const useAppStore = create()(persist((set, get) => ({
     }
     // All 6 habits completed for this date - bonus coins
     const newCoins = state.coins + 10;
-    const newBadges = [...state.badges];
-    if (newCoins >= 100 && !newBadges.includes('coins-100')) newBadges.push('coins-100');
-    if (newCoins >= 500 && !newBadges.includes('coins-500')) newBadges.push('coins-500');
     return {
       habitTracker: newHabitTracker,
       coins: newCoins,
-      badges: newBadges
+      badges: checkCoinBadges(newCoins, state.badges)
     };
   }),
   resetProgress: () => set(initialState),
-  // ── capital-mastery auth actions (Firebase + Supabase integrated) ──
-  setHasCompletedOnboarding: value => set({
-    hasCompletedOnboarding: value
-  }),
-  setUser: user => set({
-    user
-  }),
-  loginUser: async (user) => {
-    set({ user, isAuthenticated: true });
-    if (user && user.uid && !user.uid.startsWith('guest-')) {
-      const cloudProfile = await fetchUserProfile(user.uid);
-      if (cloudProfile) {
-        set({
-          coins: cloudProfile.coins ?? 0,
-          streak: cloudProfile.streak ?? 0,
-          xp: cloudProfile.xp ?? 0,
-          level: cloudProfile.level ?? 1,
-          completedModules: cloudProfile.completed_modules ?? [],
-          badges: cloudProfile.badges ?? [],
-          earnedBadges: cloudProfile.badges ?? [],
-          goals: cloudProfile.goals ?? [],
-          expenses: cloudProfile.expenses ?? [],
-        });
-      } else {
-        // First time signup, push current local state to cloud
-        await syncUserProfile(user.uid, get());
-      }
-    }
-  },
-  setIsAuthenticated: value => set({
-    isAuthenticated: value
-  }),
-  setIsEmailVerified: value => set({
-    isEmailVerified: value
-  }),
-  setIsPhoneVerified: value => set({
-    isPhoneVerified: value
-  }),
   toggleAudio: () => set(state => ({
     isAudioEnabled: !state.isAudioEnabled
-  })),
-  setLanguage: lang => set({
-    language: lang
-  }),
-  logout: () => set({
-    user: null,
-    isAuthenticated: false,
-    isEmailVerified: false,
-    isPhoneVerified: false,
-    activeStrategy: 1,
-    activeModule: null,
-    coins: 0,
-    streak: 0,
-    completedModules: [],
-    moduleProgress: {},
-    badges: [],
-    earnedBadges: [],
-    xp: 0,
-    level: 1,
-    activityLog: [],
-    userName: ''
-  })
+  }))
 }), {
   name: 'rupaiya-101-storage'
 }));
-
-// Automatic cloud synchronization subscriber
-if (typeof window !== 'undefined') {
-  useAppStore.subscribe((state, prevState) => {
-    if (state.isAuthenticated && state.user?.uid && !state.user.uid.startsWith('guest-') && !state.user.uid.startsWith('local-')) {
-      const keysToSync = [
-        'coins', 'streak', 'xp', 'level', 'completedModules',
-        'badges', 'earnedBadges', 'goals', 'expenses'
-      ];
-      
-      const hasChanged = keysToSync.some(key => JSON.stringify(state[key]) !== JSON.stringify(prevState[key]));
-      if (hasChanged) {
-        syncUserProfile(state.user.uid, state);
-      }
-    }
-  });
-}
 

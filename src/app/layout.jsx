@@ -1,8 +1,10 @@
 import { Inter, Poppins } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { AnimationProvider } from "@/components/AnimationProvider";
+import ClientProviders from "@/components/ClientProviders";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -32,8 +34,6 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5
 };
-import { AnimationProvider } from "@/components/AnimationProvider";
-import { TranslationProvider } from "@/components/TranslationProvider";
 
 export default function RootLayout({
   children
@@ -49,10 +49,11 @@ export default function RootLayout({
         defaultTheme: "dark",
         enableSystem: false,
         children: [
-          /*#__PURE__*/_jsx(TranslationProvider, {
-            children: /*#__PURE__*/_jsx(AnimationProvider, { children })
-          }),
-          /*#__PURE__*/_jsx(Toaster, {})
+          /*#__PURE__*/_jsx(ClientProviders, {
+            children: /*#__PURE__*/_jsx(AnimationProvider, {
+              children: children
+            })
+          })
         ]
       })
     })

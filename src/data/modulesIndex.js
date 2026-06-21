@@ -13,10 +13,10 @@ import { module11Topics } from './module11Cards';
 export const modules = [
   {
     id: 1,
-    title: "Paise Ki Basic Samajh",
+    title: "Understanding Money Basics",
     emoji: "💵",
     color: "#3B82F6",
-    description: "Paisa sirf paper nahi, ek concept hai. Income, expense, saving, budget — yeh basic pillars jinke bina financial life stabilize nahi hoti.",
+    description: "Money is more than just paper — it's a concept. Income, expense, saving, budget — these are the foundational pillars without which your financial life cannot be stable.",
     topics: module1Topics
   },
   {
@@ -32,7 +32,7 @@ export const modules = [
     title: "Saving Strategies",
     emoji: "🏦",
     color: "#8B5CF6",
-    description: "Compounding ka power aur savings rate calculations. Student savings hacks, inflation ka asar aur saving barriers to break.",
+    description: "The power of compounding and savings rate calculations. Student savings hacks, the impact of inflation, and how to break savings barriers.",
     topics: module3Topics
   },
   {
@@ -40,7 +40,7 @@ export const modules = [
     title: "Emergency Fund",
     emoji: "🛡️",
     color: "#EF4444",
-    description: "Aapka financial safety shield. 3/6/9 months rules, real-life savings stories, aur emergency fund deploy karne ki boundaries.",
+    description: "Your financial safety shield. 3/6/9 months rules, real-life savings stories, and the boundaries for deploying your emergency fund.",
     topics: module4Topics
   },
   {
@@ -48,15 +48,15 @@ export const modules = [
     title: "Banking Basics",
     emoji: "🏛️",
     color: "#06B6D4",
-    description: "Accounts aur cards ke types, Fixed vs Recurring deposits, online banking rules, bank fees audit aur KYC safety rules.",
+    description: "Types of accounts and cards, Fixed vs Recurring deposits, online banking rules, bank fee audits, and KYC safety rules.",
     topics: module6Topics
   },
   {
     id: 6,
-    title: "Debt Aur Credit",
+    title: "Debt & Credit",
     emoji: "💳",
     color: "#F59E0B",
-    description: "Good debt vs Bad debt ka farq. Credit score/CIBIL guide, student loan tips, EMI traps aur debt trap se nikalne ki strategies.",
+    description: "The difference between good debt and bad debt. Credit score/CIBIL guide, student loan tips, EMI traps, and strategies to escape the debt trap.",
     topics: module5Topics
   },
   {
@@ -64,7 +64,7 @@ export const modules = [
     title: "Investment Basics",
     emoji: "📈",
     color: "#EC4899",
-    description: "SIP aur mutual funds complete framework. Stock market, Gold, Crypto basics, asset allocation rules, aur initial tax tips.",
+    description: "Complete SIP and mutual funds framework. Stock market, Gold, Crypto basics, asset allocation rules, and initial tax tips.",
     topics: module7Topics
   },
   {
@@ -80,7 +80,7 @@ export const modules = [
     title: "Insurance Basics",
     emoji: "☂️",
     color: "#3B82F6",
-    description: "Risk management aur transfer concept. Health, Term life, aur vehicle insurance rules aur 10 common purchase mistakes.",
+    description: "Risk management and transfer concepts. Health, Term life, and vehicle insurance rules and the 10 most common purchase mistakes.",
     topics: module9Topics
   },
   {
@@ -88,7 +88,7 @@ export const modules = [
     title: "Budgeting In Real Life",
     emoji: "📋",
     color: "#10B981",
-    description: "Student budget template se lekar expense tracking rules aur joint family dynamics mein budget handling ki practical guide.",
+    description: "From student budget templates to expense tracking rules and practical guide to budget handling in a joint family.",
     topics: module2Topics
   },
   {

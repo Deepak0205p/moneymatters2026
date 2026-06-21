@@ -1,516 +1,419 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, Reorder } from 'framer-motion';
-import { ListOrdered, Save, Sparkles, IndianRupee, Home, UtensilsCrossed, Car, Smartphone, GraduationCap, Clapperboard, HeartPulse, PiggyBank, Gift, GripVertical, Check } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { 
+  ListOrdered, Save, Sparkles, IndianRupee, Home, 
+  UtensilsCrossed, Car, Smartphone, GraduationCap, 
+  Clapperboard, HeartPulse, PiggyBank, Gift, GripVertical, Check 
+} from 'lucide-react';
 import { useAppStore } from '@/lib/store/useAppStore';
 import { toast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/lib/utils';
 
-/* ============================================================
-   Priority Calculator — drag to reorder, live bar chart
-   ============================================================ */
-import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-const PRIORITIES = [{
-  id: 'rent',
-  emoji: '🏠',
-  title: 'Rent / Hostel',
-  titleEn: 'Rent ya hostel fees',
-  color: 'text-rose-400',
-  bg: 'bg-rose-400/10',
-  barColor: '#f43f5e',
-  idealPct: 30,
-  defaultPct: 30,
-  tip: 'Rent income ka 25-30% tak — zyada nahi!',
-  icon: /*#__PURE__*/_jsx(Home, {
-    className: "w-4 h-4"
-  })
-}, {
-  id: 'food',
-  emoji: '🍔',
-  title: 'Food',
-  titleEn: 'Khana',
-  color: 'text-amber-400',
-  bg: 'bg-amber-400/10',
-  barColor: '#f59e0b',
-  idealPct: 15,
-  defaultPct: 20,
-  tip: 'Mess / cooking se 50% bachat ho sakti hai.',
-  icon: /*#__PURE__*/_jsx(UtensilsCrossed, {
-    className: "w-4 h-4"
-  })
-}, {
-  id: 'transport',
-  emoji: '🚗',
-  title: 'Transport',
-  titleEn: 'Travel / Bus / Metro',
-  color: 'text-blue-400',
-  bg: 'bg-blue-400/10',
-  barColor: '#3b82f6',
-  idealPct: 8,
-  defaultPct: 12,
-  tip: 'Public transport = 70% saving vs cab.',
-  icon: /*#__PURE__*/_jsx(Car, {
-    className: "w-4 h-4"
-  })
-}, {
-  id: 'phone',
-  emoji: '📱',
-  title: 'Phone Recharge',
-  titleEn: 'Phone + Internet',
-  color: 'text-cyan-400',
-  bg: 'bg-cyan-400/10',
-  barColor: '#06b6d4',
-  idealPct: 3,
-  defaultPct: 6,
-  tip: 'Family plan se 30% bachat.',
-  icon: /*#__PURE__*/_jsx(Smartphone, {
-    className: "w-4 h-4"
-  })
-}, {
-  id: 'education',
-  emoji: '📚',
-  title: 'Education',
-  titleEn: 'Books / Course / Coaching',
-  color: 'text-violet-400',
-  bg: 'bg-violet-400/10',
-  barColor: '#8b5cf6',
-  idealPct: 12,
-  defaultPct: 10,
-  tip: 'Skill courses = best investment. Skilligo pe check karo.',
-  icon: /*#__PURE__*/_jsx(GraduationCap, {
-    className: "w-4 h-4"
-  })
-}, {
-  id: 'entertainment',
-  emoji: '🎬',
-  title: 'Entertainment',
-  titleEn: 'Movies / Netflix / Outing',
-  color: 'text-pink-400',
-  bg: 'bg-pink-400/10',
-  barColor: '#ec4899',
-  idealPct: 7,
-  defaultPct: 12,
-  tip: 'Family plan se 30% bachat. Free events try karo.',
-  icon: /*#__PURE__*/_jsx(Clapperboard, {
-    className: "w-4 h-4"
-  })
-}, {
-  id: 'health',
-  emoji: '💊',
-  title: 'Health',
-  titleEn: 'Medical + Fitness',
-  color: 'text-emerald-400',
-  bg: 'bg-emerald-400/10',
-  barColor: '#10b981',
-  idealPct: 7,
-  defaultPct: 5,
-  tip: 'Insurance + ₹500 gym = long-term saving.',
-  icon: /*#__PURE__*/_jsx(HeartPulse, {
-    className: "w-4 h-4"
-  })
-}, {
-  id: 'savings',
-  emoji: '💰',
-  title: 'Savings',
-  titleEn: 'Investments + Emergency',
-  color: 'text-emerald-400',
-  bg: 'bg-emerald-400/10',
-  barColor: '#22c55e',
-  idealPct: 15,
-  defaultPct: 5,
-  tip: 'Pehle 20% save karo, baaki kharch karo.',
-  icon: /*#__PURE__*/_jsx(PiggyBank, {
-    className: "w-4 h-4"
-  })
-}, {
-  id: 'gifts',
-  emoji: '🎁',
-  title: 'Gifts',
-  titleEn: 'Gifts / Donations',
-  color: 'text-orange-400',
-  bg: 'bg-orange-400/10',
-  barColor: '#f97316',
-  idealPct: 3,
-  defaultPct: 0,
-  tip: 'Occasional rakho, monthly budget impact na kare.',
-  icon: /*#__PURE__*/_jsx(Gift, {
-    className: "w-4 h-4"
-  })
-}];
-const PRESET_INCOMES = [3000, 5000, 10000, 15000, 25000];
-export default function PriorityCalculator({
-  open,
-  onClose
-}) {
-  const {
-    addCoins
-  } = useAppStore();
-  const [income, setIncome] = useState(10000);
+const PRIORITIES = [
+  {
+    id: 'rent',
+    emoji: '🏠',
+    title: 'Rent / Hostel 🏠',
+    color: 'text-rose-400',
+    bg: 'bg-rose-400/10',
+    barColor: '#f43f5e',
+    idealPct: 30,
+    tip: 'Rent income ka 25-30% tak — isse zyada mat rakho!'
+  },
+  {
+    id: 'food',
+    emoji: '🍔',
+    title: 'Food / Grocery 🍛',
+    color: 'text-amber-400',
+    bg: 'bg-amber-400/10',
+    barColor: '#f59e0b',
+    idealPct: 15,
+    tip: 'Daily outside meals avoid karke savings optimize karein.'
+  },
+  {
+    id: 'transport',
+    emoji: '🚗',
+    title: 'Transport / Commute 🚌',
+    color: 'text-blue-400',
+    bg: 'bg-blue-400/10',
+    barColor: '#3b82f6',
+    idealPct: 8,
+    tip: 'Public transport use karne se wallet burden kam hota hai.'
+  },
+  {
+    id: 'phone',
+    emoji: '📱',
+    title: 'Phone & Internet ⚡',
+    color: 'text-cyan-400',
+    bg: 'bg-cyan-400/10',
+    barColor: '#06b6d4',
+    idealPct: 3,
+    tip: 'Family plans choose karke utility bills save karein.'
+  },
+  {
+    id: 'education',
+    emoji: '📚',
+    title: 'Education / Skill-up 🎓',
+    color: 'text-violet-400',
+    bg: 'bg-violet-400/10',
+    barColor: '#8b5cf6',
+    idealPct: 12,
+    tip: 'Apni skills pe invest karna is the best compound return.'
+  },
+  {
+    id: 'entertainment',
+    emoji: '🎬',
+    title: 'Manoranjan / Subscriptions 🎬',
+    color: 'text-pink-400',
+    bg: 'bg-pink-400/10',
+    barColor: '#ec4899',
+    idealPct: 7,
+    tip: 'Faltu memberships cancel karein aur free activities try karein.'
+  },
+  {
+    id: 'health',
+    emoji: '💊',
+    title: 'Health & Fitness 🏥',
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-400/10',
+    barColor: '#10b981',
+    idealPct: 7,
+    tip: 'Daily healthy food + simple exercise reduces medical bills.'
+  },
+  {
+    id: 'savings',
+    emoji: '💰',
+    title: 'Savings & SIP 🐷',
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-400/10',
+    barColor: '#22c55e',
+    idealPct: 15,
+    tip: 'Pehle 20% savings nikalen (Pay Yourself First rule).'
+  },
+  {
+    id: 'gifts',
+    emoji: '🎁',
+    title: 'Gifts & Outings 🎁',
+    color: 'text-orange-400',
+    bg: 'bg-orange-400/10',
+    barColor: '#f97316',
+    idealPct: 3,
+    tip: 'Festive times ke liye small monthly ledger separate lock karein.'
+  }
+];
+
+const PRESET_INCOMES = [5000, 10000, 20000, 50000];
+
+export default function PriorityCalculator({ open, onClose }) {
+  const { addCoins } = useAppStore();
+  const [income, setIncome] = useState(20000);
   const [items, setItems] = useState(PRIORITIES);
   const [saved, setSaved] = useState(false);
 
-  /* Calculate allocation % based on position in list (higher position = more weight) */
+  // Derive allocation values based on Drag position (higher position = higher weight/priority)
   const allocations = useMemo(() => {
-    // Position weight: top priority gets ideal%, others scale by their `defaultPct` normalized
-    // Simpler: use the order rank with diminishing weight via formula
-    const ranked = items.map((item, idx) => ({
-      ...item,
-      rank: idx + 1,
-      // 1-based
-      weight: Math.max(2, 20 - idx * 2) // top item gets 20, last gets 4
-    }));
+    const totalItems = items.length;
+    const ranked = items.map((item, idx) => {
+      // Top gets highest score weight
+      const weight = Math.max(2, 20 - idx * 2);
+      return { ...item, rank: idx + 1, weight };
+    });
     const totalWeight = ranked.reduce((s, r) => s + r.weight, 0);
-    return ranked.map(r => ({
-      ...r,
-      pct: Math.round(r.weight / totalWeight * 100),
-      amount: Math.round(r.weight / totalWeight * income)
-    }));
-  }, [items, income]);
-  const totalAllocated = allocations.reduce((s, a) => s + a.amount, 0);
-  const remaining = income - totalAllocated;
 
-  /* AI suggestion based on allocation vs ideal */
+    return ranked.map(r => {
+      const pct = Math.round((r.weight / totalWeight) * 100);
+      const amount = Math.round((r.weight / totalWeight) * income);
+      return { ...r, pct, amount };
+    });
+  }, [items, income]);
+
+  const totalAllocated = useMemo(() => {
+    return allocations.reduce((s, a) => s + a.amount, 0);
+  }, [allocations]);
+
+  const remaining = useMemo(() => income - totalAllocated, [income, totalAllocated]);
+
+  // AI suggestions engine based on custom priorities
   const aiSuggestion = useMemo(() => {
     const savings = allocations.find(a => a.id === 'savings');
     const entertainment = allocations.find(a => a.id === 'entertainment');
     const rent = allocations.find(a => a.id === 'rent');
+
     if (!savings || !entertainment || !rent) return null;
+
     if (savings.pct < 10) {
       return {
         type: 'danger',
-        title: 'Savings bahut kam hai 🚨',
-        msg: `Bhai, savings pe sirf ${savings.pct}% chala raha hai. Kam se kam 15-20% rakho. Entertainment thoda kam karke savings badhao!`
+        title: 'Savings priority bahut low hai! 🚨',
+        msg: `Aap savings pe sirf ${savings.pct}% budget rakh rahe ho. Isse top 3 priorities mein drag karein!`
       };
     }
     if (entertainment.pct > 15) {
       return {
         type: 'warning',
-        title: 'Entertainment zyada ho gaya 🤔',
-        msg: `Movies/outing pe ${entertainment.pct}% — paisa ud raha hai. 7-8% ideal hai. Ek "No Swiggy Week" try karo!`
+        title: 'Manoranjan expense limits ke bahar hai 🎬',
+        msg: `Fun activities pe ${entertainment.pct}% budget is a bit high. Isko thoda niche push karein.`
       };
     }
     if (rent.pct > 35) {
       return {
         type: 'warning',
-        title: 'Rent ka hissa zyada hai 🏠',
-        msg: `Rent ${rent.pct}% le raha hai income ka. Sharing flat ya PG shift karo — 10% bachat ho sakti hai.`
-      };
-    }
-    if (savings.pct >= 15 && entertainment.pct <= 8) {
-      return {
-        type: 'success',
-        title: 'Perfect Budget! 🎯',
-        msg: `Bhai, tum apne paise sambhalna jaante ho! Savings ${savings.pct}% — shabaash! Aise hi chalte raho 🔥`
+        title: 'Rent allocation heavy hai 🏠',
+        msg: `Rent budget check karo (${rent.pct}%). Shared hostel ya PG consideration beneficial hoga.`
       };
     }
     return {
       type: 'success',
-      title: 'Balance achha hai 💪',
-      msg: 'Priority order bilkul theek lag raha hai. Savings ko top 3 mein rakhna try karo.'
+      title: 'Perfect Balanced Budget! 🎯',
+      msg: 'Priority list balance lag rahi hai! Savings top order mein hai. Aise hi continue karein.'
     };
   }, [allocations]);
-  const handleIncomeChange = val => {
-    setIncome(Math.max(500, Math.min(200000, val)));
-    setSaved(false);
-  };
+
   const handleSave = () => {
     setSaved(true);
     addCoins(15);
     toast({
-      title: 'Priorities save ho gayi! +15 coins 🎉'
+      title: "Priorities saved successfully! +15 Coins 🎉",
+      description: "Smart prioritizer has updated your user record."
     });
   };
-  const handleShare = async () => {
-    const lines = items.slice(0, 5).map((it, i) => `${i + 1}. ${it.emoji} ${it.title}`);
-    const text = `Meri Financial Priorities:\n\n${lines.join('\n')}\n\nMade with Money Matters 💸`;
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({
-        title: 'My Financial Priorities',
-        text
-      }).catch(() => {});
-    } else {
-      navigator.clipboard?.writeText(text);
-      toast({
-        title: 'Copy kar liya! 📋'
-      });
-    }
+
+  const handleShare = () => {
+    const topItems = items.slice(0, 3).map((it, i) => `${i + 1}. ${it.emoji} ${it.title.split(' ')[0]}`);
+    const text = `Meri top financial priorities:\n${topItems.join('\n')}\nCheck your status on Money Matters app! ⚖️`;
+    navigator.clipboard.writeText(text);
+    toast({ title: "Result details copied! Share now 📋" });
   };
-  return /*#__PURE__*/_jsx(Dialog, {
-    open: open,
-    onOpenChange: v => !v && onClose(),
-    children: /*#__PURE__*/_jsxs(DialogContent, {
-      className: "max-w-lg max-h-[92vh] overflow-y-auto p-0 border-white/[0.08] bg-[#0B1220] text-[#F8FAFC] premium-dialog-overlay",
-      children: [/*#__PURE__*/_jsx(VisuallyHidden, {
-        children: /*#__PURE__*/_jsx(DialogTitle, {
-          children: "Priority Calculator"
-        })
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "relative px-5 pt-6 pb-4 bg-gradient-to-b from-amber-500/10 to-transparent",
-        children: [/*#__PURE__*/_jsxs("div", {
-          className: "flex items-center gap-2 mb-4",
-          children: [/*#__PURE__*/_jsx("div", {
-            className: "w-10 h-10 rounded-xl glass-card-premium grid place-items-center",
-            children: /*#__PURE__*/_jsx(ListOrdered, {
-              className: "w-5 h-5 text-amber-400"
-            })
-          }), /*#__PURE__*/_jsxs("div", {
-            children: [/*#__PURE__*/_jsx("h2", {
-              className: "font-display text-xl font-bold heading-gradient",
-              children: "Priority Calculator"
-            }), /*#__PURE__*/_jsx("p", {
-              className: "text-xs text-[#94A3B8]",
-              children: "Drag karke priority set karo \uD83C\uDFAF"
-            })]
-          })]
-        }), /*#__PURE__*/_jsxs("div", {
-          className: "p-4 rounded-2xl glass-card",
-          children: [/*#__PURE__*/_jsx("label", {
-            className: "text-xs text-[#94A3B8] mb-1.5 block",
-            children: "Monthly Income / Pocket Money"
-          }), /*#__PURE__*/_jsx("div", {
-            className: "flex items-center gap-2 mb-3",
-            children: /*#__PURE__*/_jsxs("div", {
-              className: "relative flex-1",
-              children: [/*#__PURE__*/_jsx(IndianRupee, {
-                className: "absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400"
-              }), /*#__PURE__*/_jsx("input", {
-                type: "number",
-                value: income,
-                onChange: e => handleIncomeChange(parseInt(e.target.value || '0', 10)),
-                className: "w-full pl-10 pr-3 py-3 rounded-xl glass-strong text-lg font-bold text-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-              })]
-            })
-          }), /*#__PURE__*/_jsx("div", {
-            className: "flex gap-2 flex-wrap",
-            children: PRESET_INCOMES.map(amt => /*#__PURE__*/_jsxs("button", {
-              onClick: () => {
-                setIncome(amt);
-                setSaved(false);
-              },
-              className: cn('px-3 py-1.5 rounded-full text-xs font-semibold transition border', income === amt ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300' : 'glass-card border-white/[0.06] text-[#94A3B8] hover:text-[#F8FAFC]'),
-              children: ["\u20B9", amt >= 1000 ? `${amt / 1000}k` : amt]
-            }, amt))
-          })]
-        })]
-      }), /*#__PURE__*/_jsxs("div", {
-        className: "px-5 pb-6 space-y-4",
-        children: [/*#__PURE__*/_jsxs("div", {
-          children: [/*#__PURE__*/_jsxs("div", {
-            className: "flex items-center justify-between mb-2",
-            children: [/*#__PURE__*/_jsx("h3", {
-              className: "text-sm font-semibold text-[#F8FAFC]",
-              children: "Priorities (drag to reorder)"
-            }), /*#__PURE__*/_jsxs("span", {
-              className: "text-xs text-[#94A3B8]",
-              children: [items.length, " items"]
-            })]
-          }), /*#__PURE__*/_jsx(Reorder.Group, {
-            axis: "y",
-            values: items,
-            onReorder: newItems => {
-              setItems(newItems);
-              setSaved(false);
-            },
-            className: "space-y-2",
-            children: allocations.map((item, idx) => /*#__PURE__*/_jsxs(Reorder.Item, {
-              value: items[idx],
-              whileDrag: {
-                scale: 1.03,
-                boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
-                zIndex: 50
-              },
-              className: cn('flex items-center gap-3 p-3 rounded-2xl glass-card cursor-grab active:cursor-grabbing border', item.id === 'savings' ? 'border-emerald-400/30' : 'border-white/[0.06]'),
-              children: [/*#__PURE__*/_jsx(GripVertical, {
-                className: "w-4 h-4 text-[#94A3B8] shrink-0"
-              }), /*#__PURE__*/_jsx("div", {
-                className: cn('w-9 h-9 rounded-xl grid place-items-center text-lg shrink-0', item.bg),
-                children: item.emoji
-              }), /*#__PURE__*/_jsxs("div", {
-                className: "flex-1 min-w-0",
-                children: [/*#__PURE__*/_jsxs("div", {
-                  className: "flex items-center gap-2",
-                  children: [/*#__PURE__*/_jsx("span", {
-                    className: "font-semibold text-sm text-[#F8FAFC] truncate",
-                    children: item.title
-                  }), /*#__PURE__*/_jsxs("span", {
-                    className: "text-[10px] text-[#94A3B8]",
-                    children: ["#", idx + 1]
-                  })]
-                }), /*#__PURE__*/_jsxs("div", {
-                  className: "flex items-center gap-2 mt-1",
-                  children: [/*#__PURE__*/_jsx("div", {
-                    className: "flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden",
-                    children: /*#__PURE__*/_jsx(motion.div, {
-                      className: "h-full rounded-full",
-                      style: {
-                        background: item.barColor
-                      },
-                      initial: {
-                        width: 0
-                      },
-                      animate: {
-                        width: `${item.pct}%`
-                      },
-                      transition: {
-                        type: 'spring',
-                        stiffness: 120,
-                        damping: 18
-                      }
-                    })
-                  }), /*#__PURE__*/_jsxs("span", {
-                    className: "text-xs font-bold text-[#F8FAFC]",
-                    children: [item.pct, "%"]
-                  })]
-                })]
-              }), /*#__PURE__*/_jsxs("div", {
-                className: "text-right shrink-0",
-                children: [/*#__PURE__*/_jsx("p", {
-                  className: "text-sm font-bold text-emerald-300",
-                  children: formatCurrency(item.amount, false)
-                }), /*#__PURE__*/_jsx("p", {
-                  className: "text-[10px] text-[#94A3B8]",
-                  children: "\u20B9/mo"
-                })]
-              })]
-            }, item.id))
-          })]
-        }), /*#__PURE__*/_jsxs("div", {
-          className: "p-4 rounded-2xl glass-card",
-          children: [/*#__PURE__*/_jsx("h3", {
-            className: "text-sm font-semibold text-[#F8FAFC] mb-3",
-            children: "Live Allocation \uD83D\uDCCA"
-          }), /*#__PURE__*/_jsx("div", {
-            className: "flex h-10 rounded-lg overflow-hidden gap-0.5",
-            children: allocations.map(a => /*#__PURE__*/_jsx(motion.div, {
-              className: "relative group",
-              initial: {
-                width: 0
-              },
-              animate: {
-                width: `${a.pct}%`
-              },
-              transition: {
-                type: 'spring',
-                stiffness: 120,
-                damping: 18
-              },
-              style: {
-                background: a.barColor
-              },
-              children: /*#__PURE__*/_jsx("span", {
-                className: "absolute inset-0 grid place-items-center text-[10px] font-bold text-black/70",
-                children: a.pct > 5 ? a.emoji : ''
-              })
-            }, a.id))
-          }), /*#__PURE__*/_jsxs("div", {
-            className: "flex items-center justify-between mt-3 text-xs",
-            children: [/*#__PURE__*/_jsxs("span", {
-              className: "text-[#94A3B8]",
-              children: ["Allocated: ", /*#__PURE__*/_jsx("span", {
-                className: "font-bold text-[#F8FAFC]",
-                children: formatCurrency(totalAllocated, false)
-              })]
-            }), /*#__PURE__*/_jsxs("span", {
-              className: remaining >= 0 ? 'text-emerald-400' : 'text-rose-400',
-              children: [remaining >= 0 ? 'Bacha: ' : 'Over: ', /*#__PURE__*/_jsx("span", {
-                className: "font-bold",
-                children: formatCurrency(Math.abs(remaining), false)
-              })]
-            })]
-          })]
-        }), /*#__PURE__*/_jsxs("div", {
-          className: "p-4 rounded-2xl glass-card",
-          children: [/*#__PURE__*/_jsx("h3", {
-            className: "text-sm font-semibold text-[#F8FAFC] mb-3",
-            children: "Ideal Budget (50/30/20 rule) \uD83D\uDCD0"
-          }), /*#__PURE__*/_jsx("div", {
-            className: "space-y-2",
-            children: [{
-              label: 'Needs (Rent, Food, Transport)',
-              pct: 50,
-              color: 'bg-emerald-500',
-              idealAmount: income * 0.5
-            }, {
-              label: 'Wants (Entertainment, Outing)',
-              pct: 30,
-              color: 'bg-amber-500',
-              idealAmount: income * 0.3
-            }, {
-              label: 'Savings + Investment',
-              pct: 20,
-              color: 'bg-violet-500',
-              idealAmount: income * 0.2
-            }].map(row => /*#__PURE__*/_jsxs("div", {
-              children: [/*#__PURE__*/_jsxs("div", {
-                className: "flex items-center justify-between text-xs mb-1",
-                children: [/*#__PURE__*/_jsx("span", {
-                  className: "text-[#94A3B8]",
-                  children: row.label
-                }), /*#__PURE__*/_jsxs("span", {
-                  className: "font-semibold text-[#F8FAFC]",
-                  children: [row.pct, "% = \u20B9", Math.round(row.idealAmount).toLocaleString('en-IN')]
-                })]
-              }), /*#__PURE__*/_jsx("div", {
-                className: "h-2 rounded-full bg-white/[0.06] overflow-hidden",
-                children: /*#__PURE__*/_jsx("div", {
-                  className: cn('h-full rounded-full', row.color),
-                  style: {
-                    width: `${row.pct}%`
-                  }
-                })
-              })]
-            }, row.label))
-          })]
-        }), aiSuggestion && /*#__PURE__*/_jsxs(motion.div, {
-          initial: {
-            opacity: 0,
-            y: 10
-          },
-          animate: {
-            opacity: 1,
-            y: 0
-          },
-          className: cn('p-4 rounded-2xl glass-card-premium border flex items-start gap-3', aiSuggestion.type === 'danger' ? 'border-rose-500/30' : aiSuggestion.type === 'warning' ? 'border-amber-400/30' : 'border-emerald-400/30'),
-          children: [/*#__PURE__*/_jsx("div", {
-            className: cn('w-9 h-9 rounded-xl grid place-items-center shrink-0', aiSuggestion.type === 'danger' ? 'bg-rose-500/15' : aiSuggestion.type === 'warning' ? 'bg-amber-400/15' : 'bg-emerald-500/15'),
-            children: /*#__PURE__*/_jsx(Sparkles, {
-              className: cn('w-5 h-5', aiSuggestion.type === 'danger' ? 'text-rose-400' : aiSuggestion.type === 'warning' ? 'text-amber-400' : 'text-emerald-400')
-            })
-          }), /*#__PURE__*/_jsxs("div", {
-            className: "flex-1",
-            children: [/*#__PURE__*/_jsx("p", {
-              className: cn('text-sm font-bold mb-0.5', aiSuggestion.type === 'danger' ? 'text-rose-300' : aiSuggestion.type === 'warning' ? 'text-amber-300' : 'text-emerald-300'),
-              children: aiSuggestion.title
-            }), /*#__PURE__*/_jsx("p", {
-              className: "text-xs text-[#94A3B8] leading-relaxed",
-              children: aiSuggestion.msg
-            })]
-          })]
-        }), /*#__PURE__*/_jsxs("div", {
-          className: "flex gap-2",
-          children: [/*#__PURE__*/_jsx("button", {
-            onClick: handleSave,
-            className: "flex-1 py-3 rounded-xl btn-3d bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold flex items-center justify-center gap-1.5",
-            children: saved ? /*#__PURE__*/_jsxs(_Fragment, {
-              children: [/*#__PURE__*/_jsx(Check, {
-                className: "w-4 h-4"
-              }), " Saved!"]
-            }) : /*#__PURE__*/_jsxs(_Fragment, {
-              children: [/*#__PURE__*/_jsx(Save, {
-                className: "w-4 h-4"
-              }), " Save Priorities"]
-            })
-          }), /*#__PURE__*/_jsx("button", {
-            onClick: handleShare,
-            className: "py-3 px-4 rounded-xl glass-card text-sm font-semibold text-[#94A3B8] hover:text-[#F8FAFC] transition",
-            children: "Share"
-          })]
-        })]
-      })]
-    })
-  });
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+      {/* Backdrop blur overlay */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+
+      {/* Modal Card wrapper */}
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        className="relative z-10 w-full max-w-lg bg-[#090D1A] border border-white/[0.08] rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Glow backdrop header */}
+        <div className="absolute -top-24 -left-24 w-64 h-64 rounded-full bg-amber-500/10 blur-[80px] pointer-events-none" />
+
+        {/* Header */}
+        <div className="shrink-0 px-6 py-4 border-b border-white/[0.06] bg-[#0C1021]/80 backdrop-blur-md flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <ListOrdered size={20} className="text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-white">Zaroorat vs Khwahish ⚖️</h2>
+              <p className="text-[10px] text-zinc-400">Needs vs Wants Prioritizer & Budget Planner</p>
+            </div>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Scrollable Modal Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
+          {/* Income setup card */}
+          <div className="bg-[#0B0E19] border border-white/[0.04] rounded-3xl p-4.5 space-y-3">
+            <label className="text-[11px] font-black uppercase text-zinc-400 tracking-wider">
+              Enter Monthly Income / Pocket Money
+            </label>
+            <div className="relative">
+              <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+              <input 
+                type="number"
+                value={income}
+                onChange={(e) => {
+                  setIncome(Math.max(1000, Number(e.target.value)));
+                  setSaved(false);
+                }}
+                className="w-full pl-9 pr-3 py-2.5 rounded-2xl bg-[#05070F] border border-white/5 text-base font-black text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              />
+            </div>
+            <div className="flex gap-2">
+              {PRESET_INCOMES.map(preset => (
+                <button
+                  key={preset}
+                  onClick={() => {
+                    setIncome(preset);
+                    setSaved(false);
+                  }}
+                  className={`flex-1 py-1.5 rounded-xl text-[10px] font-black border transition-all ${
+                    income === preset 
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                      : 'bg-white/5 border-transparent text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  ₹{preset >= 1000 ? `${preset/1000}K` : preset}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Interactive Reorder Group */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-black uppercase text-zinc-400 tracking-wider">
+              Drag Items to Set Priority Order (Top = Highest priority)
+            </h3>
+            
+            <Reorder.Group axis="y" values={items} onReorder={(next) => { setItems(next); setSaved(false); }} className="space-y-2.5">
+              {allocations.map((item, idx) => (
+                <Reorder.Item 
+                  key={item.id} 
+                  value={item}
+                  className={`flex items-center gap-3 p-3 rounded-2xl bg-[#0B0E19] border border-white/[0.04] cursor-grab active:grabbing select-none ${
+                    item.id === 'savings' ? 'border-emerald-500/20 bg-emerald-500/[0.02]' : ''
+                  }`}
+                >
+                  <GripVertical size={16} className="text-zinc-500 shrink-0 cursor-grab active:grabbing" />
+                  
+                  {/* Category icon */}
+                  <span className="text-lg bg-white/5 p-1 rounded-lg shrink-0">
+                    {item.emoji}
+                  </span>
+
+                  {/* Info block */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-extrabold text-white truncate">{item.title}</span>
+                      <span className="text-[9px] font-bold text-zinc-500">Rank #{idx + 1}</span>
+                    </div>
+                    {/* Progress Bar inside */}
+                    <div className="w-full h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{ backgroundColor: item.barColor, width: `${item.pct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Numerical split */}
+                  <div className="text-right shrink-0">
+                    <span className="text-xs font-black text-emerald-400 block">
+                      ₹{item.amount.toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-[9px] text-zinc-500 block">{item.pct}% of total</span>
+                  </div>
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          </div>
+
+          {/* Allocation strip bar */}
+          <div className="bg-[#0B0E19] border border-white/[0.04] rounded-3xl p-4.5 space-y-2.5">
+            <h4 className="text-xs font-black uppercase text-zinc-400 tracking-wider">Live Budget Allocation Strip</h4>
+            <div className="flex h-3 rounded-full overflow-hidden bg-white/5 gap-0.5">
+              {allocations.map(a => (
+                <div 
+                  key={a.id}
+                  className="h-full relative group transition-all"
+                  style={{ 
+                    backgroundColor: a.barColor, 
+                    width: `${a.pct}%` 
+                  }}
+                  title={`${a.title}: ${a.pct}%`}
+                />
+              ))}
+            </div>
+            <div className="flex justify-between text-[10px] text-zinc-400 font-bold">
+              <span>Allocated: ₹{totalAllocated.toLocaleString('en-IN')}</span>
+              <span className={remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                {remaining >= 0 ? `Unallocated: ₹${remaining}` : `Deficit: ₹${Math.abs(remaining)}`}
+              </span>
+            </div>
+          </div>
+
+          {/* Ideal budget reference (50/30/20) */}
+          <div className="bg-[#0B0E19] border border-white/[0.04] rounded-3xl p-4.5 space-y-3">
+            <h4 className="text-xs font-black uppercase text-zinc-400 tracking-wider">Ideal Allocation Benchmark (50/30/20 Rule)</h4>
+            <div className="space-y-2">
+              <div className="space-y-1">
+                <div className="flex justify-between text-[11px] text-zinc-400">
+                  <span>Needs (Rent, Food, Commute)</span>
+                  <span className="font-black text-white">50% = ₹{(income * 0.5).toLocaleString('en-IN')}</span>
+                </div>
+                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 w-1/2" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-[11px] text-zinc-400">
+                  <span>Wants (Outings, Subscriptions)</span>
+                  <span className="font-black text-white">30% = ₹{(income * 0.3).toLocaleString('en-IN')}</span>
+                </div>
+                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-500 w-[30%]" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-[11px] text-zinc-400">
+                  <span>Savings + Emergency Locker</span>
+                  <span className="font-black text-white">20% = ₹{(income * 0.2).toLocaleString('en-IN')}</span>
+                </div>
+                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-cyan-500 w-1/5" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Advisor Card */}
+          {aiSuggestion && (
+            <div className={`p-4 rounded-3xl border flex items-start gap-3 transition-all ${
+              aiSuggestion.type === 'danger' 
+                ? 'bg-rose-500/5 border-rose-500/15' 
+                : aiSuggestion.type === 'warning' 
+                  ? 'bg-amber-500/5 border-amber-500/15' 
+                  : 'bg-emerald-500/5 border-emerald-500/15'
+            }`}>
+              <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
+                <Sparkles size={16} className="text-amber-400" />
+              </div>
+              <div>
+                <h5 className="text-xs font-black text-white">{aiSuggestion.title}</h5>
+                <p className="text-[10px] text-zinc-400 leading-relaxed mt-0.5">{aiSuggestion.msg}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer actions */}
+        <div className="shrink-0 px-6 py-4 border-t border-white/[0.06] bg-[#0C1021]/80 backdrop-blur-md flex items-center justify-between">
+          <button 
+            onClick={onClose} 
+            className="px-5 py-3 rounded-2xl text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/5 transition-all border border-white/[0.05]"
+          >
+            Close
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleShare}
+              className="px-4 py-3 rounded-2xl border border-white/[0.06] text-xs font-extrabold text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
+            >
+              Share List
+            </button>
+            <button 
+              onClick={handleSave} 
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-[#070913] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer"
+            >
+              {saved ? <Check size={14} /> : <Save size={14} />} {saved ? 'Priorities Saved' : 'Save Priorities'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
 }

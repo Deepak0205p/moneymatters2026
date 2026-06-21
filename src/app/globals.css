@@ -1370,3 +1370,49 @@ body {
 /* ════════════════════════════════════════════════════════════════════════
    END — Money Matters Premium 3D Overhaul (P2-CSS)
    ════════════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════════════
+   Google Translate — Hide widget UI, keep translation engine alive
+   ════════════════════════════════════════════════════════════════════════ */
+.goog-te-banner-frame,
+.goog-te-banner-frameonly,
+.goog-te-spinner-pos,
+.skiptranslate {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: fixed !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  pointer-events: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+#google-translate-element {
+  position: fixed !important;
+  bottom: -9999px !important;
+  left: -9999px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  width: 0 !important;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}

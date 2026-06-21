@@ -33,3 +33,7 @@ Thumbs.db
 # misc
 *.tsbuildinfo
 next-env.d.ts
+
+# backup
+backup/
+*.rar
