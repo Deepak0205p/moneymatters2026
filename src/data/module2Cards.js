@@ -23,6 +23,7 @@ Calculator use karke dekho tumhari income kaise divide honi chahiye:`,
         imagePrompt: "Pie chart illustration of 50-30-20 budget rule, vibrant green and blue colors, modern 3D icons for needs, wants and savings, clean financial infographic",
         color: "#10B981",
         emoji: "📐",
+        svgAnimationType: 'budget_pie',
         interactiveType: 'calculator',
         calcData: {
           calcType: 'budget',
@@ -296,7 +297,8 @@ Gyaan bahut ho gaya, ab real data dekhte hain!
 Agar 3 mein se 2 jawab \"haan\" hain, toh **WANT** hai.`,
         imagePrompt: "Brain with question marks around different expense items, sky blue theme, decision making concept, modern flat illustration",
         color: "#0EA5E9",
-        emoji: "🧠"
+        emoji: "🧠",
+        svgAnimationType: 'needs_wants_scale'
       },
       {
         id: "2-3-3",
@@ -599,7 +601,8 @@ Jab kharab mahine aaye (₹5,000 ya ₹0), buffer account se chalao.
 - Emergency fund use karo — yahi uske liye hai`,
         imagePrompt: "Buffer system concept - piggy bank filling up in good months, draining in bad months, amber theme, cycle illustration",
         color: "#F59E0B",
-        emoji: "💪"
+        emoji: "💪",
+        svgAnimationType: 'buffer_tank'
       },
       {
         id: "2-6-2",

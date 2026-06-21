@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { auth } from '@/lib/firebase';
 import { updateProfile, signOut } from 'firebase/auth';
-import { supabase } from '@/lib/supabase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useAppStore } from '@/lib/store/useAppStore';
 import { BADGES } from '@/lib/data/badges';
 import { 
@@ -25,6 +26,7 @@ export default function ProfilePage() {
   const {
     user,
     setUser,
+    logout,
     level,
     xp,
     coins,
@@ -46,15 +48,12 @@ export default function ProfilePage() {
     city: ''
   });
 
-  // Load existing data from Supabase if available
+  // Load existing data from Firestore if available
   useEffect(() => {
     async function fetchProfile() {
-      if (user?.uid && supabase) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.uid)
-          .single();
+      if (user?.uid && db) {
+        const snap = await getDoc(doc(db, 'profiles', user.uid));
+        const data = snap.exists() ? snap.data() : null;
         
         if (data) {
           setFormData({
@@ -86,8 +85,8 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      setUser(null);
-      router.push('/auth');
+      logout();
+      router.push('/');
     } catch (err) {
       console.error('Error signing out', err);
     }
@@ -106,18 +105,13 @@ export default function ProfilePage() {
         });
       }
 
-      // 2. Update Supabase Profile
-      if (supabase) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            name: formData.name,
-            status: formData.status,
-            city: formData.city
-          })
-          .eq('id', user.uid);
-
-        if (error) throw error;
+      // 2. Update Firestore Profile
+      if (db) {
+        await updateDoc(doc(db, 'profiles', user.uid), {
+          name: formData.name,
+          status: formData.status,
+          city: formData.city
+        });
       }
 
       // 3. Update Local Store

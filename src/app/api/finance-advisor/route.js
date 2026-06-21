@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { validateMessage } from '@/lib/security';
-import { supabase } from '@/lib/supabase';
-
-const supabaseChat = supabase;
+import { createConversation, addMessage } from '@/lib/chatStore';
 
 const MAX_MESSAGES_PER_SESSION = 20;
 
@@ -152,22 +150,18 @@ export async function POST(request) {
     // Construct prompt
     const fullSystemPrompt = SYSTEM_PROMPT + contextStr;
 
-    // Supabase Memory Check
+    // Firestore Memory Check
     let activeConversationId = conversationId;
     let history = context?.recentMessages || [];
 
-    if (!activeConversationId && supabaseChat) {
+    if (!activeConversationId) {
         // Create new conversation
-        const { data, error } = await supabaseChat.from("conversations").insert([{ title: message.substring(0, 50) }]).select().single();
-        if (data) activeConversationId = data.id;
+        const conv = await createConversation(message.substring(0, 50));
+        if (conv) activeConversationId = conv.id;
     }
 
-    if (activeConversationId && supabaseChat) {
-        await supabaseChat.from("messages").insert([{
-            conversation_id: activeConversationId,
-            role: "user",
-            content: validation.sanitized
-        }]);
+    if (activeConversationId) {
+        await addMessage(activeConversationId, "user", validation.sanitized);
     }
 
     // Format messages for LLM
@@ -179,12 +173,8 @@ export async function POST(request) {
     const llmReply = await callGemini(llmMessages, fullSystemPrompt);
 
     if (llmReply) {
-      if (activeConversationId && supabaseChat) {
-          await supabaseChat.from("messages").insert([{
-              conversation_id: activeConversationId,
-              role: "assistant",
-              content: llmReply
-          }]);
+      if (activeConversationId) {
+          await addMessage(activeConversationId, "assistant", llmReply);
       }
       return NextResponse.json({ reply: llmReply, conversationId: activeConversationId });
     }

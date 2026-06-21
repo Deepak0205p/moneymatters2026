@@ -900,7 +900,7 @@ export default function HomePage() {
   // Auth/Hydration guards
   useEffect(() => {
     if (hydrated && !isAuthenticated) {
-      router.replace('/auth');
+      router.replace('/');
     }
   }, [hydrated, isAuthenticated, router]);
 

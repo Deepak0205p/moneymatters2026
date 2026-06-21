@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-
-const supabaseChat = supabase;
+import { createConversation, getRecentMessages, addMessage } from "@/lib/chatStore";
 
 export async function POST(request) {
   try {
@@ -9,42 +7,20 @@ export async function POST(request) {
     let { message, conversationId } = body;
 
     // Create a new conversation if one doesn't exist
-    if (!conversationId && supabaseChat) {
-      const { data, error } = await supabaseChat
-        .from("conversations")
-        .insert([{ title: message.substring(0, 50) }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Error creating conversation:", error);
-      } else if (data) {
-        conversationId = data.id;
-      }
+    if (!conversationId) {
+      const conv = await createConversation(message.substring(0, 50));
+      if (conv) conversationId = conv.id;
     }
 
     // Load history
     let history = [];
-    if (conversationId && supabaseChat) {
-      const { data: msgs, error: histError } = await supabaseChat
-        .from("messages")
-        .select("role, content")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (!histError && msgs) {
-        history = msgs.reverse();
-      }
+    if (conversationId) {
+      history = await getRecentMessages(conversationId, 10);
     }
 
     // Save user message
-    if (conversationId && supabaseChat) {
-      await supabaseChat.from("messages").insert([{
-        conversation_id: conversationId,
-        role: "user",
-        content: message
-      }]);
+    if (conversationId) {
+      await addMessage(conversationId, "user", message);
     }
 
     // Proxy to backend stream endpoint
@@ -108,15 +84,12 @@ export async function POST(request) {
           controller.close();
 
           // Save assistant message to DB
-          if (conversationId && assistantContent && supabaseChat) {
-            await supabaseChat.from("messages").insert([{
-              conversation_id: conversationId,
-              role: "assistant",
-              content: assistantContent,
-              route: route,
+          if (conversationId && assistantContent) {
+            await addMessage(conversationId, "assistant", assistantContent, {
+              route,
               latency_ms: latency,
-              sources: sources
-            }]);
+              sources
+            });
           }
         }
       }

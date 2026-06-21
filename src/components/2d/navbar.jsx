@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store/useAppStore';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 import { Coins, Trophy, User, Menu, X, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
@@ -85,7 +87,7 @@ export function Navbar() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => { logout(); window.location.href = '/auth'; }}
+                    onClick={async () => { await signOut(auth); logout(); window.location.href = '/'; }}
                     className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/15 border border-red-500/25 cursor-pointer transition-colors hover:bg-red-500/20 border-b-2"
                     title="Logout"
                   >
@@ -175,7 +177,7 @@ export function Navbar() {
               </Link>
 
               <button
-                onClick={() => { logout(); window.location.href = '/auth'; }}
+                onClick={async () => { await signOut(auth); logout(); window.location.href = '/'; }}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-red-400 font-semibold text-sm cursor-pointer hover:bg-red-500/15 transition-colors border-b-2"
               >
                 <LogIn size={15} />

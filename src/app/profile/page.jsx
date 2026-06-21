@@ -122,7 +122,7 @@ export default function ProfilePage() {
   } = useAppStore();
 
   useEffect(() => {
-    if (hydrated && !isAuthenticated) router.replace('/auth');
+    if (hydrated && !isAuthenticated) router.replace('/');
   }, [hydrated, isAuthenticated, router]);
 
   // ── Edit form state ──────────────────────────────────────────────────────

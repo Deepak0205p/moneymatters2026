@@ -25,6 +25,7 @@ Barter → Gold Coins → Paper Currency → Digital Money (UPI) → Crypto. Maq
         imagePrompt: "Ancient barter system in Indian village, people exchanging goods like grain for clothes, warm earthy tones, educational illustration style",
         color: "#3B82F6",
         emoji: "🔄",
+        svgAnimationType: 'barter_system',
         interactiveType: 'choice_sim',
         choiceData: {
           scenario: "Tumhe chai chahiye, par tumhare paas sirf ek purani Engineering Book hai. Chaiwala kya bolega?",
@@ -63,6 +64,7 @@ December 2025 mein India mein **21.63 billion UPI transactions** hue worth **₹
         imagePrompt: "Evolution of money timeline from barter to gold coins to paper currency, Indian historical context, educational infographic style, warm golden tones",
         color: "#3B82F6",
         emoji: "📜",
+        svgAnimationType: 'inflation_shrinking',
         interactiveType: 'none'
       },
       {
@@ -86,6 +88,7 @@ Slide karke dekho India mein UPI ka power:`,
         imagePrompt: "Digital payment revolution in India, UPI QR code scanning on smartphone, modern fintech illustration, vibrant blue and green gradient, tech style",
         color: "#3B82F6",
         emoji: "📱",
+        svgAnimationType: 'upi_network',
         interactiveType: 'calculator',
         calcData: {
           calcType: 'compounding',

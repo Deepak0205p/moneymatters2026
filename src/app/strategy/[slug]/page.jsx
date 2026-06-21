@@ -156,7 +156,7 @@ export default function StrategyPage() {
     });
   }
   if (!isAuthenticated) {
-    router.replace('/auth');
+    router.replace('/');
     return null;
   }
   const handleBack = () => router.push("/home");

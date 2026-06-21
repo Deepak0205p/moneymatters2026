@@ -10,6 +10,7 @@ import { StrategyOnboarding } from '@/components/shared/StrategyOnboarding';
 import { getStrategiesForModule } from '@/lib/data/strategyRegistry';
 import { X, CheckCircle2, Sparkles, ArrowUp, Bookmark, FileText, Send, Trash2 } from 'lucide-react';
 import { RichContent, RainbowProgress, InteractiveQuizViewer, InteractiveCalculatorViewer, InteractiveChoiceViewer } from './CardContent';
+import { InteractiveSVGViewer } from './AnimatedVisuals';
 
 /**
  * SwipeCardViewer — Full-page module learning experience.
@@ -1647,6 +1648,9 @@ export function SwipeCardViewer({
                 }), currentCard.interactiveType === 'choice_sim' && currentCard.choiceData && /*#__PURE__*/_jsx(InteractiveChoiceViewer, {
                   data: currentCard.choiceData,
                   color: currentCard.color
+                }), currentCard.svgAnimationType && /*#__PURE__*/_jsx(InteractiveSVGViewer, {
+                  type: currentCard.svgAnimationType,
+                  color: currentCard.color || activeModule.color
                 }), currentCard.interactiveType === 'value_exchange' && /*#__PURE__*/_jsx(InteractiveValueExchange, {
                   color: currentCard.color
                 }), currentCard.interactiveType === 'barter_dilemma' && /*#__PURE__*/_jsx(InteractiveBarterDilemma, {

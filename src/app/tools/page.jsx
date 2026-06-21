@@ -300,7 +300,7 @@ export default function ToolsPage() {
   const toolCount = useMemo(() => TOOLS.length + strategies.length, []);
 
   useEffect(() => {
-    if (hydrated && !isAuthenticated) router.push('/auth');
+    if (hydrated && !isAuthenticated) router.push('/');
   }, [hydrated, isAuthenticated, router]);
 
   const translatedStrategies = strategies;

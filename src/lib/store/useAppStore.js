@@ -9,6 +9,7 @@ import {
   checkSavingsBadges,
   generateActivityId,
 } from './badgeHelpers';
+import { scheduleSync, immediateSync, loadUserData } from '@/lib/userSync';
 
 
 // Hook to detect when Zustand has finished hydrating from localStorage
@@ -95,23 +96,36 @@ export const useAppStore = create()(persist((set, get) => ({
   ...initialState,
   setUser: user => set({ user }),
   loginUser: (user) => set({ user, isAuthenticated: true }),
+  loadFromCloud: async () => {
+    const state = get();
+    if (!state.user?.uid) return;
+    const cloudData = await loadUserData(state.user.uid);
+    if (cloudData) {
+      set(cloudData);
+    }
+  },
   setHasCompletedOnboarding: value => set({ hasCompletedOnboarding: value }),
-  logout: () => set({
-    user: null,
-    isAuthenticated: false,
-    activeStrategy: 1,
-    activeModule: null,
-    coins: 0,
-    streak: 0,
-    completedModules: [],
-    moduleProgress: {},
-    badges: [],
-    earnedBadges: [],
+  logout: () => {
+    localStorage.removeItem('rupaiya-101-storage');
+    localStorage.removeItem('bookmarked_cards');
+    localStorage.removeItem('bookmarked_cards_meta');
+    set({
+      user: null,
+      isAuthenticated: false,
+      activeStrategy: 1,
+      activeModule: null,
+      coins: 0,
+      streak: 0,
+      completedModules: [],
+      moduleProgress: {},
+      badges: [],
+      earnedBadges: [],
     xp: 0,
     level: 1,
     activityLog: [],
     userName: ''
-  }),
+    });
+  },
   setActiveStrategy: id => set({
     activeStrategy: id
   }),
@@ -477,6 +491,28 @@ export const useAppStore = create()(persist((set, get) => ({
     isAudioEnabled: !state.isAudioEnabled
   }))
 }), {
-  name: 'rupaiya-101-storage'
+  name: 'rupaiya-101-storage',
+  onRehydrateStorage: () => (state) => {
+    if (state?.user?.uid && state?.isAuthenticated) {
+      immediateSync(state.user.uid, state);
+    }
+  }
 }));
+
+// Auto-sync to Firestore on every state change (debounced)
+useAppStore.subscribe((state, prevState) => {
+  if (state.user?.uid && state.isAuthenticated) {
+    scheduleSync(state.user.uid, state);
+  }
+});
+
+// Sync before page unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    const state = useAppStore.getState();
+    if (state.user?.uid && state.isAuthenticated) {
+      immediateSync(state.user.uid, state);
+    }
+  });
+}
 

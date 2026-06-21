@@ -57,7 +57,7 @@ export default function ModulePage() {
   }
 
   if (!isAuthenticated) {
-    router.push('/auth');
+    router.push('/');
     return null;
   }
 

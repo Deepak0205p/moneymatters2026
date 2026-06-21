@@ -5,6 +5,8 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useAppStore, useHydration } from '@/lib/store/useAppStore';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 // Lucide Icons
 import {
   LayoutDashboard,
@@ -73,7 +75,8 @@ export default function HomeLayout({ children }) {
     coins,
     streak,
     logout,
-    logActivity
+    logActivity,
+    loadFromCloud
   } = useAppStore();
 
   // Tab path calculation
@@ -95,9 +98,15 @@ export default function HomeLayout({ children }) {
 
   useEffect(() => {
     if (hydrated && !isAuthenticated) {
-      router.replace('/auth');
+      router.replace('/');
     }
   }, [hydrated, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (hydrated && isAuthenticated && user?.uid) {
+      loadFromCloud();
+    }
+  }, [hydrated, isAuthenticated, user?.uid]);
 
   if (!hydrated || !isAuthenticated) {
     return (
@@ -193,7 +202,7 @@ export default function HomeLayout({ children }) {
                   <div className="h-px bg-white/5 my-1" />
 
                   <button
-                    onClick={() => { logout(); router.replace('/auth'); }}
+                    onClick={async () => { await signOut(auth); logout(); router.replace('/'); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
                   >
                     Log Out
