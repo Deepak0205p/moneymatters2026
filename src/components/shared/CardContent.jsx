@@ -3,15 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, X, Zap } from 'lucide-react';
-import {
-  AnimatedFlowchart,
-  AnimatedPieChart,
-  AnimatedBarChart,
-  AnimatedDecisionTree,
-  AnimatedTimeline,
-  AnimatedComparisonCard,
-  AnimatedStatHighlight
-} from './ModuleVisuals';
+
 
 // ════════════════════════════════════════════════════════════════════════
 // RAINBOW COLORS
