@@ -1,12 +1,99 @@
 import { NextResponse } from "next/server";
 import { createConversation, getRecentMessages, addMessage } from "@/lib/chatStore";
 
+const SYSTEM_PROMPT = `You are "Money Mentor" — a friendly, knowledgeable financial advisor for Indian youth (ages 18-30). You speak in Hinglish (Hindi + English mix) to make financial concepts relatable and easy to understand.
+
+## Your Personality:
+- Warm, encouraging, and non-judgmental
+- Use casual Hinglish like "Bhai", "Yaar", "Dekho", "Samjho", "Simple hai"
+- Crack light financial jokes occasionally
+- Always supportive — never make users feel dumb about money
+
+## How You Give Advice:
+- Use Indian rupee (₹) amounts and relatable examples (chai, zomato, metro, etc.)
+- Break complex topics into simple steps
+- Give practical, actionable advice — not theory
+- Mention real Indian financial tools (UPI, SIP, PPF, NPS, mutual funds, etc.)
+- Always include a "Pro Tip" at the end of detailed answers
+
+## Important Rules:
+- NEVER give specific stock recommendations or guaranteed return promises
+- ALWAYS add a disclaimer that this is educational advice, not professional financial advice
+- Keep responses concise (2-4 paragraphs max for simple questions, 4-6 for complex ones)
+- Use bullet points and emojis for readability
+- If user asks something non-financial, gently redirect to finance topics`;
+
+async function callTavily(query) {
+  const apiKey = process.env.TAVILY_API_KEY;
+  if (!apiKey) return null;
+  try {
+    const res = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: apiKey,
+        query,
+        search_depth: "basic",
+        include_answer: true,
+        max_results: 3
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.answer || data.results?.map(r => r.content).join('\n') || null;
+  } catch (err) {
+    console.error("Tavily error:", err);
+    return null;
+  }
+}
+
+async function callGemini(messages, systemPrompt) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn("GEMINI_API_KEY not found!");
+    return null;
+  }
+  try {
+    const contents = messages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }));
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents,
+        generationConfig: {
+          maxOutputTokens: 800,
+          temperature: 0.7,
+        }
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("Gemini Error:", await res.text());
+      return null;
+    }
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+  } catch (err) {
+    console.error("Gemini exception:", err);
+    return null;
+  }
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();
     let { message, conversationId } = body;
 
-    // Create a new conversation if one doesn't exist
+    if (!message || !message.trim()) {
+      return NextResponse.json({ error: "Message is required" }, { status: 400 });
+    }
+
+    // Create conversation if needed
     if (!conversationId) {
       const conv = await createConversation(message.substring(0, 50));
       if (conv) conversationId = conv.id;
@@ -23,104 +110,71 @@ export async function POST(request) {
       await addMessage(conversationId, "user", message);
     }
 
-    // Proxy to backend stream endpoint
-    const backendUrl = process.env.CHATBOT_BACKEND_URL || 'http://127.0.0.1:8001';
-    const backendResponse = await fetch(`${backendUrl}/api/chat/stream`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message, conversation_id: conversationId, history }),
-      signal: AbortSignal.timeout(60000),
-    });
+    // Search for real-time context
+    const tavilyResult = await callTavily(message);
 
-    if (!backendResponse.ok) {
-      const errorText = await backendResponse.text().catch(() => "Unknown error");
-      return NextResponse.json(
-        { error: `Backend returned ${backendResponse.status}: ${errorText}` },
-        { status: backendResponse.status }
-      );
+    // Build context
+    let contextStr = '';
+    if (tavilyResult) {
+      contextStr = `\n\n## Internet Search Context:\n${tavilyResult}\nUse this if it helps answer the query.`;
     }
 
-    // Intercept stream to save assistant message while streaming to client
-    const reader = backendResponse.body.getReader();
-    const decoder = new TextDecoder();
+    const fullSystemPrompt = SYSTEM_PROMPT + contextStr;
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        let assistantContent = "";
-        let route = null;
-        let latency = null;
-        let sources = null;
+    // Format messages for LLM
+    const llmMessages = [
+      ...history.map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: message }
+    ];
 
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            controller.enqueue(value);
+    // Call Gemini
+    const startTime = Date.now();
+    const reply = await callGemini(llmMessages, fullSystemPrompt);
+    const latencyMs = Date.now() - startTime;
 
-            // parse value to save to db
-            const text = decoder.decode(value, { stream: true });
-            const events = text.split("\n\n");
-            for (const ev of events) {
-              if (ev.startsWith("data: ")) {
-                try {
-                  const data = JSON.parse(ev.slice(6));
-                  if (data.type === 'metadata') {
-                    route = data.route;
-                    sources = data.sources;
-                  } else if (data.type === 'chunk') {
-                    assistantContent += data.content;
-                  } else if (data.type === 'done') {
-                    latency = data.latency_ms;
-                  }
-                } catch (e) {
-                  // ignore JSON parse errors on partial chunks
-                }
-              }
-            }
-          }
-        } finally {
+    if (reply) {
+      // Save assistant message
+      if (conversationId) {
+        await addMessage(conversationId, "assistant", reply, {
+          latency_ms: latencyMs,
+        });
+      }
+
+      // Return as SSE stream for frontend compatibility
+      const stream = new ReadableStream({
+        start(controller) {
+          const encoder = new TextEncoder();
+
+          // Send metadata
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'metadata', route: 'AI', sources: [] })}\n\n`));
+
+          // Send content as chunk
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chunk', content: reply })}\n\n`));
+
+          // Send done
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', latency_ms: latencyMs })}\n\n`));
+
           controller.close();
-
-          // Save assistant message to DB
-          if (conversationId && assistantContent) {
-            await addMessage(conversationId, "assistant", assistantContent, {
-              route,
-              latency_ms: latency,
-              sources
-            });
-          }
         }
-      }
-    });
+      });
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-        "X-Conversation-Id": conversationId || ""
-      }
-    });
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+          "X-Conversation-Id": conversationId || ""
+        }
+      });
+    }
+
+    return NextResponse.json(
+      { error: "AI model se response nahi aa paya. API key check karo!" },
+      { status: 500 }
+    );
 
   } catch (error) {
-    console.error("Chatbot API proxy error:", error);
-
-    if (error instanceof DOMException && error.name === "TimeoutError") {
-      return NextResponse.json(
-        { error: "Backend timed out. Please try again, bhai." },
-        { status: 504 }
-      );
-    }
-
-    if (error instanceof TypeError && error.message.includes("fetch")) {
-      return NextResponse.json(
-        { error: "Can't reach the backend service. Please make sure it's running." },
-        { status: 502 }
-      );
-    }
-
+    console.error("Chatbot API error:", error);
     return NextResponse.json(
       { error: "Oops, something went wrong. Please try again." },
       { status: 500 }

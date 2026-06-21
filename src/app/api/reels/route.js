@@ -16,6 +16,32 @@ const REELS_DATA = [
     ]
   },
   {
+    id: "hackathon-reel-1",
+    title: "Capital Mastery Reel 1",
+    videoUrl: "/videos/reel1.mp4",
+    description: "Learn how to master your money with Capital Mastery!",
+    views: "2.5M",
+    likes: 345000,
+    hasLiked: false,
+    hasBookmarked: false,
+    comments: [
+      { id: 1, user: "Ravi", text: "This app is changing my life! 🚀" }
+    ]
+  },
+  {
+    id: "hackathon-reel-2",
+    title: "Capital Mastery Reel 2",
+    videoUrl: "/videos/reel2.mp4",
+    description: "Smart investing starts with the right habits.",
+    views: "1.8M",
+    likes: 210000,
+    hasLiked: false,
+    hasBookmarked: false,
+    comments: [
+      { id: 1, user: "Sonia", text: "Very informative video!" }
+    ]
+  },
+  {
     id: "inflation-silent-thief",
     title: "Inflation: The Silent Thief 🥷",
     videoId: "HDUqfVqL00M",

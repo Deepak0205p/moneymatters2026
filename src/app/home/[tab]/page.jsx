@@ -41,7 +41,7 @@ import {
   ChevronLeft,
   X,
   Menu,
-
+  Target,
   UserCheck,
   Shield,
   Calendar,
@@ -1229,6 +1229,7 @@ export default function HomePage() {
   // Sidebar components links
   const sideLinks = [
     { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+    { id: 'goals', label: 'Your Goals', Icon: Target },
     { id: 'reels', label: 'Reels', Icon: Film },
     { id: 'chatbot', label: 'AI Chat Bot', Icon: MessageSquare },
     { id: 'gamified', label: 'Gamified Concept', Icon: Trophy },
@@ -1380,7 +1381,7 @@ export default function HomePage() {
         </header>
 
         {/* ── MOBILE BOTTOM NAVIGATION ── */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 h-16 bg-[#090D1A]/95 backdrop-blur-xl border-t border-white/[0.05] grid grid-cols-7 items-center justify-center z-40">
+        <nav className="md:hidden fixed bottom-0 inset-x-0 h-16 bg-[#090D1A]/95 backdrop-blur-xl border-t border-white/[0.05] grid grid-cols-8 items-center justify-center z-40">
           {sideLinks.map(link => {
             const Icon = link.Icon;
             const isActive = activeTab === link.id;

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/lib/store/useAppStore';
-import { IndianRupee, Zap, Lock, BookOpen, Clock, ChevronRight, CheckCircle2, ArrowRight } from 'lucide-react';
+import { IndianRupee, Zap, Lock, BookOpen, Clock, ChevronRight, CheckCircle2, ArrowRight, Target, Rocket, TrendingUp } from 'lucide-react';
 import { modules, getAllCardsForModule } from '@/data/modulesIndex';
 
 const QUOTES = [
@@ -279,6 +279,145 @@ function ModuleCard({ mod, index, isUnlocked, onClick }) {
   );
 }
 
+// ─── Goals Section Component ──────────────────────────────────────
+function GoalsSection({ router }) {
+  const { goals, goalTarget, goalSaved } = useAppStore();
+  
+  const activeGoals = goals.filter(g => g.saved < g.target).slice(0, 3);
+  const totalSaved = goals.reduce((acc, g) => acc + g.saved, 0);
+  const totalTarget = goals.reduce((acc, g) => acc + g.target, 0);
+  const progress = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.45 }}
+      className="space-y-4"
+    >
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-lg font-bold text-white flex items-center gap-2">
+          <Target size={18} className="text-emerald-400" /> Your Goals
+        </h2>
+        <button
+          onClick={() => router.push('/home/goals')}
+          className="flex items-center gap-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+        >
+          View All <ChevronRight size={14} />
+        </button>
+      </div>
+
+      {goals.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent p-6 text-center"
+        >
+          <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+          <div className="relative z-10">
+            <div className="text-4xl mb-3">🎯</div>
+            <h3 className="text-sm font-bold text-white mb-1">Apna Pehla Goal Set Karo!</h3>
+            <p className="text-xs text-zinc-400 mb-4">Financial goals banake AI roadmap se achieve karo</p>
+            <button
+              onClick={() => router.push('/home/goals')}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-[#070913] text-xs font-black uppercase tracking-wider inline-flex items-center gap-2"
+            >
+              <Rocket size={14} />
+              Create Goal
+            </button>
+          </div>
+        </motion.div>
+      ) : (
+        <div className="space-y-3">
+          {/* Overall Progress */}
+          {goals.length > 1 && (
+            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider">Total Progress</span>
+                <span className="text-xs font-bold text-emerald-400">{progress}%</span>
+              </div>
+              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                  className="h-full bg-gradient-to-r from-emerald-500 to-amber-400 rounded-full"
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-[10px] text-zinc-500">₹{totalSaved.toLocaleString('en-IN')} saved</span>
+                <span className="text-[10px] text-zinc-500">₹{totalTarget.toLocaleString('en-IN')} target</span>
+              </div>
+            </div>
+          )}
+
+          {/* Active Goals Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {activeGoals.map((goal, i) => {
+              const pct = Math.min(100, Math.round((goal.saved / goal.target) * 100));
+              return (
+                <motion.div
+                  key={goal.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + i * 0.1 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  onClick={() => router.push('/home/goals')}
+                  className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 cursor-pointer transition-all group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                      style={{ backgroundColor: `${goal.category}20`, border: `1px solid ${goal.category}30` }}
+                    >
+                      {goal.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs font-bold text-white truncate">{goal.name}</h4>
+                      <span className="text-[10px] text-zinc-500">₹{goal.target.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.8, delay: 0.6 + i * 0.1 }}
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: goal.category }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] text-zinc-500">₹{goal.saved.toLocaleString('en-IN')} saved</span>
+                      <span className="text-[9px] font-bold" style={{ color: goal.category }}>{pct}%</span>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* View Roadmap Button */}
+          {activeGoals.length > 0 && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push('/home/goals')}
+              className="w-full py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center gap-2 hover:bg-emerald-500/15 transition-colors"
+            >
+              <TrendingUp size={14} />
+              View AI Roadmap for Your Goals
+            </motion.button>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const {
@@ -503,6 +642,10 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* Your Goals Section */}
+      <GoalsSection router={router} />
+
 
       {/* Financial Journey Map */}
       <div className="space-y-4 pt-4">

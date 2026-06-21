@@ -23,7 +23,8 @@ import {
   ChevronRight,
   Trophy,
   Clock,
-  ArrowLeft
+  ArrowLeft,
+  Target
 } from "lucide-react";
 
 import { strategies } from '@/lib/data/strategies';
@@ -88,6 +89,7 @@ export default function HomeLayout({ children }) {
 
   const sideLinks = [
     { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard, path: '/home/dashboard' },
+    { id: 'goals', label: 'Your Goals', Icon: Target, path: '/home/goals' },
     { id: 'reel', label: 'Reels', Icon: Film, path: '/home/reel' },
     { id: 'chatbot', label: 'AI Chat Bot', Icon: MessageSquare, path: '/home/chatbot' },
     { id: 'gamified', label: 'Gamified Concept', Icon: Trophy, path: '/home/gamified' },

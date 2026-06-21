@@ -68,8 +68,8 @@ async function callGemini(messages, systemPrompt) {
       parts: [{ text: msg.content }]
     }));
 
-    // Use Gemini 2.5 Flash as the fastest stable Flash model available via standard REST
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    // Use Gemini 3.1 Flash Lite
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

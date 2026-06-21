@@ -327,6 +327,19 @@ export const useAppStore = create()(persist((set, get) => ({
   addGoal: goal => set(state => ({
     goals: [...state.goals, goal]
   })),
+  updateGoalRoadmap: (goalId, roadmap) => set(state => ({
+    goals: state.goals.map(g => g.id === goalId ? { ...g, roadmap } : g)
+  })),
+  updateGoalMonthDetail: (goalId, monthGroupId, detail) => set(state => ({
+    goals: state.goals.map(g => {
+      if (g.id !== goalId) return g;
+      const monthDetails = { ...(g.monthDetails || {}), [monthGroupId]: detail };
+      return { ...g, monthDetails };
+    })
+  })),
+  updateGoalEdited: (goalId, field, value) => set(state => ({
+    goals: state.goals.map(g => g.id === goalId ? { ...g, [field]: value } : g)
+  })),
   updateGoalSaved: (id, amount) => set(state => ({
     goals: state.goals.map(g => {
       if (g.id !== id) return g;

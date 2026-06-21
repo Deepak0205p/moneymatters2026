@@ -4,10 +4,11 @@ import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Plus, Trash2, Target, TrendingUp, PartyPopper, 
-  IndianRupee, Calendar, Sparkles, Trophy, Award 
+  IndianRupee, Calendar, Sparkles, Trophy, Award, Rocket, ChevronRight
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store/useAppStore';
 import { toast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const TEMPLATES = [
   { id: 'bike', label: 'Pehli Bike 🏍️', emoji: '🏍️', target: 120000, color: '#EF4444', hint: 'Daily ₹150 bachao. 3 cup chai skip karo!' },
@@ -30,6 +31,7 @@ function daysRemaining(deadline) {
 
 export default function GoalTracker({ open, onClose }) {
   const { goals, addGoal, updateGoalSaved, deleteGoal, addCoins } = useAppStore();
+  const router = useRouter();
   const [addOpen, setAddOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   
@@ -62,16 +64,18 @@ export default function GoalTracker({ open, onClose }) {
     if (!selectedTemplate) return;
     const finalTarget = parseInt(target, 10) || selectedTemplate.target;
     
-    addGoal({
+    const newGoal = {
       id: `goal-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       name: name.trim() || selectedTemplate.label.split(' ')[1] || 'My Goal',
       target: finalTarget,
       saved: 0,
       deadline: deadline || new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
-      category: selectedTemplate.color, // uses template color code
+      category: selectedTemplate.color,
       emoji: selectedTemplate.emoji,
       createdAt: new Date().toISOString().split('T')[0]
-    });
+    };
+
+    addGoal(newGoal);
 
     // Reset Form
     setSelectedTemplate(null);
@@ -83,8 +87,11 @@ export default function GoalTracker({ open, onClose }) {
     addCoins(10);
     toast({
       title: "Goal created! +10 Coins 🎯",
-      description: "Visual goal tracker is active now."
+      description: "Ab apna roadmap dekho aur save shuru karo!"
     });
+
+    // Navigate to roadmap page
+    setTimeout(() => router.push(`/home/goals/${newGoal.id}/roadmap`), 500);
   };
 
   const handleAddSavings = (goalId, goalSaved, goalTarget) => {
@@ -116,6 +123,7 @@ export default function GoalTracker({ open, onClose }) {
   if (!open) return null;
 
   return (
+    <>
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
       {/* Backdrop blur overlay */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
@@ -295,12 +303,21 @@ export default function GoalTracker({ open, onClose }) {
                                 <span className="text-[10px] text-zinc-500 font-bold block">Target: ₹{g.target.toLocaleString('en-IN')}</span>
                               </div>
                             </div>
-                            <button
-                              onClick={() => deleteGoal(g.id)}
-                              className="p-1 rounded bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all cursor-pointer"
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => router.push(`/home/goals/${g.id}/roadmap`)}
+                                className="p-1.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-all cursor-pointer"
+                                title="View Roadmap"
+                              >
+                                <Rocket size={12} />
+                              </button>
+                              <button
+                                onClick={() => deleteGoal(g.id)}
+                                className="p-1 rounded bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all cursor-pointer"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
                           </div>
 
                           {/* Progress Line */}
@@ -393,5 +410,6 @@ export default function GoalTracker({ open, onClose }) {
         </div>
       </motion.div>
     </div>
+    </>
   );
 }

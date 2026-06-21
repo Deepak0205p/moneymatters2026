@@ -216,6 +216,14 @@ export default function ReelPage() {
                   onVideoEnd={nextReel}
                 />
               )}
+              {reels[currentReelIndex]?.videoUrl && (
+                <LocalReelPlayer
+                  videoUrl={reels[currentReelIndex].videoUrl}
+                  isMuted={isMuted}
+                  autoScroll={autoScroll}
+                  onVideoEnd={nextReel}
+                />
+              )}
 
               {/* Spacer container to allow clear video view */}
               <div className="flex-1 z-10" />
@@ -420,3 +428,33 @@ function YoutubeReelPlayer({ videoId, isMuted, autoScroll, onVideoEnd }) {
   );
 }
 
+function LocalReelPlayer({ videoUrl, isMuted, autoScroll, onVideoEnd }) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  return (
+    <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-auto rounded-[32px] flex items-center justify-center bg-black">
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        className="w-full h-full object-cover scale-[1.05]"
+        autoPlay
+        playsInline
+        loop={!autoScroll}
+        muted={isMuted}
+        onEnded={() => {
+          if (autoScroll) {
+            onVideoEnd();
+          }
+        }}
+        controls={false}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 z-10 pointer-events-none" />
+    </div>
+  );
+}

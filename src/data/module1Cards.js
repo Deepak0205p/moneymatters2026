@@ -21,11 +21,12 @@ Kya tum chaiwale ko kitab dekar chai le paoge?
 
 Mushkil hai na? Isi problem ko solve karne ke liye **Money** bana!
 
-Barter → Gold Coins → Paper Currency → Digital Money (UPI) → Crypto. Maqsad wahi raha — **Value Exchange**.`,
+{{visual: { "type": "flowchart", "data": { "nodes": [ { "label": "Barter", "x": 20, "y": 50, "width": 80, "height": 40 }, { "label": "Gold", "x": 150, "y": 50, "width": 80, "height": 40 }, { "label": "Paper", "x": 280, "y": 50, "width": 80, "height": 40 }, { "label": "UPI", "x": 150, "y": 150, "width": 80, "height": 40 }, { "label": "Crypto", "x": 280, "y": 150, "width": 80, "height": 40 } ], "edges": [ { "path": "M 100 70 L 150 70" }, { "path": "M 230 70 L 280 70" }, { "path": "M 320 90 L 320 120 L 190 120 L 190 150" }, { "path": "M 230 170 L 280 170" } ] } }}}
+
+Maqsad wahi raha — **Value Exchange**.`,
         imagePrompt: "Ancient barter system in Indian village, people exchanging goods like grain for clothes, warm earthy tones, educational illustration style",
         color: "#3B82F6",
         emoji: "🔄",
-        svgAnimationType: 'barter_system',
         interactiveType: 'choice_sim',
         choiceData: {
           scenario: "Tumhe chai chahiye, par tumhare paas sirf ek purani Engineering Book hai. Chaiwala kya bolega?",
@@ -60,11 +61,10 @@ Barter → Gold Coins → Paper Currency → Digital Money (UPI) → Crypto. Maq
 
 **Bhaiya**: Pehle Gold tha, phir paper jo gold se back hota tha. Aaj sirf 'Trust' aur 'Legal Tender' pe duniya chalti hai!
 
-December 2025 mein India mein **21.63 billion UPI transactions** hue worth **₹27.97 lakh crore** — yeh dekh lo digital money ka power.`,
+{{visual: { "type": "stathighlight", "data": { "value": "21.63 B", "label": "UPI Transactions", "subtext": "December 2025 mein India mein UPI transactions worth ₹27.97 lakh crore hue!" } }}}`,
         imagePrompt: "Evolution of money timeline from barter to gold coins to paper currency, Indian historical context, educational infographic style, warm golden tones",
         color: "#3B82F6",
         emoji: "📜",
-        svgAnimationType: 'inflation_shrinking',
         interactiveType: 'none'
       },
       {
@@ -82,13 +82,14 @@ UPI ke 4 sabse bade faayde:
 - **Free** — koi transaction charge nahi
 - **Universal** — chaiwala se le kar mall tak, sab jagah
 
-Neobanks jaise **Jupiter, Fi, aur Niyo** bhi aa gaye hain jo completely digital banking offer karte hain — bina branch visit ke account khul jaata hai.
+{{visual: { "type": "barchart", "data": { "maxValue": 150, "bars": [ { "label": "2020", "value": 18, "valueLabel": "18B" }, { "label": "2022", "value": 74, "valueLabel": "74B" }, { "label": "2024", "value": 131, "valueLabel": "131B" } ] } }}}
+
+Neobanks jaise **Jupiter, Fi, aur Niyo** bhi aa gaye hain jo completely digital banking offer karte hain.
 
 Slide karke dekho India mein UPI ka power:`,
         imagePrompt: "Digital payment revolution in India, UPI QR code scanning on smartphone, modern fintech illustration, vibrant blue and green gradient, tech style",
         color: "#3B82F6",
         emoji: "📱",
-        svgAnimationType: 'upi_network',
         interactiveType: 'calculator',
         calcData: {
           calcType: 'compounding',
@@ -107,13 +108,7 @@ Slide karke dekho India mein UPI ka power:`,
         title: "Money Ke 5 Main Functions",
         content: `Paisa sirf kharch karne ke liye nahi hota. Iske 5 super-powers hain:
 
-| Function | Kya hota hai? | Example 💡 |
-| :--- | :--- | :--- |
-| **Medium of Exchange** | Cheezein kharidne ke liye | Chai ke liye ₹20 dena ☕ |
-| **Unit of Account** | Value measure karne ke liye | Phone ₹15,000 ka hai 📱 |
-| **Store of Value** | Save karne ke liye | Bank mein ₹5k rakhna 🏦 |
-| **Standard of Deferred Payment** | Udhaar/EMI ke liye | ₹1k ki monthly EMI 💸 |
-| **Transfer of Value** | Kahin bhi bhejne ke liye | GPay to Friend 📲 |
+{{visual: { "type": "timeline", "data": { "events": [ { "year": "1. Medium of Exchange", "title": "Buy stuff", "description": "Chai ke liye ₹20 dena ☕" }, { "year": "2. Unit of Account", "title": "Measure value", "description": "Phone ₹15,000 ka hai 📱" }, { "year": "3. Store of Value", "title": "Save it", "description": "Bank mein ₹5k rakhna 🏦" }, { "year": "4. Deferred Payment", "title": "Pay later", "description": "₹1k ki monthly EMI 💸" }, { "year": "5. Transfer of Value", "title": "Send anywhere", "description": "GPay to Friend 📲" } ] } }}}
 
 **Most Liquid Asset** — Delhi se Mumbai 2 second mein pahunch jaata hai. Real estate ya gold mein yeh flexibility nahi hai.`,
         imagePrompt: "Five functions of money illustrated as icons, medium of exchange, unit of account, store of value, deferred payment, transfer of value, clean modern infographic, blue theme",
@@ -129,16 +124,7 @@ Slide karke dekho India mein UPI ka power:`,
         title: "Inflation: Chupta Hua Chor 📉",
         content: `Aaj ke \`₹100\` ki value 5 saal baad \`₹100\` nahi rahegi. Isse kehte hain **Inflation** (Mehangai).
 
-**Purchasing Power Table (6% Inflation pe):**
-
-| Year | ₹100 ki Real Value | Matlab |
-| :--- | :--- | :--- |
-| **Today** | ₹100 | Aaj ki full value 💰 |
-| **1 year** | ₹94 | Same cheez ₹106 mein milegi |
-| **3 years** | ₹84 | Value ghati 📉 |
-| **5 years** | ₹75 | Adha reh gaya |
-| **10 years** | ₹56 | Almost half! 💸 |
-| **20 years** | ₹31 | Ek third bhi nahi |
+{{visual: { "type": "barchart", "data": { "maxValue": 100, "bars": [ { "label": "Today", "value": 100, "valueLabel": "₹100" }, { "label": "1 yr", "value": 94, "valueLabel": "₹94" }, { "label": "3 yr", "value": 84, "valueLabel": "₹84" }, { "label": "5 yr", "value": 75, "valueLabel": "₹75" }, { "label": "10 yr", "value": 56, "valueLabel": "₹56" } ] } }}}
 
 **Real Example**: Rahul ne ₹5,000 ka breakdown kiya — ₹2,500 rent, ₹1,500 khana, ₹500 transport, ₹500 recharge. Phir samajh aaya ki ₹5,000 mein kitni purchasing power hai. Paisa sirf ek number nahi, yeh **purchasing power ka representation** hai.
 
@@ -207,8 +193,7 @@ Student aur Bhaiya ki baatcheet se samjho:
 
 **Bhaiya**: Best strategy! Active se bills bharo, Passive build karke financial freedom paao.
 
-Active income examples: Cafe ₹200/hour, Tuition, Freelance writing, Delivery, Internship stipend.
-Passive income examples: YouTube ads, Dividend stocks, SIP growth, Digital products, PG room rent.`,
+{{visual: { "type": "comparison", "data": { "left": { "title": "Active Income", "items": ["Requires your time", "Stops when you stop", "Cafe job, Tuitions"] }, "right": { "title": "Passive Income", "items": ["Works while you sleep", "Builds long-term wealth", "YouTube, Dividends"] } } }}}`,
         imagePrompt: "Split comparison of active vs passive income, left side person working hard at desk, right side person relaxing while money flows in, modern illustration, green and gold tones",
         color: "#10B981",
         emoji: "⚡",
@@ -643,17 +628,7 @@ Iska matlab yeh nahi ki sab spend karo, balki **savings bhi ek "expense" categor
 
 **Example: ₹15,000 income ka Zero-Based Budget:**
 
-| Category | Amount | % |
-| :--- | :--- | :--- |
-| Savings (auto-debit) | ₹3,000 | 20% |
-| Rent (1RK) | ₹4,000 | 27% |
-| Food | ₹2,500 | 17% |
-| Transport | ₹1,500 | 10% |
-| Phone + WiFi | ₹1,200 | 8% |
-| Education/Skill | ₹1,000 | 7% |
-| Entertainment | ₹1,500 | 10% |
-| Insurance | ₹300 | 2% |
-| **TOTAL** | **₹15,000** | **100%** |
+{{visual: { "type": "piechart", "data": { "totalValue": 100, "centerText": "₹15,000", "centerSubtext": "Total Budget", "segments": [ { "label": "Rent", "value": 27, "color": "#EF4444" }, { "label": "Savings", "value": 20, "color": "#10B981" }, { "label": "Food", "value": 17, "color": "#F59E0B" }, { "label": "Transport", "value": 10, "color": "#3B82F6" }, { "label": "Entertainment", "value": 10, "color": "#8B5CF6" }, { "label": "Others", "value": 16, "color": "#6B7280" } ] } }}}
 
 **Budget Banaake 5 Faayde:**
 1. Overspending control — pata chalta hai kahan zyada ho raha hai

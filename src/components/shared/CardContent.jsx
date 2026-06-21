@@ -3,6 +3,15 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, X, Zap } from 'lucide-react';
+import {
+  AnimatedFlowchart,
+  AnimatedPieChart,
+  AnimatedBarChart,
+  AnimatedDecisionTree,
+  AnimatedTimeline,
+  AnimatedComparisonCard,
+  AnimatedStatHighlight
+} from './ModuleVisuals';
 
 // ════════════════════════════════════════════════════════════════════════
 // RAINBOW COLORS
@@ -264,6 +273,47 @@ export function RichContent({
       i++;
       continue;
     }
+
+    // --- VISUAL COMPONENT PARSING ---
+    if (line.trim().startsWith('{{visual:')) {
+      let jsonString = line.trim().substring(9);
+      
+      // If it doesn't end on the same line, collect until '}}'
+      if (!jsonString.endsWith('}}')) {
+        i++;
+        while (i < lines.length && !lines[i].trim().endsWith('}}')) {
+          jsonString += lines[i];
+          i++;
+        }
+        if (i < lines.length) {
+          jsonString += lines[i].trim().slice(0, -2); // remove '}}'
+        }
+      } else {
+        jsonString = jsonString.slice(0, -2); // remove '}}'
+      }
+      
+      try {
+        const visualData = JSON.parse(jsonString);
+        const { type, data } = visualData;
+        
+        blocks.push(
+          <div key={`visual-${blockKey++}`} className="my-2">
+            {type === 'flowchart' && <AnimatedFlowchart data={data} color={color} />}
+            {type === 'piechart' && <AnimatedPieChart data={data} color={color} />}
+            {type === 'barchart' && <AnimatedBarChart data={data} color={color} />}
+            {type === 'decisiontree' && <AnimatedDecisionTree data={data} color={color} />}
+            {type === 'timeline' && <AnimatedTimeline data={data} color={color} />}
+            {type === 'comparison' && <AnimatedComparisonCard data={data} color={color} />}
+            {type === 'stathighlight' && <AnimatedStatHighlight data={data} color={color} />}
+          </div>
+        );
+      } catch (err) {
+        console.error("Failed to parse visual data:", err);
+      }
+      i++;
+      continue;
+    }
+
     blocks.push(/*#__PURE__*/_jsx("p", {
       className: "text-zinc-150 text-[16px] sm:text-[18px] leading-relaxed font-semibold",
       children: parseInline(line, color)

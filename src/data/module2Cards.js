@@ -23,7 +23,6 @@ Calculator use karke dekho tumhari income kaise divide honi chahiye:`,
         imagePrompt: "Pie chart illustration of 50-30-20 budget rule, vibrant green and blue colors, modern 3D icons for needs, wants and savings, clean financial infographic",
         color: "#10B981",
         emoji: "📐",
-        svgAnimationType: 'budget_pie',
         interactiveType: 'calculator',
         calcData: {
           calcType: 'budget',
@@ -297,8 +296,7 @@ Gyaan bahut ho gaya, ab real data dekhte hain!
 Agar 3 mein se 2 jawab \"haan\" hain, toh **WANT** hai.`,
         imagePrompt: "Brain with question marks around different expense items, sky blue theme, decision making concept, modern flat illustration",
         color: "#0EA5E9",
-        emoji: "🧠",
-        svgAnimationType: 'needs_wants_scale'
+        emoji: "🧠"
       },
       {
         id: "2-3-3",
@@ -309,24 +307,14 @@ Agar 3 mein se 2 jawab \"haan\" hain, toh **WANT** hai.`,
         title: "Decision Tree: 48-Hour Rule",
         content: `**Decision Tree for Every Expense:**
 
-\`\`\`
-Expense aaya → Kya bina iske reh sakte hain?
-    ↓ NO → NEED → Cheaper option hai?
-              ↓ YES → Woh lo
-              ↓ NO → Abhi kharido
-    ↓ YES → WANT → Kya abhi zaroori hai?
-              ↓ NO → 48-hour rule → Baad mein socho
-              ↓ YES → Budget mein hai?
-                        ↓ YES → Kharido
-                        ↓ NO → Postpone
-\`\`\`
+{{visual: { "type": "decisiontree", "data": { "nodes": [ { "label": "Expense Aaya", "x": 140, "y": 20, "width": 120, "height": 40 }, { "label": "Can live without it?", "x": 140, "y": 100, "width": 140, "height": 40 }, { "label": "NEED", "x": 60, "y": 180, "width": 80, "height": 40 }, { "label": "WANT", "x": 260, "y": 180, "width": 80, "height": 40 }, { "label": "Cheaper Option?", "x": 60, "y": 260, "width": 120, "height": 40 }, { "label": "Wait 48 Hrs", "x": 260, "y": 260, "width": 100, "height": 40 } ], "edges": [ { "path": "M 200 60 L 200 100" }, { "path": "M 140 120 L 100 120 L 100 180", "label": "No" }, { "path": "M 280 120 L 300 120 L 300 180", "label": "Yes" }, { "path": "M 100 220 L 100 260" }, { "path": "M 300 220 L 300 260" } ] } }}}
 
-**48-Hour Rule**: Kuch bhi kharidne se pehle 48 ghante socho. 90% cheezein baad mein yaad bhi nahi rehti! \"Sale mein 70% off\" soch ke impulse mat karo.
+**48-Hour Rule**: Kuch bhi kharidne se pehle 48 ghante socho. 90% cheezein baad mein yaad bhi nahi rehti! "Sale mein 70% off" soch ke impulse mat karo.
 
-⚠️ **Myth**: \"₹3,000 mein budget nahi banta\"
+⚠️ **Myth**: "₹3,000 mein budget nahi banta"
 **Sach**: ₹3,000 mein bhi budget banta hai. ₹300 savings bhi budget hai.
 
-⚠️ **Myth**: \"Budget rigid hona chahiye\"
+⚠️ **Myth**: "Budget rigid hona chahiye"
 **Sach**: Budget flexible hona chahiye. Life unpredictable hai.`,
         imagePrompt: "Decision flowchart with arrows showing the 48-hour rule, sky blue and green theme, clean infographic",
         color: "#0EA5E9",
@@ -601,8 +589,7 @@ Jab kharab mahine aaye (₹5,000 ya ₹0), buffer account se chalao.
 - Emergency fund use karo — yahi uske liye hai`,
         imagePrompt: "Buffer system concept - piggy bank filling up in good months, draining in bad months, amber theme, cycle illustration",
         color: "#F59E0B",
-        emoji: "💪",
-        svgAnimationType: 'buffer_tank'
+        emoji: "💪"
       },
       {
         id: "2-6-2",
