@@ -350,7 +350,7 @@ export default function ToolsPage() {
             })
           }), /*#__PURE__*/_jsx("p", {
             className: "text-ink-muted max-w-2xl mx-auto",
-            children: translatedHeroSub || "11 interactive strategies + 16 financial tools — SIP calculator, expense tracker, quizzes, games, AI advisor aur bahut kuch. Sab kuch Hinglish mein!"
+            children: "11 interactive strategies + 16 financial tools — SIP calculator, expense tracker, quizzes, games, AI advisor aur bahut kuch. Sab kuch Hinglish mein!"
           })]
         }), /*#__PURE__*/_jsxs(motion.div, {
           initial: {
